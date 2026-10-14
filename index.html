@@ -474,7 +474,7 @@ const uid = ()=>Math.random().toString(36).slice(2,10);
 function blankState(){
   return {v:1,id:(crypto.randomUUID?crypto.randomUUID():uid()+uid()),example:false,mode:"eigen",tab:"objekt",ai:{},roomsAuto:true,
     obj:{titel:"",typ:"efh",kaufpreis:0,wfl:0,grund:0,zimmer:0,baeder:1,baujahr:0,ort:"",land:"BW",region:"speck",makler:M.makler,hausgeld:0,keller:true,heizung:"",energie:"",zustand:"unbekannt",istMiete:0},
-    mkt:{qmUnsaniert:0,qmSaniert:0,mieteQm:0},
+    mkt:{qmUnsaniert:0,qmSaniert:0,mieteQm:0},ortInfo:null,
     find:null,rooms:[],exec:"firm",puffer:true,
     fin:{ek:0,bindung:10,tilgung:2,zinsAuto:true,zins:4.5,src:"mittel",ex:"firm",pos:"hi",kinder:0,kfw:false,netto:0},
     flip:{arv:0,monate:8,vkMakler:3.57,steuer:42,lfd:0,ziel:15},
@@ -726,7 +726,7 @@ function field(k,label,type="number",opts={}){
   if(type==="select") ctl=`<select id="${id}" data-k="${k}">${opts.options.map(([val,l])=>`<option value="${esc(val)}"${String(v)===String(val)?" selected":""}>${esc(l)}</option>`).join("")}</select>`;
   else if(type==="check") return `<label class="chk"><input type="checkbox" id="${id}" data-k="${k}"${v?" checked":""}> ${esc(label)}</label>`;
   else ctl=`<input id="${id}" type="${type}" data-k="${k}" value="${esc(v===0&&type==="number"?"":v)}"${type==="number"?` step="${opts.step||"any"}" min="0" inputmode="decimal"`:""} placeholder="${esc(opts.ph||"")}">`;
-  return `<label class="f${ai?" ai":""}" for="${id}"><span>${esc(label)}${ai?' <span class="tag">KI</span>':""}${opts.unit?` <span class="muted">(${esc(opts.unit)})</span>`:""}</span>${ctl}</label>`;
+  return `<label class="f${ai?" ai":""}" for="${id}"><span>${esc(label)}${ai?` <span class="tag">${S.ai[aiK]==="web"?"Web":"KI"}</span>`:""}${opts.unit?` <span class="muted">(${esc(opts.unit)})</span>`:""}</span>${ctl}</label>`;
 }
 function renderObjForm(){
   const o=S.obj;
@@ -754,7 +754,8 @@ function renderObjForm(){
     field("mkt.qmUnsaniert","Kaufpreis unsaniert","number",{unit:"€/m²",step:50}),
     field("mkt.qmSaniert","Kaufpreis saniert","number",{unit:"€/m²",step:50}),
     field("mkt.mieteQm","Kaltmiete normal","number",{unit:"€/m²",step:.1})
-  ].join("")+`<p class="small muted" style="grid-column:1/-1">Vergleich: Angebotspreise Böblingen Okt. 2026 lagen bei rund 4.140 €/m² (Haus), 3.800 €/m² (Wohnung) und 14,79 €/m² Miete. Für andere Orte schätzt die KI; besser mit Immobilienportal oder Mietspiegel abgleichen.</p>`;
+  ].join("")+`<div id="ortBox" style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px"></div>`;
+  renderOrtBox();
 }
 function renderFinForm(){
   const f=S.fin;
@@ -801,6 +802,44 @@ function renderEvalForm(){
   }
   $("#evalForm").innerHTML=h;
 }
+
+/* ---------- Ortspreise (Live-Recherche) ---------- */
+let ortBusy=false, ortMsg="";
+function renderOrtBox(){
+  const box=$("#ortBox"); if(!box) return;
+  const o=S.obj, i=S.ortInfo, ort=(o.ort||"").trim();
+  const stale=i&&ort&&(i.anfrage!==ort||i.art!==(o.typ==="wohnung"?"wohnung":"haus"));
+  let h="";
+  if(i&&!stale){
+    h+=`<p class="small"><b>Recherchiert für ${esc(i.ort)}</b> (${esc(i.stand||"")}): Miete ${[["einfach","einfache"],["mittel","mittlere"],["gut","gute"]].filter(([k])=>i.miete_qm?.[k]).map(([k,l])=>`${l} Lage ${dec(i.miete_qm[k])} €`).join(" · ")||"–"} pro m²${i.vergleichsmiete_qm?` · Vergleichsmiete ${dec(i.vergleichsmiete_qm)} €/m²`:""}${i.mietspiegel?` · ${esc(i.mietspiegel)}`:""}${i.mietpreisbremse===true?" · Mietpreisbremse gilt":i.mietpreisbremse===false?" · keine Mietpreisbremse":""}.</p>`;
+    if(i.hinweis) h+=`<p class="small muted">${esc(i.hinweis)}</p>`;
+    if(i.quellen?.length) h+=`<p class="small muted">Quellen: ${i.quellen.map(q=>`<a href="${esc(q.url)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(q.titel)}</a>`).join(" · ")}</p>`;
+  } else if(ort){
+    h+=`<p class="small muted">${stale?`Die Preise oben gehören zu ${esc(i.ort)}. `:""}Für „${esc(ort)}“ wurden die Preise noch nicht im Internet recherchiert.</p>`;
+  } else h+=`<p class="small muted">Trage oben den Ort ein, dann recherchiert das Tool die aktuellen Miet- und Kaufpreise für genau diesen Ort.</p>`;
+  h+=`<div class="row"><button class="btn${(!i||stale)&&ort?" pri":""}" id="btnOrt"${!ort||ortBusy||!SESSION?" disabled":""}>${ortBusy?"Recherchiere …":i&&!stale?"Neu recherchieren":"Preise für diesen Ort recherchieren"}</button><span class="status" id="ortStatus">${esc(ortMsg)}</span></div>`;
+  box.innerHTML=h;
+}
+async function lookupOrt(force){
+  const o=S.obj, ort=(o.ort||"").trim(); if(!ort||ortBusy||!SESSION) return;
+  ortBusy=true; ortMsg=`Suche aktuelle Miet- und Kaufpreise für ${ort} … das dauert meist 30–90 Sekunden.`; renderOrtBox();
+  try{
+    const {data,cached}=await api("/api/ort-preise",{ort,typ:o.typ,baujahr:num(o.baujahr)||null,wfl:num(o.wfl)||null,zimmer:num(o.zimmer)||null,force:!!force});
+    S.ortInfo={...data,anfrage:ort};
+    const put=(k,v)=>{if(v){S.mkt[k]=v;S.ai[k]="web";}};
+    put("mieteQm",data.miete_qm_normal||data.miete_qm?.mittel);
+    put("qmUnsaniert",data.kaufpreis_qm_unsaniert||data.kaufpreis_qm);
+    put("qmSaniert",data.kaufpreis_qm_saniert);
+    ortMsg=cached?"Aus der Recherche der letzten 30 Tage übernommen.":"Fertig. Werte sind eingetragen.";
+  }catch(e){ ortMsg=e.code==="cancelled"?"":errCopy(e.code); }
+  finally{ ortBusy=false; renderObjForm(); renderEvalForm(); refresh(); }
+}
+document.addEventListener("click",e=>{ if(e.target.id==="btnOrt") lookupOrt(!!(S.ortInfo&&S.ortInfo.anfrage===(S.obj.ort||"").trim())); });
+document.addEventListener("change",e=>{
+  const k=e.target.dataset?.k; if(k!=="obj.ort"&&k!=="obj.typ") return;
+  const i=S.ortInfo, ort=(S.obj.ort||"").trim();
+  if(ort&&SESSION&&(!i||i.anfrage!==ort||i.art!==(S.obj.typ==="wohnung"?"wohnung":"haus"))) lookupOrt(false); else renderOrtBox();
+});
 
 /* ---------- Rendering: Ausgaben ---------- */
 function renderSummary(F,X,R,V){
@@ -969,7 +1008,7 @@ function renderEval(F,X,R,V){
       <div class="scroll"><table class="matrix"><thead><tr><th>Ausstattung</th><th>€/m²</th><th>Kaltmiete/Monat</th><th>Bruttorendite</th></tr></thead><tbody>
       ${R.tiers.map(t=>`<tr${t.k===S.rent.tier?' style="background:var(--accent-soft)"':""}><th>${TIERL[t.k]}</th><td class="rng">${dec(t.qm)}</td><td class="rng">${eur(t.m)}</td><td class="rng">${pct(t.m*12/Math.max(1,F.kp),2)}</td></tr>`).join("")}
       </tbody></table></div>
-      <p class="small muted">Basis: ${dec(num(S.mkt.mieteQm))} €/m² für normale Ausstattung. ${esc(M.mietpreisbremse)}. In Gebieten mit Mietpreisbremse darf die Miete bei Neuvermietung höchstens 10 % über der ortsüblichen Vergleichsmiete liegen, außer nach umfassender Modernisierung.</p></div>
+      <p class="small muted">Basis: ${dec(num(S.mkt.mieteQm))} €/m² für normale Ausstattung${S.ortInfo?` in ${esc(S.ortInfo.ort)} (recherchiert ${esc(S.ortInfo.recherchiert||"")}${S.ortInfo.vergleichsmiete_qm?`, ortsübliche Vergleichsmiete ${dec(S.ortInfo.vergleichsmiete_qm)} €/m²`:""})`:" (Schätzung, Ort noch nicht recherchiert)"}. ${S.ortInfo?.mietpreisbremse===true?`In ${esc(S.ortInfo.ort)} gilt die Mietpreisbremse.`:S.ortInfo?.mietpreisbremse===false?`In ${esc(S.ortInfo.ort)} gilt keine Mietpreisbremse.`:esc(M.mietpreisbremse)+"."} In Gebieten mit Mietpreisbremse darf die Miete bei Neuvermietung höchstens 10 % über der ortsüblichen Vergleichsmiete liegen, außer nach umfassender Modernisierung.</p></div>
       <div class="card"><h3>Cashflow-Rechnung (Jahr 1)</h3><div class="ledger">
         <div class="ln"><span class="op"></span><span class="t">Jahreskaltmiete</span><span class="val">${eur(R.jkm)}</span></div>
         <div class="ln"><span class="op">−</span><span class="t">Mietausfall<small>${S.rent.ausfall} %</small></span><span class="val">${eur(R.jkm-R.einnahmen)}</span></div>
@@ -1186,7 +1225,7 @@ Aufgaben:
 1. Lies alle Eckdaten aus. Was nicht erkennbar ist: null.
 2. Schätze den Zustand aus Beschreibung, Fotos, Baujahr, Heizung und Energieklasse. Achte auf Signalwörter wie "renovierungsbedürftig", "Handwerkerobjekt", "modernisierungsbedürftig", "Originalzustand", "Liebhaber", "gepflegt", "saniert 20xx".
 3. Empfiehl eine Sanierungsstufe: "leicht" (Schönheitsreparaturen), "mittel" (Teilsanierung: Bad, Küche, Böden, Elektrik teilweise) oder "kern" (Kernsanierung).
-4. Schätze Marktwerte am Standort aus deinem Wissen: Kaufpreis €/m² unsaniert (vergleichbares Objekt im gleichen Zustand), Kaufpreis €/m² nach Sanierung, Nettokaltmiete €/m² bei normaler Ausstattung. Du kannst nicht im Internet suchen, sei realistisch und eher vorsichtig.
+4. Schätze Marktwerte für GENAU diesen Ort (z. B. Sindelfingen ist günstiger als Stuttgart) aus deinem Wissen: Kaufpreis €/m² unsaniert (vergleichbares Objekt im gleichen Zustand), Kaufpreis €/m² nach Sanierung, Nettokaltmiete €/m² bei normaler Ausstattung. Du kannst nicht im Internet suchen, sei realistisch und eher vorsichtig.
 5. Ordne das Handwerker-Preisniveau zu: "metro" (München, Stuttgart, Frankfurt, Hamburg Stadt), "speck" (Ballungsraum Süd/West, z. B. Kreis Böblingen/Esslingen/Ludwigsburg), "avg", "land" (ländlich West/Süd), "ost" (ländlich Ost).
 6. Wenn ein Grundriss sichtbar ist, liste die Räume mit Fläche.
 
@@ -1197,6 +1236,7 @@ Antworte NUR mit einem JSON-Objekt in genau dieser Form:
     const images=await Promise.all(imgs.map(toJpegB64));
     const {data:d}=await api("/api/ai",{kind:"analyze",prompt,images},ctlAn.signal);
     applyAI(d); setStatus("Fertig. Gelb markierte Felder bitte kurz prüfen.");
+    if(S.obj.ort) lookupOrt(false);
   }catch(e){ if(e?.code!=="cancelled") setStatus(errCopy(e?.code),true); else setStatus(""); }
   finally{ $("#btnAnalyze").disabled=false; $("#btnStop").hidden=true; }
 }
@@ -1296,8 +1336,8 @@ async function initDb(){
     updateAiAvail(); return;
   }
   const {data}=await SB.auth.getSession(); SESSION=data.session;
-  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); if(s?.user?.id!==was) listSaved();});
-  renderAuth(); updateAiAvail(); loadMarket(); listSaved();
+  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); if(s?.user?.id!==was) listSaved();});
+  renderAuth(); updateAiAvail(); renderOrtBox(); loadMarket(); listSaved();
 }
 async function loadMarket(){
   try{

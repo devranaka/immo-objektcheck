@@ -8,6 +8,7 @@ Immobilien per Screenshot oder Exposé einschätzen: Sanierungskosten in drei St
 |---|---|
 | `index.html` | Die komplette App (Rechnen, Raumplaner, Finanzierung, Auswertung, Chat) |
 | `api/ai.js` | KI-Analyse von Inseraten und KI-Berater über die Claude-API |
+| `api/ort-preise.js` | Recherchiert Miet- und Kaufpreise für den Ort des Objekts (30 Tage zwischengespeichert) |
 | `api/update-market.js` | Holt Zinsen, KfW-Konditionen usw. per Websuche und speichert sie in Supabase |
 | `api/config.js` | Gibt der Seite die öffentlichen Supabase-Werte |
 | `supabase/schema.sql` | Tabellen für gespeicherte Objekte und Marktdaten |
@@ -51,6 +52,7 @@ Auf console.anthropic.com unter **API Keys** einen neuen Key erstellen (z. B. �
 ## Kosten (ungefähr)
 - Inserat-Analyse mit Bildern: wenige Cent
 - Chat-Antwort: unter 1 Cent bis wenige Cent
+- Ortspreise recherchieren: ca. 5–15 Cent pro Ort, danach 30 Tage kostenlos aus dem Zwischenspeicher
 - Marktdaten-Aktualisierung: ca. 5–15 Cent pro Lauf (Websuche 1 Cent pro Suche)
 
 ## Marktdaten

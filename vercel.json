@@ -1,10 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/ai.js": { "maxDuration": 120 },
-    "api/update-market.js": { "maxDuration": 300 }
+    "api/ai.js": {
+      "maxDuration": 120
+    },
+    "api/update-market.js": {
+      "maxDuration": 300
+    },
+    "api/ort-preise.js": {
+      "maxDuration": 300
+    }
   },
   "crons": [
-    { "path": "/api/update-market", "schedule": "52 5 1,15 * *" }
+    {
+      "path": "/api/update-market",
+      "schedule": "52 5 1,15 * *"
+    }
   ]
 }
