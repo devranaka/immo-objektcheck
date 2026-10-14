@@ -1,0 +1,8 @@
+{
+  "name": "immo-objektcheck",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Immobilien per Screenshot oder Exposé einschätzen: Sanierung, Finanzierung, Eigenheim, Fix & Flip, Vermietung.",
+  "engines": { "node": ">=20" }
+}

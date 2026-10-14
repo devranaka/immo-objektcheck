@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Immo Objektcheck</title>
+<meta name="description" content="Immobilien per Screenshot oder Exposé einschätzen: Sanierung, Finanzierung, Eigenheim, Fix &amp; Flip, Vermietung.">
+<meta name="theme-color" content="#0d5f6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Objektcheck">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: Kalkulationsblatt — Kopf mit Modus, Kennzahlen-Leiste, Register-Tabs, Arbeitsflächen als Karten. */
+:root{
+  --paper:#eef1ee; --card:#ffffff; --ink:#16202a; --muted:#5a6672; --line:#d5dbd6; --soft:#f5f7f4;
+  --accent:#0d5f6b; --accent-ink:#ffffff; --accent-soft:#dcecee;
+  --sun:#b8770f; --sun-soft:#f6ead2;
+  --good:#2b7a4b; --good-soft:#dff0e5; --warn:#a86b10; --warn-soft:#f7ebd2; --bad:#b03c2b; --bad-soft:#f6dfda;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11161a; --card:#192026; --ink:#e6ece8; --muted:#9aa6ae; --line:#2c363e; --soft:#151b20;
+  --accent:#53b4c1; --accent-ink:#06171a; --accent-soft:#16343a;
+  --sun:#e2a443; --sun-soft:#3a2c14;
+  --good:#5bb57e; --good-soft:#163122; --warn:#e2aa48; --warn-soft:#3a2b12; --bad:#e57d68; --bad-soft:#3c1d18;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11161a; --card:#192026; --ink:#e6ece8; --muted:#9aa6ae; --line:#2c363e; --soft:#151b20;
+  --accent:#53b4c1; --accent-ink:#06171a; --accent-soft:#16343a;
+  --sun:#e2a443; --sun-soft:#3a2c14;
+  --good:#5bb57e; --good-soft:#163122; --warn:#e2aa48; --warn-soft:#3a2b12; --bad:#e57d68; --bad-soft:#3c1d18;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 48px}
+.app{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.55rem;font-weight:800;font-stretch:112%}
+h2{font-size:1.15rem;font-weight:700;font-stretch:108%}
+h3{font-size:1rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Kopf */
+.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:12px;align-items:center;min-width:0}
+.mark{width:38px;height:38px;flex:none;border-radius:8px;background:var(--accent);position:relative;overflow:hidden}
+.mark::before{content:"";position:absolute;left:7px;right:7px;bottom:7px;height:13px;border:2.5px solid var(--accent-ink);border-top:none}
+.mark::after{content:"";position:absolute;left:5px;top:6px;width:28px;height:28px;border-left:2.5px solid var(--accent-ink);border-top:2.5px solid var(--accent-ink);transform:translateY(8px) rotate(45deg) scale(.7);transform-origin:center}
+#objTitle{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:7px 14px;border-radius:999px;font-weight:600;font-size:.9rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg.sm button{padding:4px 10px;font-size:.8rem}
+
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--sun-soft);border:1px dashed var(--sun);border-radius:var(--r);padding:10px 14px;font-size:.9rem}
+
+/* Kennzahlen */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:stretch}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-mono);font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.kpi.stampbox{align-items:center;justify-content:center}
+.stamp{font-family:var(--f-display);font-stretch:118%;font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:1.05rem;
+  border:3px solid currentColor;border-radius:6px;padding:4px 12px;transform:rotate(-3deg);display:inline-block;text-align:center;line-height:1.15}
+.stamp.good{color:var(--good)} .stamp.warn{color:var(--warn)} .stamp.bad{color:var(--bad)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:2px solid var(--line);scrollbar-width:thin}
+.tabs button{border:0;background:transparent;padding:10px 14px;font-weight:600;color:var(--muted);white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:var(--f-display);font-stretch:105%}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button .n{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);margin-right:6px}
+
+.panel{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card-h{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;justify-content:space-between}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:820px){.cols2{grid-template-columns:minmax(0,1fr)}}
+
+/* Formulare */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 12px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f > span{font-size:.78rem;color:var(--muted);font-weight:500;display:flex;gap:6px;align-items:center}
+.f input,.f select,.f textarea{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-width:0}
+.f input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.f.ai input,.f.ai select{border-color:var(--sun);background:var(--sun-soft)}
+.tag{font-size:.65rem;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:4px;background:var(--sun-soft);color:var(--sun);border:1px solid var(--sun)}
+.chk{display:flex;gap:8px;align-items:center;font-size:.9rem}
+textarea{resize:vertical}
+.btn{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:8px;font-weight:600}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* Upload */
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;background:var(--soft)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{position:relative;width:78px;height:78px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--soft)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb button{position:absolute;top:2px;right:2px;border:0;width:22px;height:22px;border-radius:50%;background:var(--card);color:var(--ink);font-size:.8rem;line-height:1}
+.thumb .pg{position:absolute;bottom:2px;left:4px;font-size:.65rem;font-family:var(--f-mono);background:var(--card);padding:0 4px;border-radius:3px}
+.status{font-size:.88rem;color:var(--muted)}
+.status.err{color:var(--bad)}
+
+/* Befund */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.facts ul{margin:4px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:.9rem}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:.8rem;font-weight:600}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.acc{background:var(--accent-soft);color:var(--accent)}
+
+/* Matrix */
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+.matrix th,.matrix td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.matrix thead th{font-family:var(--f-display);font-size:.95rem}
+.matrix thead th small{display:block;font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:.78rem;max-width:30ch}
+.matrix td.cell{cursor:pointer;border-radius:8px}
+.matrix td.cell:hover{background:var(--soft)}
+.matrix td.cell.sel{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.rng{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.sub{font-size:.78rem;color:var(--muted);font-family:var(--f-mono)}
+.bench{font-size:.8rem}
+
+/* Raumplaner */
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+@media (max-width:420px){.rooms{grid-template-columns:minmax(0,1fr)}}
+.room{background:var(--card);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;min-width:0}
+.room-h{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.room-h .top2{display:flex;gap:8px;align-items:center}
+.room-h input.name{flex:1;min-width:0;font-family:var(--f-display);font-weight:700;font-size:1rem;border:1px solid transparent;background:transparent;padding:3px 6px;border-radius:6px}
+.room-h input.name:hover,.room-h input.name:focus{border-color:var(--line);background:var(--soft)}
+.room-h .qm{width:80px;font-family:var(--f-mono);padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft)}
+.iconbtn{border:0;background:transparent;color:var(--muted);padding:4px 6px;border-radius:6px;font-size:1.05rem;line-height:1}
+.iconbtn:hover{color:var(--bad);background:var(--bad-soft)}
+.items{list-style:none;margin:0;padding:6px 6px;display:flex;flex-direction:column}
+.items li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 8px;border-radius:7px}
+.items li:hover{background:var(--soft)}
+.items li.off .rng{color:var(--muted);font-weight:400;opacity:.7}
+.items .nm{font-size:.88rem;line-height:1.3}
+.items .nm small{display:block;color:var(--muted);font-size:.74rem}
+.items input.cnt{width:46px;font-family:var(--f-mono);padding:1px 4px;border:1px solid var(--line);border-radius:5px;background:var(--soft);font-size:.8rem}
+.room-f{margin-top:auto;padding:10px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--soft);border-radius:0 0 var(--r) var(--r)}
+
+/* Rechenweg */
+.ledger{font-family:var(--f-mono);font-variant-numeric:tabular-nums;display:flex;flex-direction:column}
+.ledger .ln{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;padding:7px 2px;border-bottom:1px dashed var(--line);align-items:baseline}
+.ledger .op{color:var(--muted);text-align:center;font-weight:600}
+.ledger .t{font-family:var(--f-body);font-size:.92rem;min-width:0}
+.ledger .t small{display:block;color:var(--muted);font-size:.76rem}
+.ledger .val{text-align:right;white-space:nowrap}
+.ledger .ln.tot{border-bottom:2px solid var(--ink);border-top:2px solid var(--ink);font-weight:600;background:var(--soft)}
+.ledger .ln.big .val{font-size:1.15rem;color:var(--accent);font-weight:600}
+
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;font-size:.92rem}
+.kv .k{color:var(--muted)}
+.kv .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.note{font-size:.85rem;color:var(--muted);border-left:3px solid var(--line);padding:4px 0 4px 10px}
+.note.warn{border-left-color:var(--warn)} .note.bad{border-left-color:var(--bad)} .note.good{border-left-color:var(--good)}
+.verdict{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.verdict .stamp{font-size:1.4rem;padding:6px 16px}
+.sens td,.sens th{padding:6px 10px;border:1px solid var(--line);text-align:right;font-family:var(--f-mono);font-size:.85rem}
+.sens th{font-family:var(--f-body);font-weight:600;background:var(--soft)}
+
+/* Chat */
+.chatlog{display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;padding-right:4px}
+.msg{padding:10px 14px;border-radius:12px;max-width:min(720px,92%);font-size:.93rem;overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.msg.assistant{align-self:flex-start;background:var(--soft);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg h4{font-size:.95rem;margin:8px 0 4px}
+.msg ul,.msg ol{margin:4px 0;padding-left:20px}
+.msg p{margin:0 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);padding:5px 11px;border-radius:999px;font-size:.82rem}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chatin{display:flex;gap:8px;align-items:flex-end}
+.chatin textarea{flex:1;min-width:0;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px}
+
+.mtable td,.mtable th{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:.88rem;vertical-align:top}
+.mtable td.r{text-align:right;font-family:var(--f-mono);white-space:nowrap}
+.mtable a{color:var(--accent)}
+.saved{display:flex;flex-direction:column;gap:6px}
+.saved .it{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--line);border-radius:8px;flex-wrap:wrap}
+.saved .it span{min-width:0;overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <div style="min-width:0"><h1>Immo Objektcheck</h1><p id="objTitle"></p></div>
+    </div>
+    <div class="seg" id="modeSeg" role="group" aria-label="Zweck">
+      <button data-mode="eigen">Eigenheim</button>
+      <button data-mode="flip">Fix &amp; Flip</button>
+      <button data-mode="miete">Vermieten</button>
+    </div>
+  </header>
+
+  <div id="exampleBanner" class="banner" hidden>
+    <span><b>Beispielobjekt.</b> Alle Zahlen hier sind ein ausgedachtes Muster, damit du siehst, wie das Tool rechnet.</span>
+    <button class="btn pri" id="btnNew">Eigenes Objekt starten</button>
+  </div>
+
+  <section class="summary" id="summary" aria-live="polite"></section>
+
+  <nav class="tabs" id="tabs" role="tablist">
+    <button data-tab="objekt"><span class="n">1</span>Objekt</button>
+    <button data-tab="sanierung"><span class="n">2</span>Sanierung</button>
+    <button data-tab="planer"><span class="n">3</span>Raumplaner</button>
+    <button data-tab="finanz"><span class="n">4</span>Finanzierung</button>
+    <button data-tab="auswertung"><span class="n">5</span>Auswertung</button>
+    <button data-tab="berater"><span class="n">6</span>KI-Berater</button>
+    <button data-tab="markt"><span class="n">7</span>Marktdaten</button>
+  </nav>
+
+  <main>
+    <!-- 1 OBJEKT -->
+    <section class="panel" data-panel="objekt">
+      <div class="cols2">
+        <div class="card">
+          <div class="card-h"><h2>Inserat einlesen</h2><span class="pill acc">KI</span></div>
+          <label class="drop" id="drop" for="fileIn">
+            <b>Screenshots oder Exposé hier ablegen</b>
+            <span class="small muted">Bilder (JPG, PNG) oder PDF-Exposé · mehrere Dateien möglich</span>
+            <span class="btn">Dateien auswählen</span>
+          </label>
+          <input type="file" id="fileIn" multiple accept="image/*,application/pdf" hidden>
+          <div class="thumbs" id="thumbs"></div>
+          <label class="f"><span>Beschreibungstext aus dem Inserat (optional einfügen)</span>
+            <textarea id="descIn" rows="5" placeholder="z. B. „Renovierungsbedürftige DHH, Baujahr 1972, Ölheizung von 1995, Bad im Originalzustand …“"></textarea>
+          </label>
+          <div class="row">
+            <button class="btn pri" id="btnAnalyze">Mit KI analysieren</button>
+            <button class="btn ghost" id="btnStop" hidden>Stopp</button>
+            <span class="status" id="anStatus"></span>
+          </div>
+          <p class="small muted" id="aiNote">Die KI liest Preis, Fläche, Baujahr, Lage und Zustand aus und schätzt den Sanierungsbedarf. Sie kann nicht im Internet suchen: Marktpreise sind Schätzungen, gelb markierte Felder bitte prüfen.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Meine Objekte</h2>
+            <div class="row"><button class="btn" id="btnSave">Speichern</button><button class="btn ghost" id="btnNew2">Neu</button></div>
+          </div>
+          <div id="authBox"></div>
+          <div class="saved" id="savedList"><p class="small muted">Gespeicherte Objekte erscheinen hier. Speichere ein Objekt, um es später wieder zu öffnen und Angebote zu vergleichen.</p></div>
+          <span class="status" id="saveStatus"></span>
+        </div>
+      </div>
+
+      <div class="card" id="findCard" hidden>
+        <div class="card-h"><h2>KI-Befund</h2><span id="findZustand"></span></div>
+        <p id="findFazit"></p>
+        <div class="facts" id="findFacts"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Eckdaten</h2><span class="small muted">Gelb = von der KI erkannt</span></div>
+        <div class="grid" id="objForm"></div>
+        <h3 style="margin-top:6px">Marktwerte am Standort</h3>
+        <div class="grid" id="mktForm"></div>
+        <div class="row"><button class="btn" id="btnRegen">Räume aus Eckdaten neu erzeugen</button><span class="small muted">Überschreibt den Raumplaner.</span></div>
+      </div>
+    </section>
+
+    <!-- 2 SANIERUNG -->
+    <section class="panel" data-panel="sanierung" hidden>
+      <div class="card">
+        <div class="card-h"><h2>Sanierungskosten in drei Stufen</h2><span id="sanHint" class="small muted"></span></div>
+        <p class="small muted">Jede Zelle ist eine Spanne von günstigem bis teurem Angebot, inklusive Material, Arbeitslohn und Mehrwertsteuer. Tippe eine Zelle an, um sie für die Finanzierung zu verwenden.</p>
+        <div class="scroll"><table class="matrix" id="matrix"></table></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="pufferIn"> Puffer für Unvorhergesehenes einrechnen</label><span class="small muted" id="pufferTxt"></span></div>
+      </div>
+      <div class="cols2">
+        <div class="card"><h3>So wird gerechnet</h3>
+          <div class="small" style="display:flex;flex-direction:column;gap:8px">
+            <p><b>Firma:</b> Preis je Gewerk × Menge. Der Lohnanteil wird mit dem regionalen Preisniveau gewichtet, Altbau-Gewerke (Elektrik, Leitungen, Putz, Estrich) mit einem Baujahr-Zuschlag.</p>
+            <p><b>Alles selbst:</b> Material zu Baumarktpreisen (+5 %) plus nur die Arbeiten, die Laien nicht machen dürfen oder sollten (Elektroanschluss, Gas, Heizung, Dach).</p>
+            <p><b>Mischkalkulation:</b> Du übernimmst die Hälfte der Arbeiten, die Laien machen können, zum Beispiel Abriss, Streichen, Boden.</p>
+            <p class="muted">Grundlage sind Preisspannen 2026 aus Branchenquellen (Tab „Marktdaten“). Vor dem Kauf immer drei Angebote einholen.</p>
+          </div>
+        </div>
+        <div class="card"><h3>Was die Stufen bedeuten</h3>
+          <div class="kv small" id="stageExplain"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 RAUMPLANER -->
+    <section class="panel" data-panel="planer" hidden>
+      <div class="card">
+        <div class="card-h"><h2>Raumplaner</h2>
+          <div class="row">
+            <span class="label">Vorlage</span>
+            <button class="btn" data-preset="leicht">Leicht</button><button class="btn" data-preset="mittel">Mittel</button><button class="btn" data-preset="kern">Kernsanierung</button>
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between">
+          <div class="row"><span class="label">Preise zeigen für</span>
+            <div class="seg sm" id="execSeg"><button data-exec="diy">Alles selbst</button><button data-exec="mix">Mix</button><button data-exec="firm">Firma</button></div>
+          </div>
+          <div class="row">
+            <select id="addType" aria-label="Raumart"></select><button class="btn" id="btnAddRoom">Raum hinzufügen</button>
+          </div>
+        </div>
+      </div>
+      <div class="rooms" id="rooms"></div>
+      <div class="card" id="planSum"></div>
+    </section>
+
+    <!-- 4 FINANZIERUNG -->
+    <section class="panel" data-panel="finanz" hidden>
+      <div class="cols2">
+        <div class="card"><h2>Annahmen</h2><div class="grid" id="finForm"></div><div id="kfwBox"></div></div>
+        <div class="card"><div class="card-h"><h2>Rechenweg</h2><span class="small muted" id="finStand"></span></div><div class="ledger" id="ledger"></div></div>
+      </div>
+      <div class="cols2">
+        <div class="card"><h3>Kaufnebenkosten</h3><div class="kv" id="nkKv"></div></div>
+        <div class="card"><h3>Kredit im Detail</h3><div class="kv" id="loanKv"></div><div id="finNotes" style="display:flex;flex-direction:column;gap:6px"></div></div>
+      </div>
+    </section>
+
+    <!-- 5 AUSWERTUNG -->
+    <section class="panel" data-panel="auswertung" hidden>
+      <div class="card"><div class="card-h"><h2 id="evalTitle"></h2></div><div class="grid" id="evalForm"></div></div>
+      <div id="evalOut" class="panel"></div>
+    </section>
+
+    <!-- 6 BERATER -->
+    <section class="panel" data-panel="berater" hidden>
+      <div class="card">
+        <div class="card-h"><h2 id="chatTitle">KI-Berater</h2><button class="btn ghost" id="btnChatClear">Verlauf leeren</button></div>
+        <p class="small muted" id="chatIntro"></p>
+        <div class="chips" id="chips"></div>
+        <div class="chatlog" id="chatlog"></div>
+        <div class="chatin">
+          <textarea id="chatIn" rows="2" placeholder="Frag zum Objekt, zur Finanzierung oder zur Sanierung …"></textarea>
+          <button class="btn pri" id="btnSend">Senden</button>
+        </div>
+        <span class="status" id="chatStatus"></span>
+      </div>
+    </section>
+
+    <!-- 7 MARKT -->
+    <section class="panel" data-panel="markt" hidden>
+      <div class="card">
+        <div class="card-h"><h2>Marktdaten im Hintergrund</h2><div class="row"><span class="pill acc" id="mktStand"></span><button class="btn" id="btnMktUpd">Jetzt aktualisieren</button></div></div>
+        <span class="status" id="mktStatus"></span>
+        <p class="small muted">Diese Werte stecken in allen Rechnungen. Zinsen und Kennzahlen werden am 1. und 15. jedes Monats automatisch aus aktuellen Quellen geholt; die Preisspannen je Gewerk siehst du im Raumplaner.</p>
+        <div class="scroll"><table class="mtable" id="mtable"></table></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(()=>{
+"use strict";
+/* ---------- Marktdaten (Stand Okt. 2026, wird aus der Datenbank überschrieben) ---------- */
+const MARKET_DEFAULT = {
+  stand: "07.10.2026",
+  zins: {5:4.36, 10:4.11, 15:4.28, 20:4.36, 30:4.59},   // Topzins effektiv, Dr. Klein
+  zinsQuelle: "Dr. Klein Topzinsen, Stand 07.10.2026",
+  aufschlag: 0.35,          // typisches Angebot über Topzins
+  kfw308: 0.53, kfw308Max: {1:140000, 2:160000, 3:180000},
+  grest: {BW:5.0,BY:3.5,BE:6.0,BB:6.5,HB:5.5,HH:5.5,HE:6.0,MV:6.0,NI:5.0,NW:6.5,RP:5.0,SL:6.5,SN:5.5,ST:5.0,SH:6.5,TH:5.0},
+  notar: 1.5, grundbuch: 0.5, makler: 3.57,
+  bk: 2.67, bkMax: 3.68, heiz: 1.32,
+  instEigen: 1.0,                // €/m²/Monat Eigenheim (LBS-Untergrenze)
+  inst22: 13.45, inst32: 17.18,  // €/m²/Jahr II. BV indexiert
+  baupreis: 5.6,                 // % Instandhaltung ggü. Vorjahr (Mai 2026)
+  stundensatz: 62,               // Ø Handwerk inkl. MwSt.
+  mietpreisbremse: "BW: gilt bis 31.12.2026, Verlängerung vom Land geplant (Meldung 22.09.2026)"
+};
+const LAENDER = {BW:"Baden-Württemberg",BY:"Bayern",BE:"Berlin",BB:"Brandenburg",HB:"Bremen",HH:"Hamburg",HE:"Hessen",MV:"Mecklenburg-Vorpommern",NI:"Niedersachsen",NW:"Nordrhein-Westfalen",RP:"Rheinland-Pfalz",SL:"Saarland",SN:"Sachsen",ST:"Sachsen-Anhalt",SH:"Schleswig-Holstein",TH:"Thüringen"};
+const REGIONS = {
+  metro:{l:"Großstadt teuer (München, Stuttgart, Frankfurt, Hamburg)", f:1.25},
+  speck:{l:"Ballungsraum Süd/West (z. B. Kreis Böblingen, Esslingen)", f:1.15},
+  avg:{l:"Bundesdurchschnitt", f:1.0},
+  land:{l:"Ländlich West/Süd", f:0.92},
+  ost:{l:"Ländlich Ost", f:0.82}
+};
+let M = JSON.parse(JSON.stringify(MARKET_DEFAULT));
+
+/* ---------- Gewerke-Katalog: Firmenpreis inkl. MwSt. 2026, [von, bis] je Qualität ----------
+   u: m2 = je m² Raumfläche · stk = Stück · p = pauschal je Raum · wfl = je m² Wohnfläche · pb = pauschal Gebäude
+   lab = Lohnanteil · diy = Anteil des Lohns, den Laien übernehmen können · age = Altbau-Zuschlag */
+const IT = {
+  maler:{n:"Wände & Decken streichen",u:"m2",g:[30,50],m:[40,65],l:[60,95],lab:.75,diy:.9},
+  spachtel:{n:"Wände spachteln/tapezieren (Q3)",u:"m2",g:[55,90],m:[70,120],l:[100,160],lab:.8,diy:.6},
+  boden:{n:"Bodenbelag neu inkl. Entfernen",u:"m2",g:[40,65],m:[65,100],l:[100,170],lab:.45,diy:.8,h:{g:"Laminat/Vinyl",m:"Design-Vinyl/Fertigparkett",l:"Massivparkett/Großformatfliese"}},
+  estrich:{n:"Estrich erneuern",u:"m2",g:[35,55],m:[40,60],l:[45,70],lab:.65,diy:.2,age:1},
+  putz:{n:"Innenputz erneuern",u:"m2",g:[40,70],m:[50,85],l:[60,100],lab:.75,diy:.3,age:1},
+  elektrik:{n:"Elektrik komplett neu verlegen",u:"m2",g:[60,100],m:[80,150],l:[150,300],lab:.65,diy:.35,age:1,h:{l:"mit Smart-Home"}},
+  elektrikTeil:{n:"Elektrik teilerneuern (Dosen, Leitungen prüfen)",u:"m2",g:[25,45],m:[30,60],l:[50,90],lab:.7,diy:.3,age:1},
+  tuer:{n:"Innentür neu inkl. Zarge",u:"stk",c:()=>1,g:[350,550],m:[550,900],l:[900,1600],lab:.3,diy:.7},
+  heizkoerper:{n:"Heizkörper tauschen",u:"stk",c:a=>Math.max(1,Math.ceil(a/15)),g:[450,700],m:[600,950],l:[900,1500],lab:.4,diy:.2},
+  fbh:{n:"Fußbodenheizung nachrüsten",u:"m2",g:[60,90],m:[80,120],l:[100,150],lab:.5,diy:.2},
+  fenster:{n:"Fenster tauschen (3-fach)",u:"stk",c:a=>Math.max(1,Math.round(a/12)),g:[550,750],m:[750,1050],l:[1050,1500],lab:.35,diy:.1},
+  trockenbau:{n:"Trockenbau / Decke abhängen",u:"m2",g:[50,80],m:[55,95],l:[70,120],lab:.65,diy:.6},
+  kuechenzeile:{n:"Einbauküche inkl. Geräte & Montage",u:"p",g:[5000,8000],m:[8000,18000],l:[18000,35000],lab:.1,diy:.6,h:{g:"Einstieg",m:"Mittelklasse",l:"Premium/Luxus"}},
+  kuecheAnschluss:{n:"Wasser, Abwasser, Starkstrom Küche",u:"p",g:[1200,2200],m:[1500,3000],l:[2500,4500],lab:.6,diy:.15,age:1},
+  fliesenspiegel:{n:"Fliesenspiegel / Nischenrückwand",u:"p",g:[400,900],m:[700,1500],l:[1500,3500],lab:.5,diy:.7},
+  badRueckbau:{n:"Rückbau & Entsorgung altes Bad",u:"p",g:[900,1600],m:[1200,2000],l:[1500,2500],lab:.85,diy:.9},
+  badLeitungen:{n:"Wasser- & Abwasserleitungen neu",u:"p",g:[2500,4000],m:[3000,5000],l:[4000,7000],lab:.65,diy:.1,age:1},
+  badFliesen:{n:"Fliesen Wand & Boden",u:"m2",g:[250,400],m:[350,600],l:[600,1000],lab:.55,diy:.5},
+  badSanitaer:{n:"Sanitärobjekte (WC, Waschtisch, Wanne, Armaturen)",u:"p",g:[1500,2800],m:[2800,5500],l:[5500,11000],lab:.25,diy:.3},
+  badDusche:{n:"Bodengleiche Dusche",u:"p",g:[1800,3000],m:[2500,4500],l:[4000,7000],lab:.6,diy:.2},
+  badElektrik:{n:"Elektrik & Licht im Bad",u:"p",g:[800,1400],m:[1200,2000],l:[2000,3500],lab:.6,diy:.2},
+  kellerFeucht:{n:"Feuchte Wände sanieren (innen)",u:"m2",g:[120,200],m:[150,300],l:[250,450],lab:.6,diy:.2},
+  kleinrep:{n:"Kleinreparaturen & Auffrischen",u:"wfl",g:[15,30],m:[20,40],l:[30,60],lab:.5,diy:.9,h:{m:"Armaturen, Steckdosen, Silikon, Türen einstellen"}},
+  entkernung:{n:"Entkernung, Abriss & Container",u:"wfl",g:[30,55],m:[35,65],l:[40,80],lab:.8,diy:.7,haus:1},
+  dach:{n:"Dach neu eindecken + Dämmung",u:"wfl",g:[140,200],m:[160,260],l:[220,330],lab:.55,diy:.05,haus:1},
+  dachDaemm:{n:"Oberste Geschossdecke dämmen",u:"wfl",g:[12,25],m:[15,35],l:[25,45],lab:.5,diy:.8,haus:1},
+  fassade:{n:"Fassadendämmung WDVS + Putz",u:"wfl",g:[140,210],m:[160,260],l:[220,380],lab:.55,diy:.05,haus:1},
+  heizung:{n:"Heizung neu (Wärmepumpe inkl. Einbau)",u:"pb",g:[25000,32000],m:[28000,38000],l:[35000,48000],lab:.35,diy:0,haus:1},
+  hausanschluss:{n:"Zählerschrank / Hausanschluss Elektro",u:"pb",g:[2000,3500],m:[2500,4500],l:[4000,7000],lab:.5,diy:0,haus:1},
+  leitungenHaus:{n:"Steigleitungen Wasser/Abwasser komplett",u:"pb",g:[8000,14000],m:[10000,18000],l:[14000,25000],lab:.65,diy:.15,age:1,haus:1},
+  kellerdecke:{n:"Kellerdecke dämmen",u:"wfl",g:[10,20],m:[12,28],l:[20,35],lab:.5,diy:.8,haus:1},
+  schadstoff:{n:"Puffer Schadstoffe (Asbest, Teer)",u:"pb",g:[5000,25000],m:[5000,25000],l:[5000,25000],lab:.9,diy:0,haus:1},
+  aussen:{n:"Außenanlagen, Zaun, Pflaster",u:"pb",g:[3000,8000],m:[6000,15000],l:[15000,35000],lab:.55,diy:.6,haus:1},
+  sonderumlage:{n:"Puffer Sonderumlage Eigentümergemeinschaft",u:"pb",g:[3000,10000],m:[3000,10000],l:[3000,10000],lab:0,diy:0,flat:1}
+};
+const RT = {
+  wohn:{l:"Wohnraum",items:["maler","spachtel","boden","putz","estrich","elektrikTeil","elektrik","tuer","heizkoerper","fenster","fbh","trockenbau"]},
+  kueche:{l:"Küche",items:["kuechenzeile","kuecheAnschluss","fliesenspiegel","maler","boden","putz","estrich","elektrikTeil","elektrik","tuer","heizkoerper","fenster"]},
+  bad:{l:"Bad",items:["badRueckbau","badLeitungen","badFliesen","badSanitaer","badDusche","badElektrik","heizkoerper","fenster","tuer","maler"]},
+  wc:{l:"Gäste-WC",ps:.55,items:["badRueckbau","badLeitungen","badFliesen","badSanitaer","badElektrik","tuer","maler"]},
+  flur:{l:"Flur / Treppe",items:["maler","spachtel","boden","putz","estrich","elektrikTeil","elektrik","trockenbau"]},
+  keller:{l:"Keller",items:["kellerFeucht","maler","elektrik","boden"]},
+  geb:{l:"Gebäude & Technik",items:["kleinrep","entkernung","dach","dachDaemm","fassade","heizung","hausanschluss","leitungenHaus","kellerdecke","schadstoff","aussen","sonderumlage"]}
+};
+const STAGES = {
+  leicht:{l:"Leicht",d:"Schönheitsreparaturen",q:"g",puffer:.10,
+    sel:{wohn:["maler","boden"],kueche:["maler","boden"],bad:["maler"],wc:["maler"],flur:["maler","boden"],keller:[],geb:["kleinrep"]}},
+  mittel:{l:"Mittel",d:"Teilsanierung",q:"m",puffer:.15,
+    sel:{wohn:["maler","spachtel","boden","tuer","elektrikTeil","heizkoerper"],kueche:["kuechenzeile","kuecheAnschluss","fliesenspiegel","maler","boden","elektrikTeil"],
+      bad:["badRueckbau","badLeitungen","badFliesen","badSanitaer","badElektrik","heizkoerper","maler"],wc:["badRueckbau","badLeitungen","badFliesen","badSanitaer"],
+      flur:["maler","spachtel","boden","elektrikTeil"],keller:["maler"],geb:["kleinrep","dachDaemm","kellerdecke"]}},
+  kern:{l:"Kernsanierung",d:"Alles bis auf den Rohbau",q:"m",puffer:.20,
+    sel:{wohn:["putz","estrich","elektrik","maler","spachtel","boden","tuer","heizkoerper","fenster"],kueche:["kuechenzeile","kuecheAnschluss","fliesenspiegel","putz","estrich","elektrik","maler","boden","tuer","heizkoerper","fenster"],
+      bad:["badRueckbau","badLeitungen","badFliesen","badSanitaer","badDusche","badElektrik","heizkoerper","fenster","tuer","maler"],wc:["badRueckbau","badLeitungen","badFliesen","badSanitaer","badElektrik","tuer","maler"],
+      flur:["putz","estrich","elektrik","maler","spachtel","boden"],keller:["maler","elektrik"],
+      geb:["entkernung","dach","fassade","heizung","hausanschluss","leitungenHaus","kellerdecke","sonderumlage"]}}
+};
+const EXEC = {diy:"Alles selbst",mix:"Mischkalkulation",firm:"Komplett Firma"};
+const QL = {g:"Günstig",m:"Mittel",l:"Luxus"};
+const TIER = {einfach:.85,normal:1,gehoben:1.12,luxus:1.25};
+const TIERL = {einfach:"Einfach",normal:"Normal",gehoben:"Gehoben",luxus:"Luxus"};
+
+/* ---------- Zustand ---------- */
+const uid = ()=>Math.random().toString(36).slice(2,10);
+function blankState(){
+  return {v:1,id:(crypto.randomUUID?crypto.randomUUID():uid()+uid()),example:false,mode:"eigen",tab:"objekt",ai:{},roomsAuto:true,
+    obj:{titel:"",typ:"efh",kaufpreis:0,wfl:0,grund:0,zimmer:0,baeder:1,baujahr:0,ort:"",land:"BW",region:"speck",makler:M.makler,hausgeld:0,keller:true,heizung:"",energie:"",zustand:"unbekannt",istMiete:0},
+    mkt:{qmUnsaniert:0,qmSaniert:0,mieteQm:0},
+    find:null,rooms:[],exec:"firm",puffer:true,
+    fin:{ek:0,bindung:10,tilgung:2,zinsAuto:true,zins:4.5,src:"mittel",ex:"firm",pos:"hi",kinder:0,kfw:false,netto:0},
+    flip:{arv:0,monate:8,vkMakler:3.57,steuer:42,lfd:0,ziel:15},
+    rent:{tier:"normal",manual:0,ausfall:2,verw:0,inst:0,geb:75,steuer:42},
+    chat:[]};
+}
+function exampleState(){
+  const s = blankState();
+  s.example = true; s.mode = "eigen";
+  Object.assign(s.obj,{titel:"Beispiel: Doppelhaushälfte, renovierungsbedürftig",typ:"dhh",kaufpreis:489000,wfl:125,grund:310,zimmer:5,baeder:1,baujahr:1972,ort:"Landkreis Böblingen",land:"BW",region:"speck",makler:3.57,keller:true,heizung:"Öl-Zentralheizung 1996",energie:"F",zustand:"renovierungsbeduerftig"});
+  Object.assign(s.mkt,{qmUnsaniert:3800,qmSaniert:4900,mieteQm:13.8});
+  s.find = {zustand:"renovierungsbeduerftig",fazit:"Beispieltext: Solide Substanz aus den 70ern, aber Bad, Elektrik und Heizung sind am Ende ihrer Lebensdauer. Eine mittlere Sanierung ist realistisch, für Energieeffizienz eher Kernsanierung.",
+    maengel:["Bad und Gäste-WC im Originalzustand","Ölheizung fast 30 Jahre alt (Austauschpflicht prüfen)","Elektrik ohne FI-Schutzschalter vermutlich"],
+    positives:["Ruhige Wohnlage, Garten","Keller vorhanden","Grundriss gut aufteilbar"],
+    risiken:["Fassade und Dach ungedämmt (Energieklasse F)","Asbest in Bodenplatten möglich (Baujahr vor 1993)"],
+    fragen:["Wann wurde das Dach zuletzt erneuert?","Gibt es Feuchtigkeit im Keller?","Liegen Energieausweis und Grundriss vor?"],stufe:"mittel"};
+  s.fin.ek = 120000; s.fin.netto = 6200; s.fin.kinder = 2;
+  s.flip.arv = Math.round(125*4900/1000)*1000;
+  s.rooms = genRooms(s.obj); applyPreset(s.rooms,"mittel",s.obj);
+  return s;
+}
+let S;
+
+/* ---------- Helfer ---------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v=>{const n=Number(v);return isFinite(n)?n:0};
+const r100 = n=>Math.round(n/100)*100;
+const fmt = n=>Math.round(n).toLocaleString("de-DE");
+const eur = n=>isFinite(n)?fmt(n)+" €":"–";
+const eurR = n=>isFinite(n)?fmt(r100(n))+" €":"–";
+const rng = (a,b)=>`${fmt(r100(a))} – ${fmt(r100(b))} €`;
+const pct = (n,d=1)=>isFinite(n)?(n*100).toFixed(d).replace(".",",")+" %":"–";
+const dec = (n,d=2)=>isFinite(n)?n.toFixed(d).replace(".",","):"–";
+const isHaus = o=>o.typ!=="wohnung";
+function getP(o,p){return p.split(".").reduce((a,k)=>a?.[k],o)}
+function setP(o,p,v){const ks=p.split(".");let t=o;ks.slice(0,-1).forEach(k=>t=t[k]);t[ks.at(-1)]=v}
+function ageF(bj){if(!bj)return 1.05;if(bj<1950)return 1.2;if(bj<1979)return 1.1;if(bj<1995)return 1;return .95}
+function ctx(){return {wfl:num(S.obj.wfl),R:(REGIONS[S.obj.region]||REGIONS.avg).f,A:ageF(num(S.obj.baujahr)),haus:isHaus(S.obj),bj:num(S.obj.baujahr)}}
+
+/* ---------- Räume ---------- */
+function genRooms(o){
+  const w = Math.max(20,num(o.wfl)||80), z = Math.max(1,Math.round(num(o.zimmer)||3)), b = Math.max(1,Math.round(num(o.baeder)||1));
+  const rooms=[], add=(typ,name,a)=>rooms.push({id:uid(),typ,name,a:Math.max(1,Math.round(a)),q:"m",sel:{},cnt:{}});
+  const ku = Math.max(7,w*.09), ba = w>110?8:6, fl = w*.1;
+  const wc = (b>=2||(isHaus(o)&&w>110))?2.5:0;
+  let rest = w-ku-ba*Math.min(b,2)-wc-fl; rest=Math.max(rest,z*10);
+  const wz = z>1?rest*.36:rest, other = z>1?(rest-wz)/(z-1):0;
+  add("wohn","Wohnzimmer",wz);
+  const names=["Schlafzimmer","Kinderzimmer","Kinderzimmer 2","Arbeitszimmer","Gästezimmer","Zimmer 7","Zimmer 8"];
+  for(let i=0;i<z-1;i++) add("wohn",names[i]||`Zimmer ${i+2}`,other);
+  add("kueche","Küche",ku);
+  add("bad","Bad",ba); if(b>=2) add("bad","Bad 2",ba*.8);
+  if(wc) add("wc","Gäste-WC",wc);
+  add("flur","Flur / Diele",fl);
+  if(isHaus(o)&&o.keller) add("keller","Keller",Math.round(w*.35));
+  add("geb","Gebäude & Technik",0);
+  return rooms;
+}
+function applyPreset(rooms,st,o){
+  const P=STAGES[st], haus=isHaus(o), bj=num(o.baujahr);
+  rooms.forEach(r=>{
+    r.q=P.q; r.sel={};
+    (P.sel[r.typ]||[]).forEach(id=>{
+      const it=IT[id]; if(!it) return;
+      if(it.haus&&!haus) return; if(it.flat&&haus) return;
+      if(id==="schadstoff"&&bj&&bj>=1993) return;
+      r.sel[id]=true;
+    });
+  });
+  return rooms;
+}
+function itemCalc(id,r,c){
+  const it=IT[id], rt=RT[r.typ];
+  let qty;
+  if(it.u==="m2") qty=num(r.a);
+  else if(it.u==="stk") qty=r.cnt[id]!=null?num(r.cnt[id]):it.c(num(r.a));
+  else if(it.u==="p") qty=rt.ps||1;
+  else if(it.u==="wfl") qty=c.wfl;
+  else qty=1;
+  const P=it[r.q]||it.m, A=it.age?c.A:1, lab=it.lab, mat=1-lab;
+  const f={firm:mat+lab*c.R, mix:mat+lab*c.R*(1-it.diy*.5), diy:mat*1.05+lab*c.R*(1-it.diy)};
+  const o={qty};
+  for(const k in f) o[k]=[qty*P[0]*A*f[k], qty*P[1]*A*f[k]];
+  const labMid=qty*(P[0]+P[1])/2*A*lab*c.R*it.diy;
+  o.hDiy=labMid/M.stundensatz*1.5; o.hMix=o.hDiy/2;
+  return o;
+}
+function visibleItems(r,c){
+  return RT[r.typ].items.filter(id=>{const it=IT[id]; if(it.haus&&!c.haus) return false; if(it.flat&&c.haus) return false; return true;});
+}
+function calcRooms(rooms,c){
+  const tot={firm:[0,0],mix:[0,0],diy:[0,0],hDiy:0,hMix:0}, per=[];
+  rooms.forEach(r=>{
+    const rt={firm:[0,0],mix:[0,0],diy:[0,0],hDiy:0,hMix:0};
+    Object.keys(r.sel).forEach(id=>{ if(!r.sel[id]||!IT[id]) return;
+      if(!visibleItems(r,c).includes(id)) return;
+      const x=itemCalc(id,r,c);
+      ["firm","mix","diy"].forEach(k=>{rt[k][0]+=x[k][0];rt[k][1]+=x[k][1]});
+      rt.hDiy+=x.hDiy; rt.hMix+=x.hMix;
+    });
+    per.push(rt);
+    ["firm","mix","diy"].forEach(k=>{tot[k][0]+=rt[k][0];tot[k][1]+=rt[k][1]});
+    tot.hDiy+=rt.hDiy; tot.hMix+=rt.hMix;
+  });
+  return {tot,per};
+}
+function stageCalc(st){
+  const rooms=JSON.parse(JSON.stringify(S.rooms.length?S.rooms:genRooms(S.obj)));
+  applyPreset(rooms,st,S.obj);
+  return calcRooms(rooms,ctx()).tot;
+}
+function benchmark(st){
+  const bj=num(S.obj.baujahr), wohnung=!isHaus(S.obj);
+  let b;
+  if(st==="leicht") b=[50,300];
+  else if(st==="mittel") b=[600,1200];
+  else { if(!bj) b=[1000,1800]; else if(bj<1950) b=[1500,2500]; else if(bj<1979) b=[1200,2000]; else if(bj<1995) b=[800,1500]; else b=[500,1000];
+    if(wohnung) b=b.map(x=>x*.6); }
+  const R=(REGIONS[S.obj.region]||REGIONS.avg).f;
+  return b.map(x=>Math.round(x*(.5+.5*R)/10)*10);
+}
+/* Ausgewähltes Sanierungsbudget */
+function sanBudget(src=S.fin.src,ex=S.fin.ex,pos=S.fin.pos){
+  let t, puf;
+  if(src==="keine") return {val:0,lo:0,hi:0,puf:0,label:"keine Sanierung"};
+  if(src==="plan"){t=calcRooms(S.rooms,ctx()).tot; puf=S.puffer?S.pufferPlan??.15:0;}
+  else {t=stageCalc(src); puf=S.puffer?STAGES[src].puffer:0;}
+  const [lo,hi]=t[ex]; const base=pos==="lo"?lo:pos==="mid"?(lo+hi)/2:hi;
+  return {val:base*(1+puf),lo:lo*(1+puf),hi:hi*(1+puf),puf,label:(src==="plan"?"Raumplaner":STAGES[src].l)+" · "+EXEC[ex]};
+}
+
+/* ---------- Finanzierung ---------- */
+function ltvAdd(ltv){if(ltv<=.6)return -.1;if(ltv<=.8)return 0;if(ltv<=.9)return .15;if(ltv<=1)return .35;return .7}
+function finCalc(){
+  const o=S.obj, f=S.fin, kp=num(o.kaufpreis);
+  const grestP=(M.grest[o.land]??5)/100, notarP=M.notar/100, gbP=M.grundbuch/100, makP=num(o.makler)/100;
+  const nk={grest:kp*grestP,notar:kp*notarP,gb:kp*gbP,mak:kp*makP}; nk.sum=nk.grest+nk.notar+nk.gb+nk.mak; nk.pct=grestP+notarP+gbP+makP;
+  const san=sanBudget();
+  const gesamt=kp+nk.sum+san.val;
+  const ek=num(f.ek); const kredit=Math.max(0,gesamt-ek);
+  let kfw=0;
+  if(S.mode==="eigen"&&f.kfw&&num(f.kinder)>0){ kfw=Math.min(kredit,M.kfw308Max[Math.min(3,num(f.kinder))]); }
+  const bank=kredit-kfw;
+  const ltv=kredit/Math.max(1,kp+san.val);
+  const top=M.zins[f.bindung]??M.zins[10];
+  const zAuto=top+M.aufschlag+ltvAdd(ltv);
+  const z=f.zinsAuto?zAuto:num(f.zins);
+  const t=num(f.tilgung);
+  const rateBank=bank*(z+t)/100/12;
+  const iK=M.kfw308/100/12, nK=360;
+  const rateKfw=kfw>0?kfw*iK/(1-Math.pow(1+iK,-nK)):0;
+  const n=f.bindung*12, i=z/100/12;
+  const rest=bank>0?bank*Math.pow(1+i,n)-rateBank*(Math.pow(1+i,n)-1)/i:0;
+  const yrs=(bank>0&&rateBank>bank*i)?-Math.log(1-bank*i/rateBank)/Math.log(1+i)/12:Infinity;
+  const zinsenBind=bank>0?rateBank*n-(bank-Math.max(0,rest)):0;
+  const wfl=num(o.wfl);
+  let neben, nebenTxt;
+  if(o.typ==="wohnung"&&num(o.hausgeld)>0){neben=num(o.hausgeld)+wfl*M.heiz*0; nebenTxt="Hausgeld laut Inserat";}
+  else if(o.typ==="wohnung"){neben=wfl*(M.bk+0.6); nebenTxt="Hausgeld geschätzt";}
+  else {neben=wfl*M.bk+wfl*M.instEigen; nebenTxt="Nebenkosten + Instandhaltungsrücklage (geschätzt)";}
+  const rate=rateBank+rateKfw;
+  const belastung=rate+neben;
+  const quote=num(f.netto)>0?belastung/num(f.netto):NaN;
+  return {kp,nk,san,gesamt,ek,kredit,kfw,bank,ltv,top,zAuto,z,t,rateBank,rateKfw,rate,rest,yrs,zinsenBind,neben,nebenTxt,belastung,quote,ekQuote:ek/Math.max(1,gesamt)};
+}
+function flipCalc(F){
+  const o=S.obj, p=S.flip, kp=F.kp, h=Math.max(1,num(p.monate));
+  const arv=num(p.arv)||num(o.wfl)*num(S.mkt.qmSaniert);
+  const vk=arv*num(p.vkMakler)/100;
+  const lfd=(num(p.lfd)||defaultLfd())*h;
+  const zinsH=F.kredit*F.z/100*h/12;
+  const kosten=kp+F.nk.sum+F.san.val+lfd+zinsH;
+  const gewinn=arv-vk-kosten;
+  const steuer=gewinn>0?gewinn*num(p.steuer)/100:0;
+  const netto=gewinn-steuer;
+  const marge=arv>0?gewinn/arv:NaN;
+  const roi=F.ek>0?netto/F.ek:NaN;
+  const pa=isFinite(roi)?roi*12/h:NaN;
+  const T=num(p.ziel)/100;
+  const profitAt=(P,arvX=arv,sanX=F.san.val)=>{
+    const nk=P*F.nk.pct, kred=Math.max(0,P+nk+sanX-F.ek), zi=kred*F.z/100*h/12;
+    return arvX-arvX*num(p.vkMakler)/100-(P+nk+sanX+lfd+zi);
+  };
+  let a=0,b=Math.max(arv*2,1);
+  for(let k=0;k<60;k++){const m=(a+b)/2; if(profitAt(m)-T*arv>0)a=m;else b=m;}
+  const maxKp=a;
+  const sens=[[-.1,0],[0,0],[.1,0],[-.1,.2],[0,.2],[.1,.2]].map(([d,s])=>{const arvX=arv*(1+d);const g=profitAt(kp,arvX,F.san.val*(1+s));return {d,s,g,m:g/arvX}});
+  return {arv,vk,lfd,zinsH,kosten,gewinn,steuer,netto,marge,roi,pa,maxKp,h,sens};
+}
+function defaultLfd(){const o=S.obj;return o.typ==="wohnung"&&num(o.hausgeld)>0?num(o.hausgeld):Math.round(num(o.wfl)*1.5)}
+function rentDefaults(){const o=S.obj, bj=num(o.baujahr), age=bj?2026-bj:40;
+  return {verw:o.typ==="wohnung"?Math.round(num(o.hausgeld)*.4)||35:25, inst:o.typ==="wohnung"?7:(age>=32?M.inst32:age>=22?M.inst22:9)}}
+function rentCalc(F){
+  const o=S.obj,r=S.rent,wfl=num(o.wfl),bj=num(o.baujahr);
+  const base=num(S.mkt.mieteQm);
+  const qm=base*TIER[r.tier];
+  const kalt=num(r.manual)>0?num(r.manual):qm*wfl;
+  const jkm=kalt*12;
+  const d=rentDefaults();
+  const verw=num(r.verw)||d.verw, inst=num(r.inst)||d.inst;
+  const einnahmen=jkm*(1-num(r.ausfall)/100);
+  const kostenNU=verw*12+inst*wfl;
+  const reinertrag=einnahmen-kostenNU;
+  const brutto=F.kp>0?jkm/F.kp:NaN, faktor=jkm>0?F.kp/jkm:NaN;
+  const nettoR=F.gesamt>0?reinertrag/F.gesamt:NaN;
+  const rateBank=F.bank*(F.z+F.t)/100/12; // ohne KfW 308 (nur Eigennutzung)
+  const zinsJ=(F.kredit)*F.z/100, tilgJ=F.kredit*F.t/100;
+  const rateM=F.kredit*(F.z+F.t)/100/12;
+  const cfVor=reinertrag/12-rateM;
+  const afaRate=bj&&bj<1925?.025:(bj>=2023?.03:.02);
+  const gebAK=(F.kp+F.nk.sum)*num(r.geb)/100;
+  const sanNetto=F.san.val/1.19;
+  const anschaffungsnah=sanNetto>.15*gebAK/1.0;
+  const afaBase=gebAK+(anschaffungsnah?F.san.val:0);
+  const afa=afaBase*afaRate;
+  const ergebnis=einnahmen-kostenNU-zinsJ-afa;
+  const steuer=ergebnis*num(r.steuer)/100;
+  const cfNach=cfVor-steuer/12;
+  const ekR=F.ek>0?(cfNach*12+tilgJ)/F.ek:NaN;
+  const tiers=Object.keys(TIER).map(k=>({k,qm:base*TIER[k],m:base*TIER[k]*wfl}));
+  return {qm,kalt,jkm,einnahmen,kostenNU,verw,inst,reinertrag,brutto,faktor,nettoR,rateM,zinsJ,tilgJ,cfVor,afaRate,afa,afaBase,gebAK,anschaffungsnah,sanNetto,ergebnis,steuer,cfNach,ekR,tiers};
+}
+function verdict(F,X,R){
+  if(S.mode==="flip"){
+    if(!(X.arv>0)) return {t:"Verkaufspreis fehlt",c:"warn"};
+    if(X.marge>=.15) return {t:"Kaufen",c:"good"};
+    if(X.marge>=.08) return {t:"Verhandeln",c:"warn"};
+    return {t:"Finger weg",c:"bad"};
+  }
+  if(S.mode==="miete"){
+    if(!(R.kalt>0)) return {t:"Miete fehlt",c:"warn"};
+    let score=0; if(R.brutto>=.05)score+=2; else if(R.brutto>=.04)score+=1;
+    if(R.cfNach>=0)score+=2; else if(R.cfNach>=-150)score+=1;
+    if(score>=3) return {t:"Kaufen",c:"good"}; if(score>=2) return {t:"Verhandeln",c:"warn"}; return {t:"Finger weg",c:"bad"};
+  }
+  if(!isFinite(F.quote)) return {t:"Einkommen fehlt",c:"warn"};
+  if(F.quote<=.35&&F.ekQuote>=.1) return {t:"Tragbar",c:"good"};
+  if(F.quote<=.45) return {t:"Knapp",c:"warn"};
+  return {t:"Zu riskant",c:"bad"};
+}
+
+/* ---------- Rendering: Formulare ---------- */
+function field(k,label,type="number",opts={}){
+  const v=getP(S,k); const aiK=k.split(".").at(-1); const ai=S.ai[aiK]&&(k.startsWith("obj.")||k.startsWith("mkt."));
+  const id="f_"+k.replace(/\./g,"_");
+  let ctl;
+  if(type==="select") ctl=`<select id="${id}" data-k="${k}">${opts.options.map(([val,l])=>`<option value="${esc(val)}"${String(v)===String(val)?" selected":""}>${esc(l)}</option>`).join("")}</select>`;
+  else if(type==="check") return `<label class="chk"><input type="checkbox" id="${id}" data-k="${k}"${v?" checked":""}> ${esc(label)}</label>`;
+  else ctl=`<input id="${id}" type="${type}" data-k="${k}" value="${esc(v===0&&type==="number"?"":v)}"${type==="number"?` step="${opts.step||"any"}" min="0" inputmode="decimal"`:""} placeholder="${esc(opts.ph||"")}">`;
+  return `<label class="f${ai?" ai":""}" for="${id}"><span>${esc(label)}${ai?' <span class="tag">KI</span>':""}${opts.unit?` <span class="muted">(${esc(opts.unit)})</span>`:""}</span>${ctl}</label>`;
+}
+function renderObjForm(){
+  const o=S.obj;
+  $("#objForm").innerHTML=[
+    field("obj.titel","Bezeichnung","text",{ph:"z. B. DHH Sindelfingen"}),
+    field("obj.typ","Objektart","select",{options:[["wohnung","Eigentumswohnung"],["efh","Einfamilienhaus"],["dhh","Doppelhaushälfte"],["rh","Reihenhaus"],["mfh","Mehrfamilienhaus"]]}),
+    field("obj.kaufpreis","Kaufpreis","number",{unit:"€",step:1000}),
+    field("obj.wfl","Wohnfläche","number",{unit:"m²"}),
+    field("obj.grund","Grundstück","number",{unit:"m²"}),
+    field("obj.zimmer","Zimmer","number",{step:.5}),
+    field("obj.baeder","Bäder","number",{step:1}),
+    field("obj.baujahr","Baujahr","number",{step:1}),
+    field("obj.ort","Ort / PLZ","text"),
+    field("obj.land","Bundesland","select",{options:Object.entries(LAENDER).map(([k,l])=>[k,`${l} · ${dec(M.grest[k],1)} % GrESt`])}),
+    field("obj.region","Preisniveau Handwerker","select",{options:Object.entries(REGIONS).map(([k,r])=>[k,r.l])}),
+    field("obj.makler","Maklerprovision Käufer","number",{unit:"%",step:.01}),
+    o.typ==="wohnung"?field("obj.hausgeld","Hausgeld","number",{unit:"€/Monat"}):"",
+    field("obj.zustand","Zustand","select",{options:[["unbekannt","unbekannt"],["neuwertig","neuwertig / saniert"],["gepflegt","gepflegt"],["renovierungsbeduerftig","renovierungsbedürftig"],["sanierungsbeduerftig","sanierungsbedürftig"],["kernsanierung","Kernsanierung nötig"]]}),
+    field("obj.heizung","Heizung","text"),
+    field("obj.energie","Energieklasse","select",{options:[["","unbekannt"],...["A+","A","B","C","D","E","F","G","H"].map(x=>[x,x])]}),
+    field("obj.istMiete","Aktuelle Kaltmiete (falls vermietet)","number",{unit:"€/Monat"}),
+    isHaus(o)?`<div class="f"><span>&nbsp;</span>${field("obj.keller","Keller vorhanden","check")}</div>`:""
+  ].join("");
+  $("#mktForm").innerHTML=[
+    field("mkt.qmUnsaniert","Kaufpreis unsaniert","number",{unit:"€/m²",step:50}),
+    field("mkt.qmSaniert","Kaufpreis saniert","number",{unit:"€/m²",step:50}),
+    field("mkt.mieteQm","Kaltmiete normal","number",{unit:"€/m²",step:.1})
+  ].join("")+`<p class="small muted" style="grid-column:1/-1">Vergleich: Angebotspreise Böblingen Okt. 2026 lagen bei rund 4.140 €/m² (Haus), 3.800 €/m² (Wohnung) und 14,79 €/m² Miete. Für andere Orte schätzt die KI; besser mit Immobilienportal oder Mietspiegel abgleichen.</p>`;
+}
+function renderFinForm(){
+  const f=S.fin;
+  $("#finForm").innerHTML=[
+    field("fin.ek","Eigenkapital","number",{unit:"€",step:1000}),
+    field("fin.bindung","Zinsbindung","select",{options:[[5,"5 Jahre"],[10,"10 Jahre"],[15,"15 Jahre"],[20,"20 Jahre"],[30,"30 Jahre"]]}),
+    field("fin.tilgung","Anfängliche Tilgung","number",{unit:"%",step:.25}),
+    `<div class="f"><span>Sollzins</span><div class="row"><label class="chk"><input type="checkbox" id="f_fin_zinsAuto" data-k="fin.zinsAuto"${f.zinsAuto?" checked":""}> aktueller Marktzins</label></div></div>`,
+    f.zinsAuto?"":field("fin.zins","Eigener Zins","number",{unit:"%",step:.01}),
+    field("fin.src","Sanierung","select",{options:[["keine","keine"],["leicht","Leicht"],["mittel","Mittel"],["kern","Kernsanierung"],["plan","Raumplaner"]]}),
+    field("fin.ex","Ausführung","select",{options:Object.entries(EXEC)}),
+    field("fin.pos","Wert aus der Spanne","select",{options:[["lo","unterer (optimistisch)"],["mid","Mitte"],["hi","oberer (vorsichtig)"]]}),
+    S.mode==="eigen"?field("fin.netto","Haushaltsnetto","number",{unit:"€/Monat",step:100}):""
+  ].join("");
+  $("#kfwBox").innerHTML=S.mode==="eigen"?`<div class="note good" style="display:flex;flex-direction:column;gap:8px">
+    <b style="color:var(--ink)">KfW 308 „Jung kauft Alt“</b>
+    <span>Für Familien mit Kind, die ein Haus mit Energieklasse F, G oder H kaufen und sanieren. Zins aktuell ${dec(M.kfw308)} % effektiv, bis 140.000 € (1 Kind), 160.000 € (2), 180.000 € (ab 3). Einkommensgrenze 90.000–110.000 € zu versteuerndes Einkommen. Seit 3.8.2026 reichen vier Einzelmaßnahmen (Heizung mit 65 % Erneuerbaren, Fenster, Fassade, Dach) statt Effizienzhaus 85 EE.</span>
+    <div class="grid">${field("fin.kinder","Kinder unter 18","number",{step:1})}<div class="f"><span>&nbsp;</span>${field("fin.kfw","KfW 308 einrechnen","check")}</div></div>
+  </div>`:"";
+}
+function renderEvalForm(){
+  const m=S.mode;
+  $("#evalTitle").textContent=m==="flip"?"Fix & Flip: Lohnt sich der Deal?":m==="miete"?"Vermieten: Rendite & Cashflow":"Eigenheim: Passt das zu dir?";
+  let h="";
+  if(m==="flip"){
+    const arvDef=num(S.obj.wfl)*num(S.mkt.qmSaniert);
+    h=[field("flip.arv","Verkaufspreis nach Sanierung","number",{unit:"€",step:1000,ph:arvDef?`Schätzung ${fmt(r100(arvDef))}`:""}),
+      field("flip.monate","Haltedauer bis Verkauf","number",{unit:"Monate",step:1}),
+      field("flip.lfd","Laufende Kosten im Leerstand","number",{unit:"€/Monat",ph:`Schätzung ${fmt(defaultLfd())}`}),
+      field("flip.vkMakler","Makler beim Verkauf","number",{unit:"%",step:.01}),
+      field("flip.steuer","Persönlicher Steuersatz","number",{unit:"%",step:1}),
+      field("flip.ziel","Ziel-Marge","number",{unit:"% vom Verkaufspreis",step:1})].join("");
+  } else if(m==="miete"){
+    const d=rentDefaults();
+    h=[field("rent.tier","Ausstattung nach Sanierung","select",{options:Object.entries(TIERL)}),
+      field("rent.manual","Kaltmiete fix (optional)","number",{unit:"€/Monat",ph:"leer = aus €/m²"}),
+      field("rent.ausfall","Mietausfall","number",{unit:"%",step:.5}),
+      field("rent.verw","Nicht umlagefähige Kosten","number",{unit:"€/Monat",ph:`Schätzung ${fmt(d.verw)}`}),
+      field("rent.inst","Instandhaltung","number",{unit:"€/m² im Jahr",ph:`Schätzung ${dec(d.inst)}`}),
+      field("rent.geb","Gebäudeanteil am Kaufpreis","number",{unit:"%",step:1}),
+      field("rent.steuer","Persönlicher Steuersatz","number",{unit:"%",step:1})].join("");
+  } else {
+    h=`<p class="small muted" style="grid-column:1/-1">Die Eingaben für Eigenkapital, Zins und Einkommen findest du unter „Finanzierung“. Hier siehst du, ob die Rate zu deinem Leben passt und was du beim Kauf beachten solltest.</p>`;
+  }
+  $("#evalForm").innerHTML=h;
+}
+
+/* ---------- Rendering: Ausgaben ---------- */
+function renderSummary(F,X,R,V){
+  const o=S.obj;
+  $("#objTitle").textContent=[o.titel||"Neues Objekt",o.wfl?`${fmt(o.wfl)} m²`:"",o.baujahr?`Bj. ${o.baujahr}`:"",o.ort].filter(Boolean).join(" · ");
+  let k4;
+  if(S.mode==="flip") k4=`<div class="kpi"><span class="label">Gewinn vor Steuer</span><span class="v">${eurR(X.gewinn)}</span><span class="s">Marge ${pct(X.marge)} · ${X.h} Monate</span></div>`;
+  else if(S.mode==="miete") k4=`<div class="kpi"><span class="label">Cashflow nach Steuer</span><span class="v">${eur(R.cfNach)}/M</span><span class="s">Bruttorendite ${pct(R.brutto,2)}</span></div>`;
+  else k4=`<div class="kpi"><span class="label">Anteil am Netto</span><span class="v">${isFinite(F.quote)?pct(F.quote,0):"–"}</span><span class="s">gesund bis 35 %</span></div>`;
+  $("#summary").innerHTML=`
+    <div class="kpi"><span class="label">Gesamtinvestition</span><span class="v">${eurR(F.gesamt)}</span><span class="s">inkl. ${eurR(F.nk.sum)} Nebenkosten, ${eurR(F.san.val)} Sanierung</span></div>
+    <div class="kpi"><span class="label">Kredit</span><span class="v">${eurR(F.kredit)}</span><span class="s">Zins ${dec(F.z)} % · ${F.t} % Tilgung</span></div>
+    <div class="kpi"><span class="label">Monatliche Belastung</span><span class="v">${eur(S.mode==="miete"?R.rateM:F.belastung)}</span><span class="s">${S.mode==="miete"?"Kreditrate":"Rate + Wohnnebenkosten"}</span></div>
+    ${k4}
+    <div class="kpi stampbox"><span class="stamp ${V.c}">${esc(V.t)}</span></div>`;
+}
+function renderFind(){
+  const f=S.find; $("#findCard").hidden=!f; if(!f) return;
+  const zmap={neuwertig:["good","neuwertig"],gepflegt:["good","gepflegt"],renovierungsbeduerftig:["warn","renovierungsbedürftig"],sanierungsbeduerftig:["bad","sanierungsbedürftig"],kernsanierung:["bad","Kernsanierung nötig"]};
+  const z=zmap[f.zustand]||["acc",f.zustand||"Zustand unklar"];
+  $("#findZustand").innerHTML=`<span class="pill ${z[0]}">${esc(z[1])}</span> ${f.stufe?`<span class="pill acc">Empfehlung: ${esc(STAGES[f.stufe]?.l||f.stufe)}</span>`:""}`;
+  $("#findFazit").textContent=f.fazit||"";
+  const list=(t,a)=>a&&a.length?`<div><span class="label">${t}</span><ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:"";
+  $("#findFacts").innerHTML=list("Mängel",f.maengel)+list("Pluspunkte",f.positives)+list("Risiken",f.risiken)+list("Fragen an den Verkäufer",f.fragen);
+}
+function renderMatrix(){
+  const c=ctx(), st=["leicht","mittel","kern"], res={}; st.forEach(s=>res[s]=stageCalc(s));
+  const wfl=Math.max(1,c.wfl);
+  let h=`<thead><tr><th></th>${st.map(s=>`<th>${STAGES[s].l}<small>${STAGES[s].d}</small></th>`).join("")}</tr></thead><tbody>`;
+  ["diy","mix","firm"].forEach(ex=>{
+    h+=`<tr><th>${EXEC[ex]}</th>`;
+    st.forEach(s=>{
+      const puf=S.puffer?STAGES[s].puffer:0; const [lo,hi]=res[s][ex].map(x=>x*(1+puf));
+      const sel=S.fin.src===s&&S.fin.ex===ex;
+      const hrs=ex==="diy"?res[s].hDiy:ex==="mix"?res[s].hMix:0;
+      h+=`<td class="cell${sel?" sel":""}" data-s="${s}" data-ex="${ex}" tabindex="0" role="button" aria-pressed="${sel}">
+        <div class="rng">${rng(lo,hi)}</div><div class="sub">${fmt(lo/wfl)}–${fmt(hi/wfl)} €/m²</div>${hrs>20?`<div class="sub">≈ ${fmt(Math.round(hrs/10)*10)} Std. Eigenleistung</div>`:""}</td>`;
+    });
+    h+="</tr>";
+  });
+  h+=`<tr><th class="small muted">Richtwert Firma (regional)</th>${st.map(s=>{const b=benchmark(s);const f=res[s].firm.map(x=>x/wfl);const mid=(f[0]+f[1])/2;const ok=mid>=b[0]*.85&&mid<=b[1]*1.15;
+    return `<td class="bench"><span class="pill ${ok?"good":"warn"}">${fmt(b[0])}–${fmt(b[1])} €/m²</span></td>`}).join("")}</tr></tbody>`;
+  $("#matrix").innerHTML=h;
+  $("#pufferIn").checked=!!S.puffer;
+  $("#pufferTxt").textContent=`Leicht +10 %, Mittel +15 %, Kern +20 % (bei Altbauten tauchen fast immer Überraschungen auf).`;
+  const z=S.obj.zustand; const rec=S.find?.stufe||({neuwertig:"leicht",gepflegt:"leicht",renovierungsbeduerftig:"mittel",sanierungsbeduerftig:"kern",kernsanierung:"kern"})[z];
+  $("#sanHint").textContent=rec?`Für diesen Zustand passt am ehesten: ${STAGES[rec].l}`:"";
+  $("#stageExplain").innerHTML=`
+    <span class="k"><b>Leicht</b></span><span class="v" style="text-align:left;font-family:var(--f-body)">Streichen, neuer Boden, Kleinkram</span>
+    <span class="k"><b>Mittel</b></span><span class="v" style="text-align:left;font-family:var(--f-body)">Bad und Küche neu, Türen, Elektrik teilweise, Heizkörper${isHaus(S.obj)?", Dachboden- und Kellerdecke dämmen":""}</span>
+    <span class="k"><b>Kern</b></span><span class="v" style="text-align:left;font-family:var(--f-body)">${isHaus(S.obj)?"Dach, Fassade, Heizung, Leitungen, Elektrik, Estrich, Putz, Fenster":"Leitungen, Elektrik, Estrich, Putz, Fenster, Bad, Küche + Puffer für Sonderumlage"}</span>`;
+}
+function renderPlanner(){
+  const c=ctx(), ex=S.exec;
+  $$("#execSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.exec===ex));
+  $("#addType").innerHTML=Object.entries(RT).filter(([k])=>k!=="geb").map(([k,v])=>`<option value="${k}">${v.l}</option>`).join("");
+  const {per}=calcRooms(S.rooms,c);
+  $("#rooms").innerHTML=S.rooms.map((r,i)=>{
+    const items=visibleItems(r,c);
+    const isGeb=r.typ==="geb";
+    return `<article class="room" data-room="${r.id}">
+      <div class="room-h">
+        <div class="top2"><input class="name" value="${esc(r.name)}" data-rf="name" aria-label="Raumname">
+          ${isGeb?"":`<input class="qm" type="number" min="0" step="0.5" value="${r.a}" data-rf="a" aria-label="Fläche"> <span class="small muted">m²</span>`}
+          <button class="iconbtn" data-del="${r.id}" aria-label="Raum entfernen" title="Raum entfernen">✕</button></div>
+        <div class="row" style="justify-content:space-between"><span class="label">${esc(RT[r.typ].l)}</span>
+          <div class="seg sm">${Object.entries(QL).map(([q,l])=>`<button data-q="${q}" aria-pressed="${r.q===q}">${l}</button>`).join("")}</div></div>
+      </div>
+      <ul class="items">${items.map(id=>{const it=IT[id];const x=itemCalc(id,r,c);const on=!!r.sel[id];
+        const hint=it.h?.[r.q]||"";
+        const unit=it.u==="m2"?`${fmt(x.qty)} m²`:it.u==="wfl"?`${fmt(c.wfl)} m² Wfl.`:it.u==="stk"?"":"pauschal";
+        return `<li class="${on?"":"off"}"><input type="checkbox" data-it="${id}" ${on?"checked":""} aria-label="${esc(it.n)}">
+          <span class="nm">${esc(it.n)}<small>${esc([hint,unit].filter(Boolean).join(" · "))}${it.u==="stk"?` <input class="cnt" type="number" min="0" step="1" value="${x.qty}" data-cnt="${id}" aria-label="Anzahl"> Stk.`:""}</small></span>
+          <span class="rng small">${rng(x[ex][0],x[ex][1])}</span></li>`}).join("")}</ul>
+      <div class="room-f"><span class="label">Summe ${EXEC[ex]}</span><span class="rng">${rng(per[i][ex][0],per[i][ex][1])}</span></div>
+    </article>`}).join("");
+  renderPlanSum();
+}
+function renderPlanSum(){
+  const c=ctx(), {tot}=calcRooms(S.rooms,c), puf=S.pufferPlan??.15, wfl=Math.max(1,c.wfl);
+  $("#planSum").innerHTML=`<div class="card-h"><h2>Zusammenfassung Raumplaner</h2>
+    <label class="f" style="width:150px"><span>Puffer</span><select id="pufPlan">${[0,.1,.15,.2,.25].map(p=>`<option value="${p}"${p===puf?" selected":""}>${p*100} %</option>`).join("")}</select></label></div>
+    <div class="scroll"><table class="matrix"><thead><tr><th>Ausführung</th><th>Ohne Puffer</th><th>Mit Puffer</th><th>je m² Wfl.</th><th>Eigenleistung</th></tr></thead><tbody>
+    ${["diy","mix","firm"].map(ex=>`<tr><th>${EXEC[ex]}</th><td class="rng">${rng(tot[ex][0],tot[ex][1])}</td><td class="rng">${rng(tot[ex][0]*(1+puf),tot[ex][1]*(1+puf))}</td><td class="sub">${fmt(tot[ex][0]/wfl)}–${fmt(tot[ex][1]/wfl)} €</td><td class="sub">${ex==="firm"?"–":`≈ ${fmt(Math.round((ex==="diy"?tot.hDiy:tot.hMix)/10)*10)} Std.`}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="row"><button class="btn pri" id="btnPlanFin">Raumplaner in Finanzierung übernehmen</button>${S.fin.src==="plan"?'<span class="pill good">wird verwendet</span>':""}</div>`;
+}
+function renderFin(F){
+  const f=S.fin, o=S.obj;
+  $("#finStand").textContent=`Zinsen Stand ${M.stand}`;
+  const L=(op,t,v,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
+  let h=L("","Kaufpreis",eur(F.kp))
+    +L("+","Kaufnebenkosten",eur(F.nk.sum),"",`${pct(F.nk.pct,2)} vom Kaufpreis`)
+    +L("=","Kaufpreis gesamt",eur(F.kp+F.nk.sum),"tot")
+    +L("+","Sanierung / Renovierung",eur(F.san.val),"",F.san.label+(F.san.puf?` · inkl. ${F.san.puf*100} % Puffer`:""))
+    +L("=","Gesamtinvestition",eur(F.gesamt),"tot")
+    +L("−","Eigenkapital",eur(F.ek),"",`${pct(F.ekQuote,0)} der Gesamtkosten`)
+    +L("=","Kreditbedarf",eur(F.kredit),"tot");
+  if(F.kfw>0) h+=L("","davon KfW 308",eur(F.kfw),"",`${dec(M.kfw308)} % effektiv, 30 Jahre Annuität`)+L("","davon Bankdarlehen",eur(F.bank));
+  h+=L("×","Sollzins",dec(F.z)+" %","",f.zinsAuto?`Topzins ${dec(F.top)} % + ${dec(M.aufschlag)} % üblicher Aufschlag ${ltvAdd(F.ltv)>=0?"+":"−"} ${dec(Math.abs(ltvAdd(F.ltv)))} % Beleihung (${pct(F.ltv,0)})`:"eigener Wert")
+    +L("+","Anfängliche Tilgung",dec(F.t,1)+" %")
+    +L("=","Kreditrate",eur(F.rate)+" /Monat","",F.kfw>0?`Bank ${eur(F.rateBank)} + KfW ${eur(F.rateKfw)}`:"")
+    +L("+","Wohnnebenkosten",eur(F.neben)+" /Monat","",F.nebenTxt)
+    +L("=","Monatliche Belastung",eur(F.belastung)+" /Monat","tot big");
+  $("#ledger").innerHTML=h;
+  $("#nkKv").innerHTML=`
+    <span class="k">Grunderwerbsteuer ${LAENDER[o.land]||""} (${dec(M.grest[o.land],1)} %)</span><span class="v">${eur(F.nk.grest)}</span>
+    <span class="k">Notar (≈ ${dec(M.notar,1)} %)</span><span class="v">${eur(F.nk.notar)}</span>
+    <span class="k">Grundbuch (≈ ${dec(M.grundbuch,1)} %)</span><span class="v">${eur(F.nk.gb)}</span>
+    <span class="k">Makler Käuferanteil (${dec(num(o.makler))} %)</span><span class="v">${eur(F.nk.mak)}</span>
+    <span class="k"><b>Summe</b></span><span class="v"><b>${eur(F.nk.sum)}</b></span>`;
+  $("#loanKv").innerHTML=`
+    <span class="k">Beleihungsauslauf</span><span class="v">${pct(F.ltv,0)}</span>
+    <span class="k">Restschuld nach ${f.bindung} Jahren</span><span class="v">${eurR(Math.max(0,F.rest))}</span>
+    <span class="k">Zinskosten in der Zinsbindung</span><span class="v">${eurR(F.zinsenBind)}</span>
+    <span class="k">Schuldenfrei nach (bei gleichem Zins)</span><span class="v">${isFinite(F.yrs)?dec(F.yrs,1)+" Jahren":"nie"}</span>`;
+  const n=[];
+  if(F.ek<F.nk.sum) n.push(["bad",`Dein Eigenkapital deckt nicht einmal die Kaufnebenkosten (${eurR(F.nk.sum)}). Viele Banken finanzieren das nur mit deutlichem Zinsaufschlag.`]);
+  else if(F.ekQuote<.2) n.push(["warn","Banken geben die besten Zinsen ab etwa 20 % Eigenkapital. Mit weniger steigt der Zins, das ist oben schon eingerechnet."]);
+  if(isFinite(F.yrs)&&F.yrs>35) n.push(["warn",`Mit ${F.t} % Tilgung dauert die Rückzahlung über 35 Jahre. 2,5–3 % Tilgung senkt die Gesamtzinsen deutlich.`]);
+  if(F.rest>0&&f.bindung<=10) n.push(["",`Nach ${f.bindung} Jahren musst du ${eurR(F.rest)} zum dann gültigen Zins neu finanzieren. Rechne zur Sicherheit 1–2 Prozentpunkte mehr ein.`]);
+  if(F.san.val>0&&F.san.puf===0) n.push(["warn","Ohne Puffer: Bei Altbauten sind 15–20 % Reserve üblich."]);
+  n.push(["","Tipp: Mitverkaufte Einbauküche oder Möbel im Kaufvertrag gesondert ausweisen. Darauf fällt keine Grunderwerbsteuer an."]);
+  $("#finNotes").innerHTML=n.map(([c,t])=>`<p class="note ${c}">${esc(t)}</p>`).join("");
+}
+function renderEval(F,X,R,V){
+  const o=S.obj, out=$("#evalOut"); let h="";
+  const vHead=(txt)=>`<div class="card"><div class="verdict"><span class="stamp ${V.c}">${esc(V.t)}</span><p style="flex:1;min-width:220px">${txt}</p></div></div>`;
+  if(S.mode==="flip"){
+    h+=vHead(X.arv>0?`Bei ${eurR(X.arv)} Verkaufspreis bleiben vor Steuern ${eurR(X.gewinn)} übrig, eine Marge von ${pct(X.marge)}. Profis wollen mindestens 15 %, weil Sanierung und Verkauf fast nie genau nach Plan laufen.`:"Trage den erwarteten Verkaufspreis nach der Sanierung ein oder lass ihn von der KI schätzen.");
+    const L=(op,t,v,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
+    h+=`<div class="cols2"><div class="card"><h3>Deal-Rechnung</h3><div class="ledger">
+      ${L("","Verkaufspreis",eur(X.arv),"",`${fmt(X.arv/Math.max(1,num(o.wfl)))} €/m²`)}
+      ${L("−","Makler beim Verkauf",eur(X.vk))}
+      ${L("−","Kaufpreis + Nebenkosten",eur(F.kp+F.nk.sum))}
+      ${L("−","Sanierung",eur(F.san.val),"",F.san.label)}
+      ${L("−","Kreditzinsen Haltedauer",eur(X.zinsH),"",`${X.h} Monate × ${dec(F.z)} %`)}
+      ${L("−","Laufende Kosten Leerstand",eur(X.lfd))}
+      ${L("=","Gewinn vor Steuer",eur(X.gewinn),"tot")}
+      ${L("−","Einkommensteuer (Spekulationsgewinn)",eur(X.steuer),"",`${S.flip.steuer} % · Verkauf innerhalb von 10 Jahren`)}
+      ${L("=","Gewinn nach Steuer",eur(X.netto),"tot big")}
+      </div></div>
+      <div class="card"><h3>Kennzahlen</h3><div class="kv">
+        <span class="k">Marge vom Verkaufspreis</span><span class="v">${pct(X.marge)}</span>
+        <span class="k">Rendite aufs Eigenkapital</span><span class="v">${pct(X.roi)}</span>
+        <span class="k">… aufs Jahr gerechnet</span><span class="v">${pct(X.pa)}</span>
+        <span class="k"><b>Höchstgebot für ${S.flip.ziel} % Marge</b></span><span class="v"><b>${eurR(X.maxKp)}</b></span>
+        <span class="k">Abstand zum Angebotspreis</span><span class="v">${eurR(X.maxKp-F.kp)}</span>
+        <span class="k">Verkaufspreis/m² vs. Markt saniert</span><span class="v">${fmt(X.arv/Math.max(1,num(o.wfl)))} / ${fmt(num(S.mkt.qmSaniert))} €</span>
+      </div>
+      <h3>Was passiert, wenn …</h3><div class="scroll"><table class="sens"><thead><tr><th></th><th>Preis −10 %</th><th>Preis wie geplant</th><th>Preis +10 %</th></tr></thead><tbody>
+      ${[0,.2].map(s=>`<tr><th>${s?"Sanierung +20 %":"Sanierung wie geplant"}</th>${X.sens.filter(x=>x.s===s).map(x=>`<td style="color:var(--${x.m>=.15?"good":x.m>=.08?"warn":"bad"})">${fmt(r100(x.g))} €<br><small>${pct(x.m,0)}</small></td>`).join("")}</tr>`).join("")}
+      </tbody></table></div></div></div>`;
+    const notes=[
+      ["warn","Spekulationsfrist: Verkaufst du innerhalb von 10 Jahren nach Kauf, ist der Gewinn voll einkommensteuerpflichtig (außer du wohnst selbst darin, im Verkaufsjahr und den zwei Jahren davor)."],
+      ["bad","Drei-Objekt-Grenze: Wer innerhalb von etwa 5 Jahren mehr als drei Objekte kauft und wieder verkauft, gilt meist als gewerblicher Grundstückshändler. Dann kommt Gewerbesteuer dazu. Vor dem zweiten Flip mit einem Steuerberater über eine GmbH sprechen."],
+      ["","Profi-Faustregel: Kaufpreis + Nebenkosten + Sanierung sollten höchstens 70–75 % des späteren Verkaufspreises ausmachen."],
+      ["","Finanzierung: Banken finanzieren Flips ungern zu 100 %. Rechne mit 20–30 % Eigenkapital und Bereitstellungszinsen, wenn die Sanierung länger dauert."]
+    ];
+    if(X.arv>0&&num(S.mkt.qmSaniert)>0&&X.arv/Math.max(1,num(o.wfl))>num(S.mkt.qmSaniert)*1.1) notes.unshift(["bad","Dein Verkaufspreis liegt mehr als 10 % über dem geschätzten Marktpreis für sanierte Objekte. Das ist der häufigste Anfängerfehler."]);
+    h+=`<div class="card"><h3>Darauf musst du als Anfänger achten</h3>${notes.map(([c,t])=>`<p class="note ${c}">${esc(t)}</p>`).join("")}
+      <div class="row"><button class="btn pri" data-ask="flipcoach">Lass dir den Deal von der KI erklären</button></div></div>`;
+  } else if(S.mode==="miete"){
+    h+=vHead(R.kalt>0?`Mit ${eur(R.kalt)} Kaltmiete im Monat liegt die Bruttomietrendite bei ${pct(R.brutto,2)} (Kaufpreisfaktor ${dec(R.faktor,1)}). Nach Kreditrate, Kosten und Steuern bleiben ${eur(R.cfNach)} pro Monat.`:"Trage eine Marktmiete pro m² unter „Objekt“ ein oder lass sie von der KI schätzen.");
+    h+=`<div class="cols2"><div class="card"><h3>Mietpreis nach Ausstattung</h3>
+      <div class="scroll"><table class="matrix"><thead><tr><th>Ausstattung</th><th>€/m²</th><th>Kaltmiete/Monat</th><th>Bruttorendite</th></tr></thead><tbody>
+      ${R.tiers.map(t=>`<tr${t.k===S.rent.tier?' style="background:var(--accent-soft)"':""}><th>${TIERL[t.k]}</th><td class="rng">${dec(t.qm)}</td><td class="rng">${eur(t.m)}</td><td class="rng">${pct(t.m*12/Math.max(1,F.kp),2)}</td></tr>`).join("")}
+      </tbody></table></div>
+      <p class="small muted">Basis: ${dec(num(S.mkt.mieteQm))} €/m² für normale Ausstattung. ${esc(M.mietpreisbremse)}. In Gebieten mit Mietpreisbremse darf die Miete bei Neuvermietung höchstens 10 % über der ortsüblichen Vergleichsmiete liegen, außer nach umfassender Modernisierung.</p></div>
+      <div class="card"><h3>Cashflow-Rechnung (Jahr 1)</h3><div class="ledger">
+        <div class="ln"><span class="op"></span><span class="t">Jahreskaltmiete</span><span class="val">${eur(R.jkm)}</span></div>
+        <div class="ln"><span class="op">−</span><span class="t">Mietausfall<small>${S.rent.ausfall} %</small></span><span class="val">${eur(R.jkm-R.einnahmen)}</span></div>
+        <div class="ln"><span class="op">−</span><span class="t">Nicht umlagefähige Kosten<small>${eur(R.verw)}/Monat Verwaltung · ${dec(R.inst)} €/m² Instandhaltung</small></span><span class="val">${eur(R.kostenNU)}</span></div>
+        <div class="ln tot"><span class="op">=</span><span class="t">Reinertrag</span><span class="val">${eur(R.reinertrag)}</span></div>
+        <div class="ln"><span class="op">−</span><span class="t">Kreditrate<small>Zins ${eur(R.zinsJ)} + Tilgung ${eur(R.tilgJ)}</small></span><span class="val">${eur(R.rateM*12)}</span></div>
+        <div class="ln tot"><span class="op">=</span><span class="t">Cashflow vor Steuer</span><span class="val">${eur(R.cfVor*12)}</span></div>
+        <div class="ln"><span class="op">${R.steuer>=0?"−":"+"}</span><span class="t">${R.steuer>=0?"Steuer":"Steuerersparnis"}<small>Ergebnis ${eur(R.ergebnis)} nach AfA ${pct(R.afaRate,1)} = ${eur(R.afa)}</small></span><span class="val">${eur(Math.abs(R.steuer))}</span></div>
+        <div class="ln tot big"><span class="op">=</span><span class="t">Cashflow nach Steuer</span><span class="val">${eur(R.cfNach*12)} /Jahr</span></div>
+      </div></div></div>
+      <div class="cols2"><div class="card"><h3>Kennzahlen</h3><div class="kv">
+        <span class="k">Bruttomietrendite (auf Kaufpreis)</span><span class="v">${pct(R.brutto,2)}</span>
+        <span class="k">Kaufpreisfaktor</span><span class="v">${dec(R.faktor,1)}</span>
+        <span class="k">Nettomietrendite (auf Gesamtinvestition)</span><span class="v">${pct(R.nettoR,2)}</span>
+        <span class="k">Eigenkapitalrendite inkl. Tilgung</span><span class="v">${pct(R.ekR,1)}</span>
+        <span class="k">Cashflow nach Steuer pro Monat</span><span class="v">${eur(R.cfNach)}</span>
+      </div></div>
+      <div class="card"><h3>Hinweise</h3>
+        <p class="note ${R.brutto>=.05?"good":R.brutto>=.04?"warn":"bad"}">Faustregel: unter 4 % Bruttorendite trägt sich eine finanzierte Wohnung kaum selbst. Im Raum Stuttgart sind 3–4 % üblich, dort zählt vor allem die Wertentwicklung.</p>
+        <p class="note ${R.anschaffungsnah?"warn":"good"}">15-%-Grenze: Sanierung netto ${eurR(R.sanNetto)} ist ${R.anschaffungsnah?"mehr":"weniger"} als 15 % der Gebäudekosten (${eurR(R.gebAK*.15)}). ${R.anschaffungsnah?"Sie wird dann über die AfA abgeschrieben statt sofort. Das ist oben schon eingerechnet.":"Du kannst sie als Erhaltungsaufwand sofort oder verteilt auf 2–5 Jahre absetzen. Das ist oben noch nicht eingerechnet."}</p>
+        <p class="note">AfA: ${pct(R.afaRate,1)} pro Jahr auf ${eurR(R.afaBase)} Gebäudewert (Baujahr ${num(o.baujahr)<1925&&num(o.baujahr)?"vor 1925":num(o.baujahr)>=2023?"ab 2023":"1925–2022"}). Steuerliche Details mit einem Steuerberater klären.</p>
+        ${num(o.istMiete)>0?`<p class="note">Das Objekt ist vermietet (${eur(num(o.istMiete))}). Mieterhöhungen sind nur bis zur Vergleichsmiete und innerhalb der Kappungsgrenze möglich.</p>`:""}
+      </div></div>`;
+  } else {
+    const vergl=num(S.mkt.mieteQm)*num(o.wfl)+num(o.wfl)*M.bk;
+    const zinsM=F.bank*F.z/100/12+(F.kfw*M.kfw308/100/12);
+    h+=vHead(isFinite(F.quote)?`Die monatliche Belastung von ${eur(F.belastung)} entspricht ${pct(F.quote,0)} deines Haushaltsnettos. Banken und Verbraucherzentralen empfehlen höchstens 35–40 %, damit Rücklagen für Auto, Urlaub und Reparaturen bleiben.`:"Trage dein Haushaltsnetto unter „Finanzierung“ ein, dann siehst du, ob die Rate tragbar ist.");
+    h+=`<div class="cols2"><div class="card"><h3>Kaufen oder mieten?</h3><div class="kv">
+        <span class="k">Vergleichbare Warmmiete</span><span class="v">${eur(vergl)}</span>
+        <span class="k">Deine Belastung als Eigentümer</span><span class="v">${eur(F.belastung)}</span>
+        <span class="k">davon Zinsen (verloren)</span><span class="v">${eur(zinsM)}</span>
+        <span class="k">davon Tilgung (Vermögensaufbau)</span><span class="v">${eur(F.rate-zinsM)}</span>
+        <span class="k">Mehrkosten gegenüber Miete</span><span class="v">${eur(F.belastung-vergl)}</span>
+      </div><p class="small muted">Die Tilgung ist kein verlorenes Geld, sie baut dein Vermögen auf. Vergleiche deshalb Zinsen plus Nebenkosten mit der Miete.</p></div>
+      <div class="card"><h3>Preis-Check</h3><div class="kv">
+        <span class="k">Angebotspreis je m²</span><span class="v">${fmt(F.kp/Math.max(1,num(o.wfl)))} €</span>
+        <span class="k">Markt unsaniert je m²</span><span class="v">${num(S.mkt.qmUnsaniert)?fmt(num(S.mkt.qmUnsaniert))+" €":"–"}</span>
+        <span class="k">Kosten nach Sanierung je m²</span><span class="v">${fmt((F.kp+F.san.val)/Math.max(1,num(o.wfl)))} €</span>
+        <span class="k">Markt saniert je m²</span><span class="v">${num(S.mkt.qmSaniert)?fmt(num(S.mkt.qmSaniert))+" €":"–"}</span>
+      </div>
+      ${num(S.mkt.qmSaniert)&&(F.kp+F.san.val)/Math.max(1,num(o.wfl))>num(S.mkt.qmSaniert)?`<p class="note warn">Kauf plus Sanierung kostet mehr als ein bereits saniertes Objekt. Verhandle den Preis oder vergleiche mit fertig sanierten Angeboten.</p>`:`<p class="note good">Kauf plus Sanierung liegt unter dem Preis für sanierte Objekte.</p>`}</div></div>
+      <div class="card"><h3>Förderungen und Pflichten</h3>
+        <p class="note good">KfW 308 „Jung kauft Alt“: ${dec(M.kfw308)} % für Familien beim Kauf eines Hauses mit Energieklasse F–H. ${["F","G","H"].includes(o.energie)?"Dieses Objekt erfüllt die Energieklasse.":"Energieklasse prüfen."}</p>
+        <p class="note">KfW 124 Wohneigentumsprogramm und KfW 458 Heizungsförderung prüfen. Förderanträge immer vor Vertragsabschluss mit Handwerkern stellen.</p>
+        <p class="note warn">Wer ein Haus kauft, muss nach dem Gebäudeenergiegesetz innerhalb von zwei Jahren ungedämmte Leitungen und die oberste Geschossdecke dämmen und sehr alte Konstanttemperatur-Heizkessel (über 30 Jahre) tauschen.</p>
+        <div class="row"><button class="btn pri" data-ask="eigencheck">Besichtigungs-Checkliste von der KI</button></div>
+      </div>`;
+  }
+  out.innerHTML=h;
+}
+function renderMarket(){
+  $("#mktStand").textContent=`Zinsen Stand ${M.stand}${M.geprueft?` · geprüft ${M.geprueft}`:""}`;
+  const rows=[
+    ["Bauzins 5 Jahre (Topzins)",dec(M.zins[5])+" %",M.zinsQuelle,"https://www.drklein.de/zinsentwicklung-prognose.html"],
+    ["Bauzins 10 Jahre (Topzins)",dec(M.zins[10])+" %",M.zinsQuelle,"https://www.drklein.de/zinsentwicklung-prognose.html"],
+    ["Bauzins 15 / 20 / 30 Jahre",`${dec(M.zins[15])} / ${dec(M.zins[20])} / ${dec(M.zins[30])} %`,M.zinsQuelle,"https://www.drklein.de/zinsentwicklung-prognose.html"],
+    ["Aufschlag typisches Angebot",`+${dec(M.aufschlag)} %`,"Baufi24: Durchschnitt 10 J. ~4,2 %, Angebote Anfang Okt. ~4,5 %","https://www.baufi24.de/presse/pressemitteilungen/zinskommentar-102026/"],
+    ["Aufschlag Beleihungsauslauf","−0,10 bis +0,70 %","Faustwerte: ≤60 % / 80 % / 90 % / 100 % / >100 %",""],
+    ["KfW 308 „Jung kauft Alt“",dec(M.kfw308)+" %","Konditionen ab 3.8.2026","https://www.baufi24.de/blog/jung-kauft-alt-neuerungen-082026/"],
+    ["Grunderwerbsteuer",`3,5–6,5 % (BW ${dec(M.grest.BW,1)} %)`,"Sätze aller Bundesländer","https://rechenbar.de/ratgeber/grunderwerbsteuer-2026-bundeslaender/"],
+    ["Notar + Grundbuch",`${dec(M.notar,1)} % + ${dec(M.grundbuch,1)} %`,"Übliche Größenordnung",""],
+    ["Maklerprovision Käufer",dec(M.makler)+" %","Hälfteteilung bei Wohnung/Einfamilienhaus",""],
+    ["Betriebskosten",`${dec(M.bk)} €/m² (max. ${dec(M.bkMax)})`,"DMB Betriebskostenspiegel, Abrechnung 2024","https://www.mieterbund.de/betriebskostenspiegel/"],
+    ["Instandhaltung Eigenheim",`${dec(M.instEigen)} €/m² im Monat`,"LBS-Untergrenze",""],
+    ["Instandhaltung Vermietung",`${dec(M.inst22)} / ${dec(M.inst32)} €/m² im Jahr`,"II. BV indexiert, ab 22 / 32 Jahre","https://reduco.ai/blog/immobilienwirtschaft/instandhaltungsruecklage-vs-energetische-sanierung"],
+    ["Baupreise Instandhaltung",`+${dec(M.baupreis,1)} % zum Vorjahr`,"Destatis, Mai 2026","https://www.baulinks.de/webplugin/2026/1005.php4"],
+    ["Handwerker-Stundensatz Ø",`${M.stundensatz} €`,"45–95 € je Gewerk, Stuttgart +20–30 %","https://www.clean-invoice.com/wissen/allgemein/handwerker-stundenlohn-kosten-2026"],
+    ["Sanierung je m²","Teil 600–1.200 € · Kern 1.000–2.500 €","nach Baujahr","https://reduco.ai/blog/sanierung/sanierungskosten-pro-qm-tabelle"],
+    ["Bad komplett","8.000–25.000 €","900–3.500 €/m²","https://www.kostenfinder.com/ratgeber/badezimmer-sanierung-kosten"],
+    ["Küche","5.000 bis über 30.000 €","Einstieg / Mittel / Premium","https://leospardo.de/ratgeber/kuechen-preise-2026/"],
+    ["Elektrik Altbau","30–300 €/m²","teil / komplett / Smart Home","https://www.clean-invoice.com/wissen/allgemein/elektroinstallation-altbau-kosten"],
+    ["Wasserleitungen","10.000–25.000 € (Altbau komplett)","40–120 €/m","https://www.clean-invoice.com/wissen/allgemein/wasserleitung-verlegen-kosten"],
+    ["Mietpreisbremse",M.mietpreisbremse,"Landesregierung BW","https://www.baden-wuerttemberg.de/de/service/alle-meldungen/meldung/pid/land-will-mietpreisbremse-verlaengern-1"],
+    ["Referenz Böblingen","Haus 4.140 €/m² · Wohnung 3.801 €/m² · Miete 14,79 €/m²","Angebotspreise 01.10.2026","https://www.immoportal.com/immobilienpreise/boeblingen"]
+  ];
+  $("#mtable").innerHTML=`<thead><tr><th>Kennzahl</th><th>Wert</th><th>Quelle</th></tr></thead><tbody>${rows.map(([a,b,c,u])=>`<tr><td>${esc(a)}</td><td class="r">${esc(b)}</td><td>${u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(c)}</a>`:esc(c)}</td></tr>`).join("")}</tbody>`;
+}
+
+/* ---------- Haupt-Refresh ---------- */
+let saveT;
+function refresh(){
+  const F=finCalc(), X=flipCalc(F), R=rentCalc(F), V=verdict(F,X,R);
+  renderSummary(F,X,R,V); renderMatrix(); renderPlanSum(); renderFin(F); renderEval(F,X,R,V); renderFind();
+  $("#exampleBanner").hidden=!S.example;
+  $$("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===S.mode));
+  clearTimeout(saveT); saveT=setTimeout(()=>{try{localStorage.setItem("immo-draft",JSON.stringify(S))}catch(e){}},400);
+}
+function renderAll(){renderObjForm();renderFinForm();renderEvalForm();renderPlanner();renderMarket();renderChat();setTab(S.tab||"objekt");refresh();}
+function setTab(t){S.tab=t;$$("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));$$("[data-panel]").forEach(p=>p.hidden=p.dataset.panel!==t)}
+
+/* ---------- Events ---------- */
+document.addEventListener("input",e=>{
+  const el=e.target, k=el.dataset.k; if(!k) return;
+  let v=el.type==="checkbox"?el.checked:el.type==="number"?num(el.value):el.value;
+  if(k==="fin.bindung") v=num(v);
+  setP(S,k,v);
+  const ak=k.split(".").at(-1); if(S.ai[ak]){delete S.ai[ak]; el.closest(".f")?.classList.remove("ai"); el.closest(".f")?.querySelector(".tag")?.remove();}
+  if(S.example&&k.startsWith("obj.")) S.example=false;
+  if(["obj.typ"].includes(k)||k==="fin.zinsAuto"||k==="fin.kfw"){renderObjForm();renderFinForm();renderPlanner();}
+  if(["obj.wfl","obj.zimmer","obj.baeder","obj.keller","obj.typ"].includes(k)&&S.roomsAuto){S.rooms=genRooms(S.obj);applyPreset(S.rooms,S.find?.stufe||"mittel",S.obj);renderPlanner();}
+  else if(["obj.region","obj.baujahr","obj.wfl"].includes(k)) renderPlanner();
+  if(k.startsWith("rent.")||k.startsWith("flip.")){/* Ausgaben reichen */}
+  refresh();
+});
+$("#modeSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.mode=b.dataset.mode;renderFinForm();renderEvalForm();renderChatIntro();refresh();});
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){setTab(b.dataset.tab);if(b.dataset.tab==="planer")renderPlanner();}});
+$("#matrix").addEventListener("click",e=>{const td=e.target.closest("td.cell");if(!td)return;S.fin.src=td.dataset.s;S.fin.ex=td.dataset.ex;renderFinForm();refresh();});
+$("#matrix").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("td.cell")){e.preventDefault();e.target.click();}});
+$("#pufferIn").addEventListener("change",e=>{S.puffer=e.target.checked;refresh();});
+$("#btnRegen").addEventListener("click",()=>{S.rooms=genRooms(S.obj);applyPreset(S.rooms,S.find?.stufe||"mittel",S.obj);S.roomsAuto=true;renderPlanner();refresh();setTab("planer");});
+$$("[data-preset]").forEach(b=>b.addEventListener("click",()=>{applyPreset(S.rooms,b.dataset.preset,S.obj);S.roomsAuto=false;renderPlanner();refresh();}));
+$("#execSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.exec=b.dataset.exec;renderPlanner();});
+$("#btnAddRoom").addEventListener("click",()=>{const t=$("#addType").value;const geb=S.rooms.findIndex(r=>r.typ==="geb");const r={id:uid(),typ:t,name:RT[t].l,a:t==="wc"?3:t==="bad"?6:12,q:"m",sel:{},cnt:{}};
+  if(geb>=0)S.rooms.splice(geb,0,r);else S.rooms.push(r);S.roomsAuto=false;renderPlanner();refresh();});
+$("#rooms").addEventListener("change",e=>{
+  const card=e.target.closest(".room"); if(!card) return; const r=S.rooms.find(x=>x.id===card.dataset.room); if(!r) return;
+  const el=e.target;
+  if(el.dataset.it){r.sel[el.dataset.it]=el.checked;}
+  else if(el.dataset.cnt){r.cnt[el.dataset.cnt]=num(el.value);}
+  else if(el.dataset.rf==="a"){r.a=num(el.value);}
+  else if(el.dataset.rf==="name"){r.name=el.value;refresh();return;}
+  S.roomsAuto=false; renderPlanner(); refresh();
+});
+$("#rooms").addEventListener("click",e=>{
+  const card=e.target.closest(".room"); if(!card) return; const r=S.rooms.find(x=>x.id===card.dataset.room);
+  const q=e.target.closest("[data-q]"); if(q){r.q=q.dataset.q;S.roomsAuto=false;renderPlanner();refresh();return;}
+  const d=e.target.closest("[data-del]"); if(d){S.rooms=S.rooms.filter(x=>x.id!==r.id);S.roomsAuto=false;renderPlanner();refresh();}
+});
+document.addEventListener("change",e=>{if(e.target.id==="pufPlan"){S.pufferPlan=num(e.target.value);refresh();}});
+document.addEventListener("click",e=>{
+  if(e.target.id==="btnPlanFin"){S.fin.src="plan";S.fin.ex=S.exec;renderFinForm();refresh();setTab("finanz");}
+  const a=e.target.closest("[data-ask]"); if(a){setTab("berater");askPreset(a.dataset.ask);}
+});
+function newObject(){S=blankState();try{localStorage.removeItem("immo-draft")}catch(e){} files=[];renderThumbs();$("#descIn").value="";renderAll();setTab("objekt");}
+$("#btnNew").addEventListener("click",newObject);
+$("#btnNew2").addEventListener("click",newObject);
+
+/* ---------- Dateien ---------- */
+let files=[]; // {blob,url,name,page}
+const drop=$("#drop");
+["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>addFiles(e.dataTransfer.files));
+$("#fileIn").addEventListener("change",e=>{addFiles(e.target.files);e.target.value=""});
+document.addEventListener("paste",e=>{const its=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith("image/"));if(its.length){addFiles(its);}});
+async function addFiles(list){
+  for(const f of [...list]){
+    if(f.type==="application/pdf"){ setStatus("PDF wird gelesen …"); try{ const pages=await pdfToImages(f); pages.forEach((b,i)=>files.push({blob:b,url:URL.createObjectURL(b),name:f.name,page:i+1})); setStatus(""); }catch(err){ setStatus("Das PDF konnte nicht gelesen werden. Mach Screenshots der wichtigsten Seiten.",true);} }
+    else if(f.type.startsWith("image/")) files.push({blob:f,url:URL.createObjectURL(f),name:f.name});
+  }
+  renderThumbs();
+}
+function renderThumbs(){$("#thumbs").innerHTML=files.map((f,i)=>`<div class="thumb"><img src="${f.url}" alt="${esc(f.name)}">${f.page?`<span class="pg">S. ${f.page}</span>`:""}<button data-rm="${i}" aria-label="Entfernen">✕</button></div>`).join("");}
+$("#thumbs").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;files.splice(num(b.dataset.rm),1);renderThumbs();});
+let pdfReady=null;
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+async function pdfToImages(file){
+  if(!pdfReady) pdfReady=(async()=>{await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js");
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";})();
+  await pdfReady;
+  const doc=await window.pdfjsLib.getDocument({data:await file.arrayBuffer(),isEvalSupported:false}).promise;
+  const out=[], n=Math.min(doc.numPages,8);
+  for(let p=1;p<=n;p++){const page=await doc.getPage(p);const vp=page.getViewport({scale:1.4});const cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;
+    await page.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;out.push(await new Promise(r=>cv.toBlob(r,"image/jpeg",.82)));}
+  return out;
+}
+function setStatus(t,err){const s=$("#anStatus");s.textContent=t;s.classList.toggle("err",!!err)}
+
+/* ---------- KI ---------- */
+let ctlAn=null; const imgLimit=8;
+const AINOTE="Die KI liest Preis, Fläche, Baujahr, Lage und Zustand aus und schätzt den Sanierungsbedarf. Marktpreise sind Schätzungen, gelb markierte Felder bitte prüfen.";
+const errCopy=c=>({auth:"Bitte zuerst anmelden.",config:"Der Server ist noch nicht fertig eingerichtet (Schlüssel in Vercel fehlen, siehe README).",rate_limited:"Zu viele Anfragen gerade. Bitte in einer Minute nochmal.",invalid_json:"Die Antwort war unvollständig. Bitte nochmal versuchen."}[c]||"Das hat nicht geklappt. Bitte nochmal versuchen.");
+async function api(path,body,signal){
+  if(!SESSION) throw {code:"auth"};
+  let r;
+  try{ r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+SESSION.access_token},body:JSON.stringify(body),signal}); }
+  catch(e){ throw {code:e?.name==="AbortError"?"cancelled":"upstream_error"}; }
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw {code:j.error||"upstream_error",message:j.message};
+  return j;
+}
+async function toJpegB64(blob){
+  const bmp=await createImageBitmap(blob); const sc=Math.min(1,1400/Math.max(bmp.width,bmp.height));
+  const cv=document.createElement("canvas"); cv.width=Math.round(bmp.width*sc); cv.height=Math.round(bmp.height*sc);
+  cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+  return cv.toDataURL("image/jpeg",.8).split(",")[1];
+}
+function updateAiAvail(){
+  const ok=!!SESSION; $("#btnAnalyze").disabled=!ok; $("#btnSend").disabled=!ok;
+  $("#aiNote").textContent=ok?AINOTE:"Melde dich rechts unter „Meine Objekte“ an, um die KI zu nutzen. Rechnen und Planen funktioniert auch ohne Anmeldung.";
+}
+
+function stateSummary(){
+  const F=finCalc(), X=flipCalc(F), R=rentCalc(F), o=S.obj;
+  const st={}; ["leicht","mittel","kern"].forEach(s=>{const t=stageCalc(s);st[s]={firma:t.firm.map(r100),mix:t.mix.map(r100),selbst:t.diy.map(r100)}});
+  return JSON.stringify({modus:{eigen:"Eigenheim",flip:"Fix & Flip",miete:"Vermieten"}[S.mode],objekt:{...o,bundesland:LAENDER[o.land],preisniveau:REGIONS[o.region]?.l},markt:S.mkt,befund:S.find,
+    sanierung_stufen_eur:st,gewaehlte_sanierung:{name:F.san.label,betrag:r100(F.san.val)},
+    finanzierung:{kaufnebenkosten:r100(F.nk.sum),gesamt:r100(F.gesamt),eigenkapital:F.ek,kredit:r100(F.kredit),zins:+F.z.toFixed(2),tilgung:F.t,zinsbindung:S.fin.bindung,rate_monat:Math.round(F.rate),wohnnebenkosten:Math.round(F.neben),belastung_monat:Math.round(F.belastung),haushaltsnetto:S.fin.netto,anteil_netto:isFinite(F.quote)?+(F.quote*100).toFixed(0):null,restschuld:r100(F.rest)},
+    flip:S.mode==="flip"?{verkaufspreis:r100(X.arv),gewinn_vor_steuer:r100(X.gewinn),marge_pct:+(X.marge*100).toFixed(1),gewinn_nach_steuer:r100(X.netto),hoechstgebot:r100(X.maxKp),haltedauer:X.h}:undefined,
+    vermieten:S.mode==="miete"?{kaltmiete:Math.round(R.kalt),bruttorendite_pct:+(R.brutto*100).toFixed(2),cashflow_nach_steuer_monat:Math.round(R.cfNach),kaufpreisfaktor:+R.faktor.toFixed(1)}:undefined,
+    marktdaten:{stand:M.stand,topzins_10j:M.zins[10],kfw308:M.kfw308}});
+}
+
+$("#btnAnalyze").addEventListener("click",analyze);
+$("#btnStop").addEventListener("click",()=>ctlAn?.abort());
+async function analyze(){
+  if(!SESSION){setStatus("Bitte zuerst anmelden.",true);return;}
+  const desc=$("#descIn").value.trim();
+  if(!files.length&&!desc){setStatus("Lade zuerst Screenshots oder ein Exposé hoch oder füge den Text ein.",true);return;}
+  const imgs=files.slice(0,imgLimit).map(f=>f.blob);
+  const prompt=`Du bist Immobiliengutachter und Sanierungsexperte in Deutschland (Stand Oktober 2026). Analysiere das Immobilieninserat ${imgs.length?`auf den ${imgs.length} Bildern (Screenshots/Exposé-Seiten)`:""}${desc?" und im folgenden Text":""}.
+${desc?`\nINSERATTEXT:\n"""${desc.slice(0,12000)}"""\n`:""}
+Aufgaben:
+1. Lies alle Eckdaten aus. Was nicht erkennbar ist: null.
+2. Schätze den Zustand aus Beschreibung, Fotos, Baujahr, Heizung und Energieklasse. Achte auf Signalwörter wie "renovierungsbedürftig", "Handwerkerobjekt", "modernisierungsbedürftig", "Originalzustand", "Liebhaber", "gepflegt", "saniert 20xx".
+3. Empfiehl eine Sanierungsstufe: "leicht" (Schönheitsreparaturen), "mittel" (Teilsanierung: Bad, Küche, Böden, Elektrik teilweise) oder "kern" (Kernsanierung).
+4. Schätze Marktwerte am Standort aus deinem Wissen: Kaufpreis €/m² unsaniert (vergleichbares Objekt im gleichen Zustand), Kaufpreis €/m² nach Sanierung, Nettokaltmiete €/m² bei normaler Ausstattung. Du kannst nicht im Internet suchen, sei realistisch und eher vorsichtig.
+5. Ordne das Handwerker-Preisniveau zu: "metro" (München, Stuttgart, Frankfurt, Hamburg Stadt), "speck" (Ballungsraum Süd/West, z. B. Kreis Böblingen/Esslingen/Ludwigsburg), "avg", "land" (ländlich West/Süd), "ost" (ländlich Ost).
+6. Wenn ein Grundriss sichtbar ist, liste die Räume mit Fläche.
+
+Antworte NUR mit einem JSON-Objekt in genau dieser Form:
+{"titel":"kurzer Name z. B. DHH in Sindelfingen","typ":"wohnung|efh|dhh|rh|mfh","kaufpreis":Zahl,"wohnflaeche":Zahl,"grundstueck":Zahl|null,"zimmer":Zahl,"baeder":Zahl,"baujahr":Zahl,"ort":"Ort/PLZ","bundesland":"BW|BY|BE|BB|HB|HH|HE|MV|NI|NW|RP|SL|SN|ST|SH|TH","region":"metro|speck|avg|land|ost","maklerprovision_prozent":Zahl|0 wenn provisionsfrei|null,"hausgeld":Zahl|null,"keller":true|false|null,"heizung":"Art und Baujahr"|null,"energieklasse":"A+..H"|null,"kaltmiete_ist":Zahl|null,"zustand":"neuwertig|gepflegt|renovierungsbeduerftig|sanierungsbeduerftig|kernsanierung","stufe":"leicht|mittel|kern","markt":{"qm_unsaniert":Zahl,"qm_saniert":Zahl,"miete_qm":Zahl},"maengel":["…"],"positives":["…"],"risiken":["…"],"fragen":["Fragen an Verkäufer/Makler"],"raeume":[{"typ":"wohn|kueche|bad|wc|flur|keller","name":"…","flaeche":Zahl}],"fazit":"2-3 Sätze, ehrlich, für einen Laien verständlich"}`;
+  ctlAn=new AbortController(); $("#btnAnalyze").disabled=true; $("#btnStop").hidden=false; setStatus("Die KI liest das Inserat … das dauert meist 20–60 Sekunden.");
+  try{
+    const images=await Promise.all(imgs.map(toJpegB64));
+    const {data:d}=await api("/api/ai",{kind:"analyze",prompt,images},ctlAn.signal);
+    applyAI(d); setStatus("Fertig. Gelb markierte Felder bitte kurz prüfen.");
+  }catch(e){ if(e?.code!=="cancelled") setStatus(errCopy(e?.code),true); else setStatus(""); }
+  finally{ $("#btnAnalyze").disabled=false; $("#btnStop").hidden=true; }
+}
+function applyAI(d){
+  if(!d||typeof d!=="object") return;
+  const s=S; s.example=false; s.ai={};
+  const set=(k,v,aiK)=>{if(v===null||v===undefined||v==="")return;setP(s,k,v);s.ai[aiK||k.split(".").at(-1)]=true;};
+  const n=v=>v===null||v===undefined?null:(isFinite(Number(v))?Number(v):null);
+  set("obj.titel",d.titel); if(["wohnung","efh","dhh","rh","mfh"].includes(d.typ)) set("obj.typ",d.typ);
+  set("obj.kaufpreis",n(d.kaufpreis)); set("obj.wfl",n(d.wohnflaeche)); set("obj.grund",n(d.grundstueck)); set("obj.zimmer",n(d.zimmer)); set("obj.baeder",n(d.baeder));
+  set("obj.baujahr",n(d.baujahr)); set("obj.ort",d.ort); if(LAENDER[d.bundesland]) set("obj.land",d.bundesland); if(REGIONS[d.region]) set("obj.region",d.region);
+  if(n(d.maklerprovision_prozent)!==null) set("obj.makler",n(d.maklerprovision_prozent)); set("obj.hausgeld",n(d.hausgeld));
+  if(typeof d.keller==="boolean") set("obj.keller",d.keller); set("obj.heizung",d.heizung); set("obj.energie",d.energieklasse); set("obj.istMiete",n(d.kaltmiete_ist));
+  if(d.zustand) set("obj.zustand",d.zustand);
+  if(d.markt){set("mkt.qmUnsaniert",n(d.markt.qm_unsaniert));set("mkt.qmSaniert",n(d.markt.qm_saniert));set("mkt.mieteQm",n(d.markt.miete_qm));}
+  const stufe=STAGES[d.stufe]?d.stufe:"mittel";
+  s.find={zustand:d.zustand,fazit:d.fazit,maengel:d.maengel||[],positives:d.positives||[],risiken:d.risiken||[],fragen:d.fragen||[],stufe};
+  if(Array.isArray(d.raeume)&&d.raeume.filter(r=>RT[r.typ]&&n(r.flaeche)).length>=2){
+    s.rooms=d.raeume.filter(r=>RT[r.typ]&&r.typ!=="geb"&&n(r.flaeche)).map(r=>({id:uid(),typ:r.typ,name:String(r.name||RT[r.typ].l).slice(0,40),a:Math.round(n(r.flaeche)),q:"m",sel:{},cnt:{}}));
+    s.rooms.push({id:uid(),typ:"geb",name:"Gebäude & Technik",a:0,q:"m",sel:{},cnt:{}});
+  } else s.rooms=genRooms(s.obj);
+  applyPreset(s.rooms,stufe,s.obj); s.roomsAuto=true;
+  s.fin.src=stufe; s.flip.arv=0;
+  renderAll(); setTab("objekt");
+}
+
+/* ---------- Chat ---------- */
+let ctlChat=null;
+const PERSONA={
+  eigen:"Du berätst eine Familie oder Einzelperson, die das Objekt selbst bewohnen will. Achte auf Tragbarkeit der Rate, Puffer, versteckte Kosten, Förderungen (KfW 308, KfW 124, BEG), Pflichten nach dem Gebäudeenergiegesetz und worauf bei der Besichtigung zu achten ist.",
+  flip:"Der Nutzer ist ANFÄNGER bei Fix & Flip. Sei sein geduldiger, ehrlicher Mentor: Erkläre Fachbegriffe kurz in Klammern, gib klare nächste Schritte, nenne Zahlen aus den Daten, warne deutlich vor typischen Anfängerfehlern (Sanierung unterschätzt, Verkaufspreis zu optimistisch, Haltedauer zu kurz, Spekulationssteuer, Drei-Objekt-Grenze). Er soll sich gut aufgehoben fühlen, aber nicht in einen schlechten Deal gelobt werden.",
+  miete:"Der Nutzer will das Objekt als Kapitalanlage vermieten. Achte auf Mietrendite, Cashflow, nicht umlagefähige Kosten, Mietpreisbremse und Kappungsgrenze, AfA und 15-%-Grenze für anschaffungsnahe Herstellungskosten, Leerstands- und Mietausfallrisiko."
+};
+const CHIPS={
+  eigen:["Ist die Rate für mich tragbar?","Worauf muss ich bei der Besichtigung achten?","Welche Förderungen passen?","Wie viel sollte ich bieten?"],
+  flip:["Erklär mir diesen Deal wie einem Anfänger","Wie viel soll ich maximal bieten?","Welche Risiken übersehe ich?","Schritt-für-Schritt-Plan bis zum Verkauf"],
+  miete:["Lohnt sich das als Kapitalanlage?","Welche Miete ist realistisch?","Wie optimiere ich steuerlich?","Was passiert bei 2 Monaten Leerstand?"]
+};
+const PRESETS={flipcoach:"Erklär mir diesen Fix-&-Flip-Deal Schritt für Schritt wie einem Anfänger: Lohnt er sich, was ist mein Höchstgebot, wo sind die größten Risiken, und was sind meine nächsten 5 konkreten Schritte?",
+  eigencheck:"Erstelle mir eine Besichtigungs-Checkliste speziell für dieses Objekt (Baujahr, Zustand, Mängel beachten) und sag mir, welche Unterlagen ich vom Verkäufer anfordern muss."};
+function renderChatIntro(){
+  $("#chatTitle").textContent={eigen:"KI-Berater Eigenheim",flip:"KI-Mentor Fix & Flip",miete:"KI-Berater Vermietung"}[S.mode];
+  $("#chatIntro").textContent=S.mode==="flip"?"Dein Mentor kennt alle Zahlen dieses Objekts und erklärt dir jeden Schritt. Frag ruhig auch Grundlagenfragen.":"Der Berater kennt alle Zahlen dieses Objekts. Er ersetzt keinen Steuerberater, Notar oder Gutachter.";
+  $("#chips").innerHTML=CHIPS[S.mode].map(c=>`<button class="chip">${esc(c)}</button>`).join("");
+}
+function md(t){
+  const lines=esc(t).split("\n"); let h="",list=null;
+  const inl=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*(?!\s)(.+?)\*/g,"$1<i>$2</i>");
+  const close=()=>{if(list){h+=`</${list}>`;list=null}};
+  for(const l of lines){
+    let m;
+    if((m=l.match(/^#{1,4}\s+(.*)/))){close();h+=`<h4>${inl(m[1])}</h4>`;}
+    else if((m=l.match(/^\s*[-*•]\s+(.*)/))){if(list!=="ul"){close();h+="<ul>";list="ul"}h+=`<li>${inl(m[1])}</li>`;}
+    else if((m=l.match(/^\s*\d+[.)]\s+(.*)/))){if(list!=="ol"){close();h+="<ol>";list="ol"}h+=`<li>${inl(m[1])}</li>`;}
+    else if(l.trim()===""){close();}
+    else {close();h+=`<p>${inl(l)}</p>`;}
+  }
+  close(); return h;
+}
+function renderChat(){
+  renderChatIntro();
+  $("#chatlog").innerHTML=S.chat.length?S.chat.map(m=>`<div class="msg ${m.role}">${m.role==="assistant"?md(m.content):esc(m.content)}</div>`).join(""):`<p class="small muted">Noch keine Fragen. Tippe auf einen Vorschlag oder schreib deine eigene Frage.</p>`;
+  const cl=$("#chatlog"); cl.scrollTop=cl.scrollHeight;
+}
+$("#chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(b)send(b.textContent);});
+$("#btnSend").addEventListener("click",()=>{const t=$("#chatIn").value.trim();if(t){$("#chatIn").value="";send(t);}});
+$("#chatIn").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#btnSend").click();}});
+$("#btnChatClear").addEventListener("click",()=>{S.chat=[];renderChat();});
+function askPreset(k){send(PRESETS[k]);}
+async function send(text){
+  if(!SESSION){$("#chatStatus").textContent="Bitte zuerst anmelden.";return;}
+  if(ctlChat) return;
+  S.chat.push({role:"user",content:text}); renderChat();
+  const bubble=document.createElement("div"); bubble.className="msg assistant"; bubble.textContent="Denkt nach …"; $("#chatlog").appendChild(bubble); $("#chatlog").scrollTop=1e9;
+  const rules=`Du bist ein erfahrener, ehrlicher Immobilienberater in Deutschland, Stand Oktober 2026. ${PERSONA[S.mode]}
+Regeln: Antworte auf Deutsch, in einfacher Sprache, konkret mit den Zahlen aus den Objektdaten unten. Halte dich kurz (meist unter 250 Wörter), nutze kurze Listen, wenn sie helfen. Du kannst nicht im Internet suchen; Marktpreise sind Schätzungen, sag das, wenn es wichtig ist. Bei Steuer- und Rechtsfragen gib eine Orientierung und empfehle für die Entscheidung Steuerberater oder Notar. Erfinde keine Fakten über das Objekt.
+OBJEKTDATEN (aktuell aus dem Tool):
+${stateSummary()}`;
+  ctlChat=new AbortController(); $("#chatStatus").textContent="";
+  try{
+    const {text}=await api("/api/ai",{kind:"chat",system:rules,messages:S.chat.slice(-12)},ctlChat.signal);
+    S.chat.push({role:"assistant",content:text});
+  }catch(e){ if(e?.text){S.chat.push({role:"assistant",content:e.text});} $("#chatStatus").textContent=e?.code==="cancelled"?"":errCopy(e?.code); }
+  finally{ ctlChat=null; renderChat(); refresh(); }
+}
+
+/* ---------- Speicher (Supabase) ---------- */
+let SB=null, SESSION=null;
+async function initDb(){
+  try{
+    const cfg=await fetch("/api/config").then(r=>r.json());
+    if(!cfg.url||!cfg.anon||!window.supabase) throw new Error("config");
+    SB=window.supabase.createClient(cfg.url,cfg.anon);
+  }catch(e){
+    SB=null; $("#btnSave").disabled=true; $("#btnMktUpd").disabled=true;
+    $("#authBox").innerHTML=`<p class="note warn">Supabase ist noch nicht verbunden. Trage SUPABASE_URL und SUPABASE_ANON_KEY in Vercel ein (siehe README). Dein Stand bleibt so lange in diesem Browser.</p>`;
+    updateAiAvail(); return;
+  }
+  const {data}=await SB.auth.getSession(); SESSION=data.session;
+  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); if(s?.user?.id!==was) listSaved();});
+  renderAuth(); updateAiAvail(); loadMarket(); listSaved();
+}
+async function loadMarket(){
+  try{
+    const {data,error}=await SB.from("market").select("data").eq("id","current").maybeSingle();
+    if(error||!data) return; const d=data.data||{};
+    M={...M,...d,zins:{...M.zins,...(d.zins||{})},grest:{...M.grest,...(d.grest||{})},kfw308Max:{...M.kfw308Max,...(d.kfw308Max||{})}};
+    renderObjForm(); renderFinForm(); renderMarket(); refresh();
+  }catch(e){}
+}
+function renderAuth(){
+  const box=$("#authBox");
+  $("#btnMktUpd").disabled=!SESSION;
+  if(SESSION){
+    box.innerHTML=`<div class="row" style="justify-content:space-between"><span class="small muted">Angemeldet als ${esc(SESSION.user.email)}</span><button class="btn ghost" id="btnLogout">Abmelden</button></div>`;
+    $("#btnSave").disabled=false;
+  } else {
+    box.innerHTML=`<form id="loginForm" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+      <label class="f" for="lgMail"><span>E-Mail</span><input id="lgMail" type="email" autocomplete="email" required></label>
+      <label class="f" for="lgPw"><span>Passwort</span><input id="lgPw" type="password" autocomplete="current-password" minlength="6" required></label>
+      <div class="row" style="grid-column:1/-1"><button class="btn pri" type="submit">Anmelden</button><button class="btn" type="button" id="btnSignup">Konto anlegen</button></div></form>
+      <p class="small muted">Die Anmeldung brauchst du für die KI und zum Speichern deiner Objekte.</p>`;
+    $("#btnSave").disabled=true; $("#savedList").innerHTML="";
+  }
+}
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="loginForm") return; e.preventDefault(); const st=$("#saveStatus");
+  const {error}=await SB.auth.signInWithPassword({email:$("#lgMail").value.trim(),password:$("#lgPw").value});
+  st.textContent=error?"Anmeldung fehlgeschlagen: E-Mail oder Passwort stimmt nicht, oder die E-Mail ist noch nicht bestätigt.":""; st.classList.toggle("err",!!error);
+});
+document.addEventListener("click",async e=>{
+  if(e.target.id==="btnSignup"){
+    const mail=$("#lgMail").value.trim(), pw=$("#lgPw").value, st=$("#saveStatus");
+    if(!mail||pw.length<6){st.textContent="Bitte E-Mail und ein Passwort mit mindestens 6 Zeichen eingeben.";st.classList.add("err");return;}
+    const {data,error}=await SB.auth.signUp({email:mail,password:pw});
+    st.classList.toggle("err",!!error);
+    st.textContent=error?("Konto anlegen fehlgeschlagen: "+error.message):(data.session?"Konto angelegt, du bist angemeldet.":"Konto angelegt. Bestätige den Link in deiner E-Mail und melde dich dann an.");
+  }
+  if(e.target.id==="btnLogout"){ await SB.auth.signOut(); }
+});
+async function listSaved(){
+  if(!SB||!SESSION) return;
+  const {data,error}=await SB.from("objekte").select("id,name,info,saved_at").order("saved_at",{ascending:false}).limit(30);
+  if(error){ $("#savedList").innerHTML=`<p class="small muted">Die Liste konnte nicht geladen werden. Ist die Datenbank eingerichtet (supabase/schema.sql)?</p>`; return; }
+  $("#savedList").innerHTML=!data.length?`<p class="small muted">Noch nichts gespeichert. Mit „Speichern“ legst du das aktuelle Objekt hier ab.</p>`:
+    data.map(x=>`<div class="it"><span><b>${esc(x.name)}</b><br><span class="small muted">${esc(x.info||"")} · ${new Date(x.saved_at).toLocaleDateString("de-DE")}</span></span><span class="row"><button class="btn" data-open="${esc(x.id)}">Öffnen</button><button class="iconbtn" data-delsaved="${esc(x.id)}" aria-label="Löschen">✕</button></span></div>`).join("");
+}
+$("#btnSave").addEventListener("click",async()=>{
+  if(!SB||!SESSION) return; const st=$("#saveStatus");
+  const copy={...S,chat:S.chat.slice(-16),example:false};
+  const {error}=await SB.from("objekte").upsert({id:S.id,name:S.obj.titel||"Objekt ohne Namen",
+    info:`${eurR(S.obj.kaufpreis)} · ${fmt(S.obj.wfl)} m² · ${{eigen:"Eigenheim",flip:"Fix & Flip",miete:"Vermieten"}[S.mode]}`,state:copy,saved_at:new Date().toISOString()});
+  st.textContent=error?"Speichern hat nicht geklappt. Bitte nochmal versuchen.":"Gespeichert."; st.classList.toggle("err",!!error);
+  if(!error){S.example=false; listSaved(); refresh();}
+});
+let pendingDel=null;
+$("#savedList").addEventListener("click",async e=>{
+  const o=e.target.closest("[data-open]");
+  if(o){ const {data,error}=await SB.from("objekte").select("state").eq("id",o.dataset.open).single();
+    if(!error&&data){ S={...blankState(),...data.state}; files=[]; renderThumbs(); renderAll(); } return; }
+  const x=e.target.closest("[data-delsaved]");
+  if(x){
+    if(pendingDel!==x.dataset.delsaved){pendingDel=x.dataset.delsaved;x.textContent="Löschen?";x.style.color="var(--bad)";return;}
+    await SB.from("objekte").delete().eq("id",pendingDel); pendingDel=null; listSaved();
+  }
+});
+$("#btnMktUpd").addEventListener("click",async()=>{
+  const st=$("#mktStatus"), b=$("#btnMktUpd"); b.disabled=true;
+  st.textContent="Suche aktuelle Werte im Internet … das dauert 1–3 Minuten.";
+  try{
+    const j=await api("/api/update-market",{});
+    st.textContent=j.changes?.length?`Aktualisiert: ${j.changes.map(c=>c.feld).join(", ")}.`:"Alles aktuell, keine Änderungen.";
+    await loadMarket();
+  }catch(e){ st.textContent=e.code==="auth"?"Nur für freigegebene E-Mail-Adressen (ALLOWED_EMAILS in Vercel).":errCopy(e.code); }
+  finally{ b.disabled=!SESSION; }
+});
+
+/* ---------- Start ---------- */
+try{ const d=localStorage.getItem("immo-draft"); S=d?{...blankState(),...JSON.parse(d)}:exampleState(); }catch(e){ S=exampleState(); }
+if(!S.rooms?.length){S.rooms=genRooms(S.obj);applyPreset(S.rooms,"mittel",S.obj);}
+renderAll();
+updateAiAvail();
+initDb();
+})();
+</script>
+</body>
+</html>
