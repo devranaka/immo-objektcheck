@@ -58,7 +58,8 @@ export async function sbAdmin(path, init = {}) {
   if (!SUPABASE_URL || !key) throw Object.assign(new Error("Supabase-Schlüssel fehlen in Vercel"), { code: "config" });
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
-    headers: { apikey: key, Authorization: `Bearer ${key}`, "content-type": "application/json", ...(init.headers || {}) },
+    // Alte Schlüssel (eyJ…) zusätzlich als Bearer senden, neue Secret Keys (sb_secret_…) nur als apikey
+    headers: { apikey: key, ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}), "content-type": "application/json", ...(init.headers || {}) },
   });
   if (!r.ok) throw Object.assign(new Error(`Supabase ${r.status}: ${await r.text()}`), { code: "upstream_error" });
   return r.status === 204 ? null : r.json();
