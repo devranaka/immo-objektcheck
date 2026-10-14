@@ -2,7 +2,7 @@
 -- In Supabase: SQL Editor → New query → alles einfügen → Run
 
 -- 1) Gespeicherte Objekte, jeder Nutzer sieht nur seine eigenen
-create table if not exists public.objekte (
+create table if not exists public.immo_objekte (
   id        text primary key,
   user_id   uuid not null default auth.uid() references auth.users(id) on delete cascade,
   name      text,
@@ -10,30 +10,30 @@ create table if not exists public.objekte (
   state     jsonb not null,
   saved_at  timestamptz not null default now()
 );
-create index if not exists objekte_user_saved on public.objekte (user_id, saved_at desc);
-alter table public.objekte enable row level security;
+create index if not exists immo_objekte_user_saved on public.immo_objekte (user_id, saved_at desc);
+alter table public.immo_objekte enable row level security;
 
-drop policy if exists "objekte lesen"    on public.objekte;
-drop policy if exists "objekte anlegen"  on public.objekte;
-drop policy if exists "objekte aendern"  on public.objekte;
-drop policy if exists "objekte loeschen" on public.objekte;
-create policy "objekte lesen"    on public.objekte for select using (auth.uid() = user_id);
-create policy "objekte anlegen"  on public.objekte for insert with check (auth.uid() = user_id);
-create policy "objekte aendern"  on public.objekte for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "objekte loeschen" on public.objekte for delete using (auth.uid() = user_id);
+drop policy if exists "immo objekte lesen"    on public.immo_objekte;
+drop policy if exists "immo objekte anlegen"  on public.immo_objekte;
+drop policy if exists "immo objekte aendern"  on public.immo_objekte;
+drop policy if exists "immo objekte loeschen" on public.immo_objekte;
+create policy "immo objekte lesen"    on public.immo_objekte for select using (auth.uid() = user_id);
+create policy "immo objekte anlegen"  on public.immo_objekte for insert with check (auth.uid() = user_id);
+create policy "immo objekte aendern"  on public.immo_objekte for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "immo objekte loeschen" on public.immo_objekte for delete using (auth.uid() = user_id);
 
 -- 2) Marktdaten: jeder darf lesen, schreiben nur der Server (Service-Key)
-create table if not exists public.market (
+create table if not exists public.immo_market (
   id          text primary key,
   data        jsonb not null,
   updated_at  timestamptz not null default now()
 );
-alter table public.market enable row level security;
-drop policy if exists "market lesen" on public.market;
-create policy "market lesen" on public.market for select using (true);
+alter table public.immo_market enable row level security;
+drop policy if exists "immo market lesen" on public.immo_market;
+create policy "immo market lesen" on public.immo_market for select using (true);
 
 -- 3) Startwerte (Stand 07.10.2026)
-insert into public.market (id, data) values ('current', '{
+insert into public.immo_market (id, data) values ('current', '{
   "stand": "07.10.2026",
   "zins": {"5": 4.36, "10": 4.11, "15": 4.28, "20": 4.36, "30": 4.59},
   "zinsQuelle": "Dr. Klein Topzinsen, Stand 07.10.2026",

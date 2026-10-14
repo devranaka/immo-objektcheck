@@ -18,13 +18,15 @@ Kein Build-Schritt, keine Pakete: Vercel liefert die Seite direkt aus.
 ## Einrichtung
 
 ### 1. Supabase
-1. Auf supabase.com ein neues Projekt anlegen (Region Frankfurt).
+Du kannst ein **bestehendes Projekt mitbenutzen** (z. B. das vom Händler-Tool), dann kostet es nichts extra. Alle Tabellen beginnen mit `immo_` und kommen anderen Tabellen nicht in die Quere. Nutzer-Konten werden dann gemeinsam genutzt: Mit deinem bestehenden Login kannst du dich auch hier anmelden.
+
+1. Bestehendes Projekt öffnen (oder ein neues anlegen, Region Frankfurt).
 2. **SQL Editor → New query**, den Inhalt von `supabase/schema.sql` einfügen, **Run**.
 3. **Project Settings → API**: notiere `Project URL`, `anon public` Key und `service_role` Key.
 4. Optional: **Authentication → Providers → Email** „Confirm email“ ausschalten, dann bist du nach „Konto anlegen“ sofort angemeldet.
 
 ### 2. Claude-API-Schlüssel
-Auf console.anthropic.com einen API-Key erstellen und etwas Guthaben aufladen.
+Auf console.anthropic.com unter **API Keys** einen neuen Key erstellen (z. B. „immo-objektcheck“). Er nutzt dasselbe Guthaben wie deine anderen Keys; unter **Usage** siehst du die Kosten pro Key getrennt.
 
 ### 3. Vercel
 1. Auf vercel.com **Add New → Project**, dieses GitHub-Repo importieren.
@@ -36,7 +38,7 @@ Auf console.anthropic.com einen API-Key erstellen und etwas Guthaben aufladen.
 | `SUPABASE_URL` | Project URL aus Supabase |
 | `SUPABASE_ANON_KEY` | anon public Key |
 | `SUPABASE_SERVICE_ROLE_KEY` | service_role Key (geheim!) |
-| `ANTHROPIC_API_KEY` | dein Claude-API-Key (geheim!) |
+| `ANTHROPIC_API_KEY` | Claude-API-Key (geheim!), gerne ein zweiter Key im selben Konto wie beim Händler-Tool |
 | `ALLOWED_EMAILS` | deine E-Mail-Adresse, mehrere mit Komma getrennt |
 | `CRON_SECRET` | ein beliebiges langes Passwort, z. B. 40 zufällige Zeichen |
 | `AI_MODEL` | optional, Standard ist `claude-sonnet-5-5` |

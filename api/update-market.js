@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const rows = await sbAdmin("market?id=eq.current&select=data");
+    const rows = await sbAdmin("immo_market?id=eq.current&select=data");
     const old = rows?.[0]?.data || {};
     const today = new Date().toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" });
 
@@ -72,7 +72,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
     next.quellen = Array.isArray(d.quellen) ? d.quellen.slice(0, 10) : old.quellen;
     next.geprueft = today;
 
-    await sbAdmin("market?on_conflict=id", {
+    await sbAdmin("immo_market?on_conflict=id", {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({ id: "current", data: next, updated_at: new Date().toISOString() }),

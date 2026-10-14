@@ -1301,7 +1301,7 @@ async function initDb(){
 }
 async function loadMarket(){
   try{
-    const {data,error}=await SB.from("market").select("data").eq("id","current").maybeSingle();
+    const {data,error}=await SB.from("immo_market").select("data").eq("id","current").maybeSingle();
     if(error||!data) return; const d=data.data||{};
     M={...M,...d,zins:{...M.zins,...(d.zins||{})},grest:{...M.grest,...(d.grest||{})},kfw308Max:{...M.kfw308Max,...(d.kfw308Max||{})}};
     renderObjForm(); renderFinForm(); renderMarket(); refresh();
@@ -1339,7 +1339,7 @@ document.addEventListener("click",async e=>{
 });
 async function listSaved(){
   if(!SB||!SESSION) return;
-  const {data,error}=await SB.from("objekte").select("id,name,info,saved_at").order("saved_at",{ascending:false}).limit(30);
+  const {data,error}=await SB.from("immo_objekte").select("id,name,info,saved_at").order("saved_at",{ascending:false}).limit(30);
   if(error){ $("#savedList").innerHTML=`<p class="small muted">Die Liste konnte nicht geladen werden. Ist die Datenbank eingerichtet (supabase/schema.sql)?</p>`; return; }
   $("#savedList").innerHTML=!data.length?`<p class="small muted">Noch nichts gespeichert. Mit „Speichern“ legst du das aktuelle Objekt hier ab.</p>`:
     data.map(x=>`<div class="it"><span><b>${esc(x.name)}</b><br><span class="small muted">${esc(x.info||"")} · ${new Date(x.saved_at).toLocaleDateString("de-DE")}</span></span><span class="row"><button class="btn" data-open="${esc(x.id)}">Öffnen</button><button class="iconbtn" data-delsaved="${esc(x.id)}" aria-label="Löschen">✕</button></span></div>`).join("");
@@ -1347,7 +1347,7 @@ async function listSaved(){
 $("#btnSave").addEventListener("click",async()=>{
   if(!SB||!SESSION) return; const st=$("#saveStatus");
   const copy={...S,chat:S.chat.slice(-16),example:false};
-  const {error}=await SB.from("objekte").upsert({id:S.id,name:S.obj.titel||"Objekt ohne Namen",
+  const {error}=await SB.from("immo_objekte").upsert({id:S.id,name:S.obj.titel||"Objekt ohne Namen",
     info:`${eurR(S.obj.kaufpreis)} · ${fmt(S.obj.wfl)} m² · ${{eigen:"Eigenheim",flip:"Fix & Flip",miete:"Vermieten"}[S.mode]}`,state:copy,saved_at:new Date().toISOString()});
   st.textContent=error?"Speichern hat nicht geklappt. Bitte nochmal versuchen.":"Gespeichert."; st.classList.toggle("err",!!error);
   if(!error){S.example=false; listSaved(); refresh();}
@@ -1355,12 +1355,12 @@ $("#btnSave").addEventListener("click",async()=>{
 let pendingDel=null;
 $("#savedList").addEventListener("click",async e=>{
   const o=e.target.closest("[data-open]");
-  if(o){ const {data,error}=await SB.from("objekte").select("state").eq("id",o.dataset.open).single();
+  if(o){ const {data,error}=await SB.from("immo_objekte").select("state").eq("id",o.dataset.open).single();
     if(!error&&data){ S={...blankState(),...data.state}; files=[]; renderThumbs(); renderAll(); } return; }
   const x=e.target.closest("[data-delsaved]");
   if(x){
     if(pendingDel!==x.dataset.delsaved){pendingDel=x.dataset.delsaved;x.textContent="Löschen?";x.style.color="var(--bad)";return;}
-    await SB.from("objekte").delete().eq("id",pendingDel); pendingDel=null; listSaved();
+    await SB.from("immo_objekte").delete().eq("id",pendingDel); pendingDel=null; listSaved();
   }
 });
 $("#btnMktUpd").addEventListener("click",async()=>{
