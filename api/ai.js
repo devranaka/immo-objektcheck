@@ -1,6 +1,6 @@
 // KI-Endpunkt: Inserat-Analyse (mit Bildern) und Berater-Chat.
 // Nur für angemeldete Nutzer, damit niemand Fremdes dein API-Guthaben verbraucht.
-import { requireUser, claude, textOf, parseJson } from "./_lib.js";
+import { requireUser, claude, textOf, parseJson, useQuota, limitReply } from "./_lib.js";
 
 const MAX_IMAGES = 8;
 
@@ -10,6 +10,10 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ error: "auth", message: "Bitte anmelden." });
 
   const { kind, prompt, system, messages, images } = req.body || {};
+  if (kind === "analyze" || kind === "chat") {
+    const q = await useQuota(user, kind);
+    if (!q.ok) return limitReply(res, q);
+  }
   try {
     if (kind === "analyze") {
       if (typeof prompt !== "string" || !prompt) return res.status(400).json({ error: "invalid", message: "prompt fehlt" });

@@ -64,3 +64,30 @@ export async function sbAdmin(path, init = {}) {
   if (!r.ok) throw Object.assign(new Error(`Supabase ${r.status}: ${await r.text()}`), { code: "upstream_error" });
   return r.status === 204 ? null : r.json();
 }
+
+/** Tageslimit pro Nutzer und Art der Anfrage. Zählt VOR dem KI-Aufruf, damit auch Fehlversuche zählen.
+ *  Limits per Vercel-Variable änderbar: LIMIT_ANALYZE, LIMIT_CHAT, LIMIT_ORT, LIMIT_MARKET. */
+const DAILY = { analyze: 15, chat: 80, ort: 8, market: 3 };
+export async function useQuota(user, kind) {
+  const lim = Number(process.env[`LIMIT_${kind.toUpperCase()}`]) || DAILY[kind] || 10;
+  const day = new Date().toISOString().slice(0, 10);
+  let n = 0;
+  try {
+    const rows = await sbAdmin(`immo_usage?user_id=eq.${user.id}&day=eq.${day}&kind=eq.${kind}&select=n`);
+    n = rows?.[0]?.n || 0;
+  } catch (e) {
+    console.error("Tabelle immo_usage fehlt oder ist nicht erreichbar (supabase/schema.sql ausführen):", e.message);
+    return { ok: true, n: 0, lim };
+  }
+  if (n >= lim) return { ok: false, n, lim };
+  try {
+    await sbAdmin("immo_usage?on_conflict=user_id,day,kind", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ user_id: user.id, day, kind, n: n + 1 }),
+    });
+  } catch (e) { console.error("immo_usage schreiben fehlgeschlagen:", e.message); }
+  return { ok: true, n: n + 1, lim };
+}
+export const limitReply = (res, q) =>
+  res.status(429).json({ error: "limit", message: `Tageslimit erreicht (${q.lim} pro Tag). Morgen geht es weiter.` });

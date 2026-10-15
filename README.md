@@ -47,6 +47,8 @@ Auf console.anthropic.com unter **API Keys** einen neuen Key erstellen (z. B. �
 4. **Deploy**. Danach die Seite öffnen, unter „Meine Objekte“ ein Konto mit der E-Mail aus `ALLOWED_EMAILS` anlegen.
 5. Auf dem Handy: Seite öffnen → Teilen → „Zum Home-Bildschirm“.
 
+**Schutz vor hohen KI-Kosten:** Jedes Konto hat Tageslimits (15 Analysen, 80 Chat-Nachrichten, 8 Ortsrecherchen, 3 Marktdaten-Aktualisierungen). Ändern per Vercel-Variable `LIMIT_ANALYZE`, `LIMIT_CHAT`, `LIMIT_ORT`, `LIMIT_MARKET`. Zusätzlich in der Claude-Konsole unter **Limits** ein Monatslimit setzen.
+
 > `ALLOWED_EMAILS` schützt dein API-Guthaben: Nur diese Adressen dürfen die KI nutzen, auch wenn sich jemand anderes ein Konto anlegt.
 
 ## Kosten (ungefähr)

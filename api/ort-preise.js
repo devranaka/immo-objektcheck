@@ -1,7 +1,7 @@
 // Recherchiert per Claude + Websuche die aktuellen Kauf- und Mietpreise für einen bestimmten Ort.
 // Ergebnisse werden 30 Tage in Supabase (Tabelle immo_market, id "ort:…") zwischengespeichert,
 // damit derselbe Ort nicht jedes Mal neu bezahlt werden muss.
-import { requireUser, claude, textOf, parseJson, sbAdmin } from "./_lib.js";
+import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply } from "./_lib.js";
 
 const CACHE_TAGE = 30;
 const inRange = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo && v <= hi;
@@ -21,12 +21,15 @@ export default async function handler(req, res) {
 
   try {
     if (!force) {
-      const rows = await sbAdmin(`immo_market?id=eq.${encodeURIComponent(id)}&select=data,updated_at`);
+      const rows = await sbAdmin(`immo_market?id=eq.${encodeURIComponent(id)}&select=data,updated_at`).catch(() => null);
       const hit = rows?.[0];
       if (hit && Date.now() - new Date(hit.updated_at).getTime() < CACHE_TAGE * 864e5) {
         return res.status(200).json({ data: hit.data, cached: true });
       }
     }
+    // Erst ab hier kostet es Geld: Tageslimit prüfen
+    const q = await useQuota(user, "ort");
+    if (!q.ok) return limitReply(res, q);
 
     const heute = new Date().toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" });
     const prompt = `Heute ist der ${heute}. Recherchiere mit der Websuche die aktuellen Immobilienpreise für GENAU diesen Ort: "${ort}".
@@ -44,10 +47,10 @@ Erfinde nichts. Unsichere Werte lieber weglassen (null).
 Antworte am Ende NUR mit einem JSON-Objekt:
 {"ort":"Name des Orts","miete_qm":{"einfach":Zahl,"mittel":Zahl,"gut":Zahl},"miete_qm_normal":Zahl,"vergleichsmiete_qm":Zahl|null,"mietspiegel":"z. B. Qualifizierter Mietspiegel 2025"|null,"mietpreisbremse":true|false|null,"kaufpreis_qm":Zahl,"kaufpreis_qm_unsaniert":Zahl,"kaufpreis_qm_saniert":Zahl,"stand":"Monat Jahr der Daten","hinweis":"1 Satz zur Datenlage","quellen":[{"titel":"…","url":"https://…"}]}`;
 
-    const tools = [{ type: "web_search_20260318", name: "web_search", max_uses: 6 }];
+    const tools = [{ type: "web_search_20260318", name: "web_search", max_uses: 5 }];
     let messages = [{ role: "user", content: prompt }];
     let msg;
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
       msg = await claude({ max_tokens: 3000, tools, messages });
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
@@ -77,11 +80,14 @@ Antworte am Ende NUR mit einem JSON-Objekt:
     for (const k of ["einfach", "mittel", "gut"]) if (inRange(d.miete_qm?.[k], 3, 45)) out.miete_qm[k] = d.miete_qm[k];
     if (!out.miete_qm_normal && out.miete_qm.mittel) out.miete_qm_normal = out.miete_qm.mittel;
 
-    await sbAdmin("immo_market?on_conflict=id", {
-      method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify({ id, data: out, updated_at: new Date().toISOString() }),
-    });
+    // Speichern darf das Ergebnis nicht verhindern: die Recherche ist schon bezahlt
+    try {
+      await sbAdmin("immo_market?on_conflict=id", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({ id, data: out, updated_at: new Date().toISOString() }),
+      });
+    } catch (e) { console.error("Ortspreise konnten nicht zwischengespeichert werden:", e.message); }
     return res.status(200).json({ data: out, cached: false });
   } catch (e) {
     const status = e.code === "rate_limited" ? 429 : e.code === "config" ? 500 : 502;

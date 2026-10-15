@@ -48,3 +48,13 @@ insert into public.immo_market (id, data) values ('current', '{
   "mietpreisbremse": "BW: gilt bis 31.12.2026, Verlängerung vom Land geplant (Meldung 22.09.2026)"
 }'::jsonb)
 on conflict (id) do nothing;
+
+-- 4) Tageszähler für KI-Anfragen (schützt dein API-Guthaben). Nur der Server liest und schreibt.
+create table if not exists public.immo_usage (
+  user_id  uuid not null references auth.users(id) on delete cascade,
+  day      date not null,
+  kind     text not null,
+  n        int  not null default 0,
+  primary key (user_id, day, kind)
+);
+alter table public.immo_usage enable row level security;

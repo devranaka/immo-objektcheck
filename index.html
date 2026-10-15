@@ -993,7 +993,8 @@ function ortStale(){
   if(!i||i.anfrage!==ort||i.art!==artOf(S.obj)) return true;
   return !i.ts||Date.now()-i.ts>30*864e5;
 }
-function autoOrt(){ if(SESSION&&!ortBusy&&ortStale()) lookupOrt(false); }
+let ortFailFor=null;
+function autoOrt(){ const ort=(S.obj.ort||"").trim(); if(SESSION&&!ortBusy&&ortFailFor!==ort&&ortStale()) lookupOrt(false); }
 function renderOrtBox(){
   const box=$("#ortBox"); if(!box) return;
   const o=S.obj, i=S.ortInfo, ort=(o.ort||"").trim(), fresh=i&&ort&&!ortStale();
@@ -1023,7 +1024,7 @@ async function lookupOrt(force){
     put("qmUnsaniert",data.kaufpreis_qm_unsaniert||data.kaufpreis_qm);
     put("qmSaniert",data.kaufpreis_qm_saniert);
     ortMsg=cached?"":"Aktualisiert.";
-  }catch(e){ ortErr=e.code!=="cancelled"; ortMsg=ortErr?errCopy(e.code):""; }
+  }catch(e){ ortErr=e.code!=="cancelled"; ortMsg=ortErr?(e.code==="limit"?e.message:errCopy(e.code)):""; if(ortErr) ortFailFor=ort; }
   finally{
     ortBusy=false;
     if(!$("#mktForm").contains(document.activeElement)) renderMktForm(); else renderOrtBox();
@@ -1424,7 +1425,7 @@ function setStatus(t,err){const s=$("#anStatus");s.textContent=t;s.classList.tog
 /* ---------- KI ---------- */
 let ctlAn=null; const imgLimit=8;
 const AINOTE="Die KI liest Preis, Fläche, Baujahr, Lage und Zustand aus und schätzt den Sanierungsbedarf. Marktpreise sind Schätzungen, gelb markierte Felder bitte prüfen.";
-const errCopy=c=>({auth:"Bitte zuerst anmelden.",config:"Der Server ist noch nicht fertig eingerichtet (Schlüssel in Vercel fehlen, siehe README).",rate_limited:"Zu viele Anfragen gerade. Bitte in einer Minute nochmal.",invalid_json:"Die Antwort war unvollständig. Bitte nochmal versuchen."}[c]||"Das hat nicht geklappt. Bitte nochmal versuchen.");
+const errCopy=c=>({limit:"Tageslimit für KI-Anfragen erreicht. Morgen geht es weiter.",auth:"Bitte zuerst anmelden.",config:"Der Server ist noch nicht fertig eingerichtet (Schlüssel in Vercel fehlen, siehe README).",rate_limited:"Zu viele Anfragen gerade. Bitte in einer Minute nochmal.",invalid_json:"Die Antwort war unvollständig. Bitte nochmal versuchen."}[c]||"Das hat nicht geklappt. Bitte nochmal versuchen.");
 async function api(path,body,signal){
   if(!SESSION) throw {code:"auth"};
   let r;
@@ -1580,7 +1581,7 @@ async function initDb(){
     updateAiAvail(); return;
   }
   const {data}=await SB.auth.getSession(); SESSION=data.session;
-  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); autoOrt(); if(s?.user?.id!==was) listSaved();});
+  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); if(s?.user?.id!==was){ listSaved(); if(s) autoOrt(); }});
   renderAuth(); updateAiAvail(); renderOrtBox(); loadMarket(); listSaved(); autoOrt();
 }
 async function loadMarket(){

@@ -1,7 +1,7 @@
 // Aktualisiert die Marktdaten (Zinsen, KfW, Grunderwerbsteuer …) per Claude + Websuche
 // und schreibt sie in Supabase. Läuft automatisch über Vercel Cron (siehe vercel.json)
 // oder per Knopf im Tool (nur für angemeldete Nutzer aus ALLOWED_EMAILS).
-import { requireUser, claude, textOf, parseJson, sbAdmin } from "./_lib.js";
+import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply } from "./_lib.js";
 
 const DOMAINS = [
   "drklein.de", "baufi24.de", "interhyp.de", "huettig-rompf.de", "kfw.de",
@@ -15,6 +15,8 @@ export default async function handler(req, res) {
   if (!cron) {
     const user = await requireUser(req);
     if (!user || !process.env.ALLOWED_EMAILS) return res.status(401).json({ error: "auth", message: "Nicht erlaubt." });
+    const q = await useQuota(user, "market");
+    if (!q.ok) return limitReply(res, q);
   }
 
   try {
@@ -40,7 +42,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
     const tools = [{ type: "web_search_20260318", name: "web_search", max_uses: 8, allowed_domains: DOMAINS }];
     let messages = [{ role: "user", content: prompt }];
     let msg;
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
       msg = await claude({ max_tokens: 4000, tools, messages });
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
