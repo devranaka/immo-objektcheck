@@ -140,24 +140,45 @@ table{border-collapse:collapse;width:100%}
 .bench{font-size:.8rem}
 
 /* Raumplaner */
-.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
-@media (max-width:420px){.rooms{grid-template-columns:minmax(0,1fr)}}
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:16px;align-items:start}
 .room{background:var(--card);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;min-width:0}
-.room-h{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.room-h{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
 .room-h .top2{display:flex;gap:8px;align-items:center}
-.room-h input.name{flex:1;min-width:0;font-family:var(--f-display);font-weight:700;font-size:1rem;border:1px solid transparent;background:transparent;padding:3px 6px;border-radius:6px}
+.room-h input.name{flex:1;min-width:0;font-family:var(--f-display);font-weight:700;font-size:1.15rem;border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:6px}
 .room-h input.name:hover,.room-h input.name:focus{border-color:var(--line);background:var(--soft)}
-.room-h .qm{width:80px;font-family:var(--f-mono);padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--soft)}
-.iconbtn{border:0;background:transparent;color:var(--muted);padding:4px 6px;border-radius:6px;font-size:1.05rem;line-height:1}
+.room-h .qm{width:90px;font-family:var(--f-mono);font-size:.95rem;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--soft)}
+.bulk{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.bulk .grp{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.iconbtn{border:0;background:transparent;color:var(--muted);padding:6px 8px;border-radius:6px;font-size:1.05rem;line-height:1}
 .iconbtn:hover{color:var(--bad);background:var(--bad-soft)}
-.items{list-style:none;margin:0;padding:6px 6px;display:flex;flex-direction:column}
-.items li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 8px;border-radius:7px}
-.items li:hover{background:var(--soft)}
+.items{list-style:none;margin:0;padding:10px;display:flex;flex-direction:column;gap:6px}
+.items li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:start;padding:10px 12px;border-radius:9px;border:1px solid transparent}
+.items li.on{background:var(--soft);border-color:var(--line)}
+.items li input[type=checkbox]{width:20px;height:20px;margin:1px 0 0;accent-color:var(--accent)}
+.items .nm{font-size:.98rem;line-height:1.35;font-weight:500;min-width:0}
+.items .nm small{display:block;color:var(--muted);font-size:.8rem;font-weight:400;margin-top:3px}
+.items li.off .nm{color:var(--muted);font-weight:400}
 .items li.off .rng{color:var(--muted);font-weight:400;opacity:.7}
-.items .nm{font-size:.88rem;line-height:1.3}
-.items .nm small{display:block;color:var(--muted);font-size:.74rem}
-.items input.cnt{width:46px;font-family:var(--f-mono);padding:1px 4px;border:1px solid var(--line);border-radius:5px;background:var(--soft);font-size:.8rem}
-.room-f{margin-top:auto;padding:10px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--soft);border-radius:0 0 var(--r) var(--r)}
+.items .rng{font-size:.92rem;text-align:right}
+.items .ctl{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.items .ctl .grp{display:flex;align-items:center;gap:6px}
+.items .ctl .note2{font-size:.8rem;color:var(--muted)}
+.items input.cnt{width:60px;font-family:var(--f-mono);padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);font-size:.85rem}
+.room-f{margin-top:auto;padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;background:var(--soft);border-radius:0 0 var(--r) var(--r)}
+.room-f .rng{font-size:1.05rem}
+.seg.xs button{padding:5px 11px;font-size:.82rem}
+.seg.xs{flex-wrap:nowrap}
+.items .ctl .grp{flex-wrap:wrap}
+@media (max-width:560px){
+  .items{padding:6px}
+  .items li{padding:10px 8px;gap:8px 10px}
+  .items .ctl{grid-column:1/-1;gap:10px}
+  .items .ctl .grp{width:100%;justify-content:space-between}
+  .room-h,.room-f{padding-left:14px;padding-right:14px}
+}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--muted);font:italic 600 11px/1 Georgia,"Times New Roman",serif;cursor:pointer;padding:0;flex:none;vertical-align:middle;margin-left:5px;text-transform:none;letter-spacing:0}
+.ib:hover,.ib[aria-expanded="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#infoPop{position:fixed;z-index:60;max-width:min(340px,calc(100vw - 24px));background:var(--ink);color:var(--paper);padding:10px 13px;border-radius:9px;font-size:.87rem;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.28);font-family:var(--f-body);font-weight:400;text-transform:none;letter-spacing:0}
 
 /* Rechenweg */
 .ledger{font-family:var(--f-mono);font-variant-numeric:tabular-nums;display:flex;flex-direction:column}
@@ -289,7 +310,7 @@ table{border-collapse:collapse;width:100%}
         <div class="card-h"><h2>Sanierungskosten in drei Stufen</h2><span id="sanHint" class="small muted"></span></div>
         <p class="small muted">Jede Zelle ist eine Spanne von günstigem bis teurem Angebot, inklusive Material, Arbeitslohn und Mehrwertsteuer. Tippe eine Zelle an, um sie für die Finanzierung zu verwenden.</p>
         <div class="scroll"><table class="matrix" id="matrix"></table></div>
-        <div class="row"><label class="chk"><input type="checkbox" id="pufferIn"> Puffer für Unvorhergesehenes einrechnen</label><span class="small muted" id="pufferTxt"></span></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="pufferIn"> Puffer für Unvorhergesehenes einrechnen</label><button type="button" class="ib" data-info="puffer" aria-label="Erklärung anzeigen" aria-expanded="false">i</button><span class="small muted" id="pufferTxt"></span></div>
       </div>
       <div class="cols2">
         <div class="card"><h3>So wird gerechnet</h3>
@@ -316,9 +337,7 @@ table{border-collapse:collapse;width:100%}
           </div>
         </div>
         <div class="row" style="justify-content:space-between">
-          <div class="row"><span class="label">Preise zeigen für</span>
-            <div class="seg sm" id="execSeg"><button data-exec="diy">Alles selbst</button><button data-exec="mix">Mix</button><button data-exec="firm">Firma</button></div>
-          </div>
+          <div class="bulk" id="globalBulk"></div>
           <div class="row">
             <select id="addType" aria-label="Raumart"></select><button class="btn" id="btnAddRoom">Raum hinzufügen</button>
           </div>
@@ -468,17 +487,171 @@ const EXEC = {diy:"Alles selbst",mix:"Mischkalkulation",firm:"Komplett Firma"};
 const QL = {g:"Günstig",m:"Mittel",l:"Luxus"};
 const TIER = {einfach:.85,normal:1,gehoben:1.12,luxus:1.25};
 const TIERL = {einfach:"Einfach",normal:"Normal",gehoben:"Gehoben",luxus:"Luxus"};
+const EXS = {diy:"Selbst",mix:"Mix",firm:"Firma"};
+/* ---------- Erklärungen für die (i)-Knöpfe ---------- */
+const ITI = {
+  maler:"Wände und Decken grundieren und zweimal streichen. Gut selbst machbar. Günstig = Baumarktfarbe, Luxus = Premiumfarbe oder Kalk-/Lehmputz-Optik.",
+  spachtel:"Wände glatt spachteln (Qualitätsstufe Q3) oder tapezieren, bevor gestrichen wird. Nötig bei alten, unebenen Wänden.",
+  boden:"Alten Belag entfernen und neuen verlegen, inklusive Sockelleisten. Günstig = Laminat/Vinyl, Mittel = Design-Vinyl oder Fertigparkett, Luxus = Massivparkett oder große Fliesen.",
+  estrich:"Den Untergrund unter dem Bodenbelag neu machen. Nötig, wenn er bröckelt, uneben ist oder Fußbodenheizung kommt. Muss danach wochenlang trocknen.",
+  putz:"Alten Innenputz abschlagen und neu verputzen. Typisch bei Kernsanierung, wenn neue Leitungen in die Wände kommen.",
+  elektrik:"Alle Leitungen, Dosen und Sicherungen neu. Bei Häusern vor ca. 1980 fast immer nötig (fehlender FI-Schutz, zu wenig Steckdosen). Schlitze klopfen kannst du selbst, anschließen darf nur ein Elektriker.",
+  elektrikTeil:"Steckdosen und Schalter tauschen, einzelne Leitungen erneuern, FI-Schutzschalter nachrüsten. Für Häuser, deren Elektrik grundsätzlich noch in Ordnung ist.",
+  tuer:"Neue Innentür mit Zarge, Drücker und Einbau. Anzahl kannst du unten ändern.",
+  heizkoerper:"Alte Heizkörper gegen neue tauschen, inklusive Ventile. Bei einer Wärmepumpe oft größere Heizkörper nötig. Anzahl wird aus der Fläche geschätzt.",
+  fbh:"Fußbodenheizung nachträglich einbauen. Ideal für Wärmepumpen, braucht meist neuen Estrich oder ein Fräs-System.",
+  fenster:"Alte Fenster gegen 3-fach verglaste tauschen, inklusive Einbau. Anzahl wird aus der Fläche geschätzt, du kannst sie ändern.",
+  trockenbau:"Wände aus Gipskarton stellen oder Decken abhängen, z. B. für neue Raumaufteilung oder Spots.",
+  kuechenzeile:"Komplette Einbauküche mit Geräten, Lieferung und Montage. Günstig = 5.000–8.000 € (einfache Zeile), Mittel = 8.000–18.000 € (Markengeräte), Luxus = ab 18.000 € (Insel, Naturstein, Premiumgeräte).",
+  kuecheAnschluss:"Wasser, Abwasser und Starkstrom für Herd an die richtige Stelle legen. Muss teilweise ein Fachbetrieb machen.",
+  fliesenspiegel:"Wandfliesen oder Glas-/Steinrückwand zwischen Arbeitsplatte und Hängeschränken.",
+  badRueckbau:"Alte Fliesen, Wanne, WC und Leitungen herausreißen und entsorgen. Gut selbst machbar, spart viel Geld.",
+  badLeitungen:"Wasser- und Abwasserleitungen im Bad neu verlegen. In Altbauten fast immer nötig, alte Bleirohre (vor 1960) müssen raus.",
+  badFliesen:"Wand- und Bodenfliesen inklusive Abdichtung. Preis pro m² Badfläche. Günstig = Standardfliesen, Luxus = Großformat oder Naturstein.",
+  badSanitaer:"WC, Waschtisch, Badewanne oder Dusche, Armaturen und Spiegel. Günstig = Baumarkt, Mittel = Marken wie Grohe/Villeroy, Luxus = Designserien.",
+  badDusche:"Bodengleiche Dusche mit Rinne und Glaswand. Komfortabel und gut für den Wiederverkauf, braucht genug Gefälle im Boden.",
+  badElektrik:"Steckdosen, Licht, Spiegelschrank-Anschluss und Lüfter im Bad. Wegen Feuchtigkeit nur vom Elektriker.",
+  kellerFeucht:"Feuchte Kellerwände von innen sanieren (Sperrputz, Abdichtung). Bei starker Nässe kann eine Außenabdichtung nötig sein, die deutlich teurer ist.",
+  kleinrep:"Viele kleine Dinge: Armaturen tauschen, Silikon erneuern, Türen einstellen, Steckdosenabdeckungen. Pro m² Wohnfläche gerechnet.",
+  entkernung:"Alles rausreißen bis auf die Wände: Böden, Putz, Leitungen, Bäder. Mit Container und Entsorgung. Viel davon kannst du selbst machen.",
+  dach:"Neue Dacheindeckung mit Dämmung und Unterspannbahn. Preis pro m² Wohnfläche geschätzt. Nur Fachbetrieb.",
+  dachDaemm:"Die Decke zum ungeheizten Dachboden dämmen. Günstig, oft selbst machbar und laut Gebäudeenergiegesetz nach dem Kauf Pflicht.",
+  fassade:"Außenwände mit Dämmplatten und neuem Putz (WDVS). Spart Heizkosten, ist Teil der KfW-Förderung „Jung kauft Alt“.",
+  heizung:"Alte Öl- oder Gasheizung raus, Wärmepumpe rein. Bis zu 70 % Zuschuss über die KfW-Heizungsförderung möglich, das ist hier noch nicht abgezogen.",
+  hausanschluss:"Neuer Zählerschrank, oft nötig bei alter Elektrik oder Wärmepumpe. Nur Elektriker und Netzbetreiber.",
+  leitungenHaus:"Alle Wasser- und Abwasserleitungen im Haus vom Keller bis zum Dach erneuern.",
+  kellerdecke:"Die Decke vom unbeheizten Keller zum Erdgeschoss dämmen. Günstig, selbst machbar, warme Füße im Erdgeschoss.",
+  schadstoff:"Puffer für Asbest (z. B. in alten Bodenplatten, Kleber, Eternit) oder teerhaltige Stoffe. Betrifft Häuser vor 1993. Entsorgung nur durch Fachfirma.",
+  aussen:"Garten, Zaun, Einfahrt, Terrasse. Viel davon selbst machbar.",
+  sonderumlage:"Bei Eigentumswohnungen beschließt die Eigentümergemeinschaft manchmal große Sanierungen (Dach, Fassade), die jeder Eigentümer extra zahlen muss. Protokolle der letzten Versammlungen prüfen!"
+};
+const INFO = {
+  "obj.titel":"Ein Name für dich, damit du das Objekt später unter „Meine Objekte“ wiederfindest.",
+  "obj.typ":"Art der Immobilie. Davon hängen die Raumvorschläge, Hausgeld, Instandhaltung und die Ortspreise ab, denn Häuser und Wohnungen haben andere Preise pro m².",
+  "obj.kaufpreis":"Der Angebotspreis aus dem Inserat. Darauf werden Kaufnebenkosten und Kredit berechnet. Oft lassen sich 3–10 % herunterhandeln.",
+  "obj.wfl":"Wohnfläche in m² laut Inserat. Grundlage für fast alles: Sanierungskosten, Miete und Marktwert.",
+  "obj.grund":"Grundstücksfläche in m². Nur bei Häusern interessant, hilft beim Vergleich mit anderen Angeboten.",
+  "obj.zimmer":"Anzahl der Zimmer ohne Küche und Bad. Daraus schlägt der Raumplaner die Räume vor.",
+  "obj.baeder":"Anzahl der Bäder. Jedes Bad ist im Raumplaner ein eigener, teurer Raum.",
+  "obj.baujahr":"Baujahr des Gebäudes. Ältere Häuser brauchen meist neue Leitungen, Elektrik und Putz, deshalb rechnet das Tool bei Altbauten mit Zuschlägen. Wichtig auch für Steuer-Abschreibung und Asbest (vor 1993).",
+  "obj.ort":"Ort oder Postleitzahl. Damit holt das Tool automatisch die aktuellen Kauf- und Mietpreise pro m² für genau diesen Ort.",
+  "obj.land":"Bestimmt die Grunderwerbsteuer: zwischen 3,5 % (Bayern) und 6,5 % (z. B. NRW). Baden-Württemberg: 5 %.",
+  "obj.region":"Wie teuer Handwerker in der Gegend sind. Im Raum Stuttgart oder München zahlst du für die gleiche Arbeit bis zu 25 % mehr als im Durchschnitt, im ländlichen Osten etwa 20 % weniger.",
+  "obj.makler":"Provision, die du als Käufer zahlst. Bei Wohnungen und Einfamilienhäusern meist 3,57 % inkl. Mehrwertsteuer. Bei provisionsfreien Angeboten 0 eintragen.",
+  "obj.hausgeld":"Monatliche Zahlung an die Eigentümergemeinschaft: Verwaltung, Rücklage für Reparaturen und Nebenkosten. Steht im Inserat.",
+  "obj.zustand":"Wie das Objekt aussieht. Daraus schlägt das Tool die passende Sanierungsstufe vor.",
+  "obj.heizung":"Art und Alter der Heizung. Öl- und Gasheizungen über 30 Jahre müssen oft getauscht werden, das kostet 25.000–40.000 €.",
+  "obj.energie":"Energieklasse aus dem Energieausweis, A+ ist sehr gut, H sehr schlecht. F, G und H heißen hohe Heizkosten, öffnen aber die günstige KfW-Förderung „Jung kauft Alt“.",
+  "obj.istMiete":"Nur wenn das Objekt gerade vermietet ist: die Kaltmiete, die der Mieter heute zahlt. Erhöhen darfst du sie nur begrenzt.",
+  "obj.keller":"Ob es einen Keller gibt. Dann schlägt der Raumplaner ihn als eigenen Raum vor.",
+  "mkt.qmUnsaniert":"Was vergleichbare Objekte im heutigen Zustand an diesem Ort pro m² kosten. Wird automatisch für den Ort recherchiert. Zeigt dir, ob das Angebot zu teuer ist.",
+  "mkt.qmSaniert":"Was frisch sanierte oder neuwertige Objekte an diesem Ort pro m² kosten. Daraus schätzt das Tool den Verkaufspreis nach der Sanierung.",
+  "mkt.mieteQm":"Übliche Kaltmiete pro m² bei Neuvermietung an diesem Ort, normale Ausstattung. Wird automatisch recherchiert und ist die Grundlage für die Miet-Rechnung.",
+  "ortpreise":"Sobald ein Ort eingetragen ist, sucht das Tool im Internet die aktuellen Kauf- und Mietpreise für genau diesen Ort (Immobilienportale, Mietspiegel der Stadt). Jeder Ort wird 30 Tage gespeichert und dann automatisch neu geholt. Änderst du einen Wert von Hand, bleibt deiner stehen.",
+  "fin.ek":"Dein eigenes Geld, das du einbringst. Banken wollen mindestens die Kaufnebenkosten, für gute Zinsen eher 20 % der Gesamtkosten.",
+  "fin.bindung":"So lange bleibt der Zins fest. Danach musst du die Restschuld zum dann gültigen Zins weiterfinanzieren. Längere Bindung heißt mehr Sicherheit, aber etwas höherer Zins.",
+  "fin.tilgung":"Wie viel Prozent des Kredits du im ersten Jahr zurückzahlst. 2 % ist das Minimum, mit 3 % bist du deutlich schneller schuldenfrei.",
+  "fin.zinsAuto":"Mit Haken nimmt das Tool den aktuellen Bestzins, den üblichen Aufschlag und einen Zuschlag, wenn du wenig Eigenkapital hast. Ohne Haken trägst du den Zins aus deinem echten Bankangebot ein.",
+  "fin.zins":"Sollzins aus deinem Bankangebot.",
+  "fin.src":"Welche Sanierungskosten in die Finanzierung kommen: eine der drei Stufen oder genau deine Auswahl aus dem Raumplaner.",
+  "fin.ex":"Ob du alles selbst machst, einen Teil selbst (Mix) oder alles von Handwerkern machen lässt.",
+  "fin.pos":"Sanierungskosten sind immer eine Spanne. Unterer Wert = günstige Angebote, keine Überraschungen. Oberer Wert = vorsichtig gerechnet. Für die Bank lieber den oberen nehmen.",
+  "fin.netto":"Was dein Haushalt im Monat netto verdient. Damit prüft das Tool, ob die Rate tragbar ist.",
+  "fin.kinder":"Anzahl der Kinder unter 18 im Haushalt. Bestimmt, wie viel KfW-Förderkredit möglich ist.",
+  "fin.kfw":"Rechnet den KfW-Kredit „Jung kauft Alt“ ein. Nur für Familien mit Kind, die selbst einziehen, bei Energieklasse F, G oder H und Sanierung innerhalb von 54 Monaten.",
+  "flip.arv":"Wofür du das Objekt nach der Sanierung realistisch verkaufen kannst. Leer lassen, dann nimmt das Tool den Marktpreis für sanierte Objekte am Ort.",
+  "flip.monate":"Zeit vom Kauf bis zum Verkauf: Notar, Sanierung, Vermarktung. Anfänger planen meist zu kurz, 8–12 Monate sind realistisch.",
+  "flip.lfd":"Was das leere Objekt jeden Monat kostet: Hausgeld oder Nebenkosten, Strom, Heizung, Versicherung, Grundsteuer.",
+  "flip.vkMakler":"Provision, wenn du über einen Makler verkaufst. Verkaufst du selbst, 0 eintragen.",
+  "flip.steuer":"Dein persönlicher Steuersatz auf zusätzliches Einkommen. Gewinn aus einem Verkauf innerhalb von 10 Jahren wird wie Gehalt versteuert, bei mittlerem Einkommen meist 30–42 %.",
+  "flip.ziel":"Wie viel Gewinn vom Verkaufspreis mindestens bleiben soll. Profis planen mit 15–20 %, weil fast immer etwas teurer wird oder länger dauert.",
+  "rent.tier":"Wie hochwertig die Wohnung nach der Sanierung ist. Gehobene Ausstattung bringt etwa 12 % mehr Miete, einfache etwa 15 % weniger.",
+  "rent.lage":"Wo das Objekt im Ort liegt. Die Mietpreise für einfache, mittlere und gute Lage kommen aus der Ortsrecherche.",
+  "rent.manual":"Wenn du die Miete schon kennst, z. B. aus einem Mietvertrag, trag sie hier ein. Dann wird nicht mit dem m²-Preis gerechnet.",
+  "rent.ausfall":"Puffer für Leerstand zwischen zwei Mietern und Mieter, die nicht zahlen. 2–3 % sind üblich.",
+  "rent.verw":"Kosten, die du nicht auf den Mieter umlegen darfst, z. B. Hausverwaltung und Kontogebühren. Bei Wohnungen etwa 30–40 % des Hausgelds.",
+  "rent.inst":"Rücklage für Reparaturen, die du als Vermieter selbst zahlst. Ältere Gebäude brauchen mehr.",
+  "rent.geb":"Steuerlich abschreiben darfst du nur das Gebäude, nicht das Grundstück. In Städten liegt der Gebäudeanteil oft bei 60–75 %, auf dem Land höher.",
+  "rent.steuer":"Dein persönlicher Steuersatz. Gewinne aus der Vermietung werden damit versteuert, Verluste senken deine Steuer auf das Gehalt.",
+  "kpi.gesamt":"Alles, was der Kauf insgesamt kostet: Kaufpreis, Kaufnebenkosten und Sanierung.",
+  "kpi.kredit":"Was du bei der Bank leihen musst: Gesamtinvestition minus Eigenkapital.",
+  "kpi.belastung":"Was jeden Monat von deinem Konto geht: Kreditrate plus Wohnnebenkosten. Beim Vermieten nur die Kreditrate, weil der Mieter die Nebenkosten zahlt.",
+  "kpi.quote":"Wie viel Prozent deines Nettoeinkommens für die Immobilie draufgehen. Bis 35 % gilt als gesund, ab 45 % wird es eng.",
+  "kpi.gewinn":"Was beim Flip nach dem Verkauf übrig bleibt, vor Einkommensteuer.",
+  "kpi.cf":"Was nach Miete, Kreditrate, Kosten und Steuern jeden Monat übrig bleibt. Negativ heißt: Du zahlst jeden Monat drauf.",
+  "kpi.stamp":"Die Gesamteinschätzung. Eigenheim: ob die Rate tragbar ist. Fix & Flip: Kaufen ab 15 % Marge, Verhandeln ab 8 %. Vermieten: aus Mietrendite und Cashflow.",
+  "ex.diy":"Du machst alles selbst, was Laien machen dürfen. Gezahlt werden das Material und die Arbeiten, die ein Fachbetrieb machen muss (Elektroanschluss, Heizung, Gas, Dach).",
+  "ex.mix":"Du übernimmst etwa die Hälfte der Arbeiten, die Laien machen können, z. B. Abriss, Streichen, Boden. Den Rest macht eine Firma.",
+  "ex.firm":"Alles machen Handwerker: Material, Arbeitslohn und Mehrwertsteuer.",
+  "st.leicht":"Schönheitsreparaturen: streichen, neuer Boden, Kleinkram. Für gepflegte Objekte.",
+  "st.mittel":"Teilsanierung: Bad und Küche neu, Türen, Elektrik teilweise, Heizkörper. Für renovierungsbedürftige Objekte.",
+  "st.kern":"Kernsanierung: alles bis auf den Rohbau, inklusive Leitungen, Elektrik, Putz, Estrich, Fenster und bei Häusern Dach, Fassade und Heizung.",
+  "richtwert":"Was Sanierungen dieser Art laut Branchenquellen pro m² kosten, angepasst an die Region. Grün = die Rechnung des Tools liegt im üblichen Rahmen.",
+  "puffer":"Aufschlag für Überraschungen, die erst beim Öffnen von Wänden und Böden auftauchen. Bei Altbauten fast immer nötig.",
+  "q":"Qualität: Günstig = Baumarkt- und Einstiegsprodukte. Mittel = solide Markenware. Luxus = hochwertige Materialien und Designprodukte.",
+  "x":"Ausführung: Selbst = nur Material plus Pflicht-Fachbetrieb. Mix = du machst etwa die Hälfte selbst. Firma = alles vom Handwerker.",
+  "bulk":"Setzt Qualität oder Ausführung für alle Arbeiten auf einmal. Danach kannst du jede Arbeit einzeln anpassen.",
+  "stunden":"Geschätzte Stunden, die du selbst arbeitest. Ein Laie braucht etwa 1,5-mal so lange wie ein Profi.",
+  "plan":"Deine Auswahl: jede Arbeit mit der Qualität und Ausführung, die du gewählt hast. Darunter zum Vergleich, was es kosten würde, wenn alles gleich ausgeführt wird.",
+  "l.kp":"Der Angebotspreis aus dem Inserat.",
+  "l.nk":"Grunderwerbsteuer, Notar, Grundbuch und Makler. Diese Kosten finanziert kaum eine Bank, du solltest sie aus Eigenkapital zahlen.",
+  "l.kpg":"Kaufpreis plus Kaufnebenkosten.",
+  "l.san":"Die gewählten Sanierungskosten, inklusive Puffer.",
+  "l.kfw":"Der Teil, den die KfW über „Jung kauft Alt“ sehr günstig finanziert.",
+  "l.bank":"Der Teil, den eine normale Bank finanziert.",
+  "l.zins":"Zinssatz pro Jahr. Er steigt, je mehr du im Verhältnis zum Wert leihst.",
+  "l.rate":"Monatliche Kreditrate aus Zins und Tilgung. Sie bleibt während der Zinsbindung gleich.",
+  "l.neben":"Bei Wohnungen das Hausgeld. Bei Häusern die üblichen Nebenkosten inkl. Heizung (Durchschnitt laut Mieterbund) plus 1 €/m² Rücklage für Reparaturen.",
+  "nk.grest":"Steuer, die beim Kauf einer Immobilie anfällt. Je nach Bundesland 3,5–6,5 % des Kaufpreises.",
+  "nk.notar":"Der Notar beurkundet den Kaufvertrag. Etwa 1,5 % des Kaufpreises.",
+  "nk.gb":"Eintrag ins Grundbuch für dich als Eigentümer und die Grundschuld der Bank. Etwa 0,5 %.",
+  "loan.ltv":"Kredit im Verhältnis zum Wert (Kaufpreis plus Sanierung). Unter 80 % gibt es die besten Zinsen, über 100 % wird es teuer.",
+  "loan.rest":"Was nach dem Ende der Zinsbindung noch offen ist und neu finanziert werden muss.",
+  "loan.zinsen":"Wie viel Zinsen du während der Zinsbindung insgesamt zahlst.",
+  "loan.yrs":"Wann der Kredit abbezahlt wäre, wenn der Zins gleich bliebe.",
+  "f.vk":"Provision für den Makler beim Verkauf.",
+  "f.zinsH":"Zinsen für den Kredit, solange du das Objekt hältst.",
+  "f.st":"Einkommensteuer auf den Gewinn, weil du innerhalb von 10 Jahren verkaufst.",
+  "f.netto":"Was dir am Ende wirklich bleibt.",
+  "f.marge":"Gewinn vor Steuer geteilt durch Verkaufspreis. Ab 15 % gilt ein Flip als sicher.",
+  "f.roi":"Gewinn nach Steuer geteilt durch dein eingesetztes Eigenkapital.",
+  "f.pa":"Die Eigenkapitalrendite auf ein Jahr hochgerechnet. Zeigt, wie schnell dein Geld arbeitet.",
+  "f.max":"Der höchste Kaufpreis, bei dem du deine Ziel-Marge noch erreichst. Mehr solltest du nicht bieten.",
+  "f.abst":"Positiv: Das Angebot liegt unter deinem Höchstgebot. Negativ: So viel musst du mindestens herunterhandeln.",
+  "f.qm":"Dein geplanter Verkaufspreis pro m² im Vergleich zu sanierten Objekten am Ort. Liegt deiner deutlich darüber, ist er zu optimistisch.",
+  "f.sens":"Was mit deinem Gewinn passiert, wenn der Verkauf schlechter oder besser läuft oder die Sanierung teurer wird. Grün ab 15 % Marge, gelb ab 8 %, rot darunter.",
+  "r.jkm":"Kaltmiete mal 12 Monate.",
+  "r.nu":"Verwaltung und Instandhaltung, die du als Vermieter selbst trägst.",
+  "r.rein":"Was die Immobilie vor Kredit und Steuern abwirft.",
+  "r.cfv":"Was nach der Kreditrate übrig bleibt, vor Steuern.",
+  "r.st":"Auf das Ergebnis aus Miete minus Kosten, Zinsen und Abschreibung zahlst du Steuer. Ist es negativ, sparst du Steuern auf dein Gehalt.",
+  "r.brutto":"Jahreskaltmiete geteilt durch Kaufpreis. Ab 5 % gut, unter 4 % trägt sich ein Kredit kaum von selbst.",
+  "r.faktor":"Kaufpreis geteilt durch Jahreskaltmiete, also wie viele Jahresmieten der Kaufpreis kostet. Unter 20 ist günstig, über 25 teuer.",
+  "r.netto":"Reinertrag geteilt durch Gesamtinvestition inkl. Nebenkosten und Sanierung. Die ehrlichere Rendite.",
+  "r.ekr":"Was dein Eigenkapital pro Jahr verdient: Cashflow nach Steuer plus Tilgung, denn die Tilgung baut dein Vermögen auf.",
+  "r.tiers":"Mietpreise für verschiedene Ausstattungen, ausgehend von der Miete am Ort und der gewählten Lage.",
+  "e.vergl":"Was eine vergleichbare Wohnung am Ort zur Miete kosten würde, inklusive Nebenkosten.",
+  "e.zins":"Zinsen gehen an die Bank und sind weg, ähnlich wie Miete.",
+  "e.tilg":"Mit der Tilgung zahlst du den Kredit ab. Das Geld bleibt als Eigentum bei dir.",
+  "e.mehr":"Wie viel mehr du als Eigentümer im Monat zahlst als zur Miete. Negativ heißt, Kaufen ist günstiger.",
+  "e.qmAng":"Angebotspreis geteilt durch Wohnfläche.",
+  "e.qmNach":"Kaufpreis plus Sanierung pro m². So viel steckt am Ende im Objekt."
+};
+const LINFO = {"Kaufpreis":"l.kp","Kaufnebenkosten":"l.nk","Kaufpreis gesamt":"l.kpg","Sanierung / Renovierung":"l.san","Gesamtinvestition":"kpi.gesamt","Eigenkapital":"fin.ek","Kreditbedarf":"kpi.kredit","davon KfW 308":"l.kfw","davon Bankdarlehen":"l.bank","Sollzins":"l.zins","Anfängliche Tilgung":"fin.tilgung","Kreditrate":"l.rate","Wohnnebenkosten":"l.neben","Monatliche Belastung":"kpi.belastung",
+  "Verkaufspreis":"flip.arv","Makler beim Verkauf":"f.vk","Kaufpreis + Nebenkosten":"l.kpg","Sanierung":"l.san","Kreditzinsen Haltedauer":"f.zinsH","Laufende Kosten Leerstand":"flip.lfd","Gewinn vor Steuer":"kpi.gewinn","Einkommensteuer (Spekulationsgewinn)":"f.st","Gewinn nach Steuer":"f.netto"};
+const ib = k => `<button type="button" class="ib" data-info="${k}" aria-label="Erklärung anzeigen" aria-expanded="false">i</button>`;
+const K = (label,val,info) => `<span class="k">${label}${info?ib(info):""}</span><span class="v">${val}</span>`;
 
 /* ---------- Zustand ---------- */
 const uid = ()=>Math.random().toString(36).slice(2,10);
 function blankState(){
   return {v:1,id:(crypto.randomUUID?crypto.randomUUID():uid()+uid()),example:false,mode:"eigen",tab:"objekt",ai:{},roomsAuto:true,
     obj:{titel:"",typ:"efh",kaufpreis:0,wfl:0,grund:0,zimmer:0,baeder:1,baujahr:0,ort:"",land:"BW",region:"speck",makler:M.makler,hausgeld:0,keller:true,heizung:"",energie:"",zustand:"unbekannt",istMiete:0},
-    mkt:{qmUnsaniert:0,qmSaniert:0,mieteQm:0},ortInfo:null,
+    mkt:{qmUnsaniert:0,qmSaniert:0,mieteQm:0},ortInfo:null,manual:{},
     find:null,rooms:[],exec:"firm",puffer:true,
     fin:{ek:0,bindung:10,tilgung:2,zinsAuto:true,zins:4.5,src:"mittel",ex:"firm",pos:"hi",kinder:0,kfw:false,netto:0},
     flip:{arv:0,monate:8,vkMakler:3.57,steuer:42,lfd:0,ziel:15},
-    rent:{tier:"normal",manual:0,ausfall:2,verw:0,inst:0,geb:75,steuer:42},
+    rent:{tier:"normal",lage:"auto",manual:0,ausfall:2,verw:0,inst:0,geb:75,steuer:42},
     chat:[]};
 }
 function exampleState(){
@@ -519,7 +692,7 @@ function ctx(){return {wfl:num(S.obj.wfl),R:(REGIONS[S.obj.region]||REGIONS.avg)
 /* ---------- Räume ---------- */
 function genRooms(o){
   const w = Math.max(20,num(o.wfl)||80), z = Math.max(1,Math.round(num(o.zimmer)||3)), b = Math.max(1,Math.round(num(o.baeder)||1));
-  const rooms=[], add=(typ,name,a)=>rooms.push({id:uid(),typ,name,a:Math.max(1,Math.round(a)),q:"m",sel:{},cnt:{}});
+  const rooms=[], add=(typ,name,a)=>rooms.push({id:uid(),typ,name,a:Math.max(1,Math.round(a)),q:"m",ex:"firm",iq:{},ix:{},sel:{},cnt:{}});
   const ku = Math.max(7,w*.09), ba = w>110?8:6, fl = w*.1;
   const wc = (b>=2||(isHaus(o)&&w>110))?2.5:0;
   let rest = w-ku-ba*Math.min(b,2)-wc-fl; rest=Math.max(rest,z*10);
@@ -538,7 +711,7 @@ function genRooms(o){
 function applyPreset(rooms,st,o){
   const P=STAGES[st], haus=isHaus(o), bj=num(o.baujahr);
   rooms.forEach(r=>{
-    r.q=P.q; r.sel={};
+    r.q=P.q; r.sel={}; r.iq={}; r.ix={};
     (P.sel[r.typ]||[]).forEach(id=>{
       const it=IT[id]; if(!it) return;
       if(it.haus&&!haus) return; if(it.flat&&haus) return;
@@ -548,6 +721,8 @@ function applyPreset(rooms,st,o){
   });
   return rooms;
 }
+const iQ=(r,id)=>r.iq?.[id]||r.q||"m";
+const iX=(r,id)=>IT[id]?.diy===0?"firm":(r.ix?.[id]||r.ex||"firm");
 function itemCalc(id,r,c){
   const it=IT[id], rt=RT[r.typ];
   let qty;
@@ -556,7 +731,7 @@ function itemCalc(id,r,c){
   else if(it.u==="p") qty=rt.ps||1;
   else if(it.u==="wfl") qty=c.wfl;
   else qty=1;
-  const P=it[r.q]||it.m, A=it.age?c.A:1, lab=it.lab, mat=1-lab;
+  const P=it[iQ(r,id)]||it.m, A=it.age?c.A:1, lab=it.lab, mat=1-lab;
   const f={firm:mat+lab*c.R, mix:mat+lab*c.R*(1-it.diy*.5), diy:mat*1.05+lab*c.R*(1-it.diy)};
   const o={qty};
   for(const k in f) o[k]=[qty*P[0]*A*f[k], qty*P[1]*A*f[k]];
@@ -568,18 +743,19 @@ function visibleItems(r,c){
   return RT[r.typ].items.filter(id=>{const it=IT[id]; if(it.haus&&!c.haus) return false; if(it.flat&&c.haus) return false; return true;});
 }
 function calcRooms(rooms,c){
-  const tot={firm:[0,0],mix:[0,0],diy:[0,0],hDiy:0,hMix:0}, per=[];
+  const z=()=>({firm:[0,0],mix:[0,0],diy:[0,0],plan:[0,0],hDiy:0,hMix:0,hPlan:0});
+  const tot=z(), per=[];
   rooms.forEach(r=>{
-    const rt={firm:[0,0],mix:[0,0],diy:[0,0],hDiy:0,hMix:0};
-    Object.keys(r.sel).forEach(id=>{ if(!r.sel[id]||!IT[id]) return;
-      if(!visibleItems(r,c).includes(id)) return;
-      const x=itemCalc(id,r,c);
+    const rt=z(), vis=visibleItems(r,c);
+    Object.keys(r.sel).forEach(id=>{ if(!r.sel[id]||!IT[id]||!vis.includes(id)) return;
+      const x=itemCalc(id,r,c), ch=iX(r,id);
       ["firm","mix","diy"].forEach(k=>{rt[k][0]+=x[k][0];rt[k][1]+=x[k][1]});
-      rt.hDiy+=x.hDiy; rt.hMix+=x.hMix;
+      rt.plan[0]+=x[ch][0]; rt.plan[1]+=x[ch][1];
+      rt.hDiy+=x.hDiy; rt.hMix+=x.hMix; rt.hPlan+=ch==="diy"?x.hDiy:ch==="mix"?x.hMix:0;
     });
     per.push(rt);
-    ["firm","mix","diy"].forEach(k=>{tot[k][0]+=rt[k][0];tot[k][1]+=rt[k][1]});
-    tot.hDiy+=rt.hDiy; tot.hMix+=rt.hMix;
+    ["firm","mix","diy","plan"].forEach(k=>{tot[k][0]+=rt[k][0];tot[k][1]+=rt[k][1]});
+    tot.hDiy+=rt.hDiy; tot.hMix+=rt.hMix; tot.hPlan+=rt.hPlan;
   });
   return {tot,per};
 }
@@ -604,8 +780,8 @@ function sanBudget(src=S.fin.src,ex=S.fin.ex,pos=S.fin.pos){
   if(src==="keine") return {val:0,lo:0,hi:0,puf:0,label:"keine Sanierung"};
   if(src==="plan"){t=calcRooms(S.rooms,ctx()).tot; puf=S.puffer?S.pufferPlan??.15:0;}
   else {t=stageCalc(src); puf=S.puffer?STAGES[src].puffer:0;}
-  const [lo,hi]=t[ex]; const base=pos==="lo"?lo:pos==="mid"?(lo+hi)/2:hi;
-  return {val:base*(1+puf),lo:lo*(1+puf),hi:hi*(1+puf),puf,label:(src==="plan"?"Raumplaner":STAGES[src].l)+" · "+EXEC[ex]};
+  const [lo,hi]=t[src==="plan"?"plan":ex]; const base=pos==="lo"?lo:pos==="mid"?(lo+hi)/2:hi;
+  return {val:base*(1+puf),lo:lo*(1+puf),hi:hi*(1+puf),puf,label:src==="plan"?"Raumplaner · deine Auswahl":STAGES[src].l+" · "+EXEC[ex]};
 }
 
 /* ---------- Finanzierung ---------- */
@@ -671,7 +847,8 @@ function rentDefaults(){const o=S.obj, bj=num(o.baujahr), age=bj?2026-bj:40;
   return {verw:o.typ==="wohnung"?Math.round(num(o.hausgeld)*.4)||35:25, inst:o.typ==="wohnung"?7:(age>=32?M.inst32:age>=22?M.inst22:9)}}
 function rentCalc(F){
   const o=S.obj,r=S.rent,wfl=num(o.wfl),bj=num(o.baujahr);
-  const base=num(S.mkt.mieteQm);
+  const lage=r.lage||"auto";
+  const base=lage==="auto"?num(S.mkt.mieteQm):(num(S.ortInfo?.miete_qm?.[lage])||num(S.mkt.mieteQm)*({einfach:.85,mittel:1,gut:1.18}[lage]||1));
   const qm=base*TIER[r.tier];
   const kalt=num(r.manual)>0?num(r.manual):qm*wfl;
   const jkm=kalt*12;
@@ -724,9 +901,9 @@ function field(k,label,type="number",opts={}){
   const id="f_"+k.replace(/\./g,"_");
   let ctl;
   if(type==="select") ctl=`<select id="${id}" data-k="${k}">${opts.options.map(([val,l])=>`<option value="${esc(val)}"${String(v)===String(val)?" selected":""}>${esc(l)}</option>`).join("")}</select>`;
-  else if(type==="check") return `<label class="chk"><input type="checkbox" id="${id}" data-k="${k}"${v?" checked":""}> ${esc(label)}</label>`;
+  else if(type==="check") return `<span class="chk"><label class="chk" for="${id}"><input type="checkbox" id="${id}" data-k="${k}"${v?" checked":""}> ${esc(label)}</label>${INFO[k]?ib(k):""}</span>`;
   else ctl=`<input id="${id}" type="${type}" data-k="${k}" value="${esc(v===0&&type==="number"?"":v)}"${type==="number"?` step="${opts.step||"any"}" min="0" inputmode="decimal"`:""} placeholder="${esc(opts.ph||"")}">`;
-  return `<label class="f${ai?" ai":""}" for="${id}"><span>${esc(label)}${ai?` <span class="tag">${S.ai[aiK]==="web"?"Web":"KI"}</span>`:""}${opts.unit?` <span class="muted">(${esc(opts.unit)})</span>`:""}</span>${ctl}</label>`;
+  return `<label class="f${ai?" ai":""}" for="${id}"><span>${esc(label)}${INFO[opts.info||k]?ib(opts.info||k):""}${ai?` <span class="tag">${S.ai[aiK]==="web"?"Web":"KI"}</span>`:""}${opts.unit?` <span class="muted">(${esc(opts.unit)})</span>`:""}</span>${ctl}</label>`;
 }
 function renderObjForm(){
   const o=S.obj;
@@ -750,6 +927,9 @@ function renderObjForm(){
     field("obj.istMiete","Aktuelle Kaltmiete (falls vermietet)","number",{unit:"€/Monat"}),
     isHaus(o)?`<div class="f"><span>&nbsp;</span>${field("obj.keller","Keller vorhanden","check")}</div>`:""
   ].join("");
+  renderMktForm();
+}
+function renderMktForm(){
   $("#mktForm").innerHTML=[
     field("mkt.qmUnsaniert","Kaufpreis unsaniert","number",{unit:"€/m²",step:50}),
     field("mkt.qmSaniert","Kaufpreis saniert","number",{unit:"€/m²",step:50}),
@@ -763,10 +943,10 @@ function renderFinForm(){
     field("fin.ek","Eigenkapital","number",{unit:"€",step:1000}),
     field("fin.bindung","Zinsbindung","select",{options:[[5,"5 Jahre"],[10,"10 Jahre"],[15,"15 Jahre"],[20,"20 Jahre"],[30,"30 Jahre"]]}),
     field("fin.tilgung","Anfängliche Tilgung","number",{unit:"%",step:.25}),
-    `<div class="f"><span>Sollzins</span><div class="row"><label class="chk"><input type="checkbox" id="f_fin_zinsAuto" data-k="fin.zinsAuto"${f.zinsAuto?" checked":""}> aktueller Marktzins</label></div></div>`,
+    `<div class="f"><span>Sollzins${ib("fin.zinsAuto")}</span><div class="row"><label class="chk"><input type="checkbox" id="f_fin_zinsAuto" data-k="fin.zinsAuto"${f.zinsAuto?" checked":""}> aktueller Marktzins</label></div></div>`,
     f.zinsAuto?"":field("fin.zins","Eigener Zins","number",{unit:"%",step:.01}),
     field("fin.src","Sanierung","select",{options:[["keine","keine"],["leicht","Leicht"],["mittel","Mittel"],["kern","Kernsanierung"],["plan","Raumplaner"]]}),
-    field("fin.ex","Ausführung","select",{options:Object.entries(EXEC)}),
+    f.src==="plan"?`<div class="f"><span>Ausführung${ib("fin.ex")}</span><p class="small" style="margin:6px 0 0">wie im Raumplaner pro Arbeit gewählt</p></div>`:field("fin.ex","Ausführung","select",{options:Object.entries(EXEC)}),
     field("fin.pos","Wert aus der Spanne","select",{options:[["lo","unterer (optimistisch)"],["mid","Mitte"],["hi","oberer (vorsichtig)"]]}),
     S.mode==="eigen"?field("fin.netto","Haushaltsnetto","number",{unit:"€/Monat",step:100}):""
   ].join("");
@@ -790,7 +970,9 @@ function renderEvalForm(){
       field("flip.ziel","Ziel-Marge","number",{unit:"% vom Verkaufspreis",step:1})].join("");
   } else if(m==="miete"){
     const d=rentDefaults();
-    h=[field("rent.tier","Ausstattung nach Sanierung","select",{options:Object.entries(TIERL)}),
+    const oi=S.ortInfo?.miete_qm||{}, lq=k=>oi[k]?` · ${dec(oi[k])} €/m²`:"";
+    h=[field("rent.lage","Lage im Ort","select",{options:[["auto",`Normal wie recherchiert${num(S.mkt.mieteQm)?` · ${dec(num(S.mkt.mieteQm))} €/m²`:""}`],["einfach","Einfache Lage"+lq("einfach")],["mittel","Mittlere Lage"+lq("mittel")],["gut","Gute Lage"+lq("gut")]]}),
+      field("rent.tier","Ausstattung nach Sanierung","select",{options:Object.entries(TIERL)}),
       field("rent.manual","Kaltmiete fix (optional)","number",{unit:"€/Monat",ph:"leer = aus €/m²"}),
       field("rent.ausfall","Mietausfall","number",{unit:"%",step:.5}),
       field("rent.verw","Nicht umlagefähige Kosten","number",{unit:"€/Monat",ph:`Schätzung ${fmt(d.verw)}`}),
@@ -803,42 +985,56 @@ function renderEvalForm(){
   $("#evalForm").innerHTML=h;
 }
 
-/* ---------- Ortspreise (Live-Recherche) ---------- */
-let ortBusy=false, ortMsg="";
+/* ---------- Ortspreise (automatisch im Hintergrund) ---------- */
+let ortBusy=false, ortMsg="", ortErr=false;
+const artOf=o=>o.typ==="wohnung"?"wohnung":"haus";
+function ortStale(){
+  const i=S.ortInfo, ort=(S.obj.ort||"").trim(); if(!ort) return false;
+  if(!i||i.anfrage!==ort||i.art!==artOf(S.obj)) return true;
+  return !i.ts||Date.now()-i.ts>30*864e5;
+}
+function autoOrt(){ if(SESSION&&!ortBusy&&ortStale()) lookupOrt(false); }
 function renderOrtBox(){
   const box=$("#ortBox"); if(!box) return;
-  const o=S.obj, i=S.ortInfo, ort=(o.ort||"").trim();
-  const stale=i&&ort&&(i.anfrage!==ort||i.art!==(o.typ==="wohnung"?"wohnung":"haus"));
-  let h="";
-  if(i&&!stale){
-    h+=`<p class="small"><b>Recherchiert für ${esc(i.ort)}</b> (${esc(i.stand||"")}): Miete ${[["einfach","einfache"],["mittel","mittlere"],["gut","gute"]].filter(([k])=>i.miete_qm?.[k]).map(([k,l])=>`${l} Lage ${dec(i.miete_qm[k])} €`).join(" · ")||"–"} pro m²${i.vergleichsmiete_qm?` · Vergleichsmiete ${dec(i.vergleichsmiete_qm)} €/m²`:""}${i.mietspiegel?` · ${esc(i.mietspiegel)}`:""}${i.mietpreisbremse===true?" · Mietpreisbremse gilt":i.mietpreisbremse===false?" · keine Mietpreisbremse":""}.</p>`;
+  const o=S.obj, i=S.ortInfo, ort=(o.ort||"").trim(), fresh=i&&ort&&!ortStale();
+  let h=`<p class="small" style="display:flex;align-items:center;gap:4px"><b>Ortspreise</b>${ib("ortpreise")}</p>`;
+  if(ortBusy) h+=`<p class="small muted">${esc(ortMsg)}</p>`;
+  else if(fresh){
+    h+=`<p class="small">Aktuelle Preise für <b>${esc(i.ort)}</b> (${esc(i.stand||"")}, geholt ${esc(i.recherchiert||"")}): Kaltmiete ${[["einfach","einfache"],["mittel","mittlere"],["gut","gute"]].filter(([k])=>i.miete_qm?.[k]).map(([k,l])=>`${l} Lage ${dec(i.miete_qm[k])} €`).join(" · ")||"–"} pro m²${i.vergleichsmiete_qm?` · Vergleichsmiete ${dec(i.vergleichsmiete_qm)} €/m²`:""}${i.kaufpreis_qm?` · Kaufpreis Ø ${fmt(i.kaufpreis_qm)} €/m²`:""}${i.mietspiegel?` · ${esc(i.mietspiegel)}`:""}${i.mietpreisbremse===true?" · Mietpreisbremse gilt":i.mietpreisbremse===false?" · keine Mietpreisbremse":""}.</p>`;
     if(i.hinweis) h+=`<p class="small muted">${esc(i.hinweis)}</p>`;
     if(i.quellen?.length) h+=`<p class="small muted">Quellen: ${i.quellen.map(q=>`<a href="${esc(q.url)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(q.titel)}</a>`).join(" · ")}</p>`;
-  } else if(ort){
-    h+=`<p class="small muted">${stale?`Die Preise oben gehören zu ${esc(i.ort)}. `:""}Für „${esc(ort)}“ wurden die Preise noch nicht im Internet recherchiert.</p>`;
-  } else h+=`<p class="small muted">Trage oben den Ort ein, dann recherchiert das Tool die aktuellen Miet- und Kaufpreise für genau diesen Ort.</p>`;
-  h+=`<div class="row"><button class="btn${(!i||stale)&&ort?" pri":""}" id="btnOrt"${!ort||ortBusy||!SESSION?" disabled":""}>${ortBusy?"Recherchiere …":i&&!stale?"Neu recherchieren":"Preise für diesen Ort recherchieren"}</button><span class="status" id="ortStatus">${esc(ortMsg)}</span></div>`;
+    if(ortMsg) h+=`<p class="status${ortErr?" err":""}">${esc(ortMsg)}</p>`;
+    h+=`<div class="row"><button class="btn ghost" id="btnOrt">Jetzt neu holen</button></div>`;
+  } else if(!ort) h+=`<p class="small muted">Sobald ein Ort eingetragen oder aus dem Inserat gelesen ist, holt das Tool die aktuellen Kauf- und Mietpreise dafür automatisch.</p>`;
+  else if(!SESSION) h+=`<p class="small muted">Melde dich unter „Meine Objekte“ an, dann holt das Tool die aktuellen Preise für ${esc(ort)} automatisch.</p>`;
+  else { h+=`<p class="status${ortErr?" err":""}">${esc(ortMsg||`Preise für ${ort} werden gleich geholt …`)}</p>`; if(ortErr) h+=`<div class="row"><button class="btn" id="btnOrt">Nochmal versuchen</button></div>`; }
   box.innerHTML=h;
 }
 async function lookupOrt(force){
   const o=S.obj, ort=(o.ort||"").trim(); if(!ort||ortBusy||!SESSION) return;
-  ortBusy=true; ortMsg=`Suche aktuelle Miet- und Kaufpreise für ${ort} … das dauert meist 30–90 Sekunden.`; renderOrtBox();
+  ortBusy=true; ortErr=false; ortMsg=`Hole aktuelle Kauf- und Mietpreise für ${ort} … das dauert meist 30–90 Sekunden. Du kannst solange weiterarbeiten.`; renderOrtBox();
   try{
     const {data,cached}=await api("/api/ort-preise",{ort,typ:o.typ,baujahr:num(o.baujahr)||null,wfl:num(o.wfl)||null,zimmer:num(o.zimmer)||null,force:!!force});
-    S.ortInfo={...data,anfrage:ort};
-    const put=(k,v)=>{if(v){S.mkt[k]=v;S.ai[k]="web";}};
+    if((S.obj.ort||"").trim()!==ort) return;
+    if(S.ortInfo?.anfrage!==ort) S.manual={};
+    S.ortInfo={...data,anfrage:ort,ts:Date.now()};
+    const put=(k,v)=>{if(v&&!S.manual?.[k]){S.mkt[k]=v;S.ai[k]="web";}};
     put("mieteQm",data.miete_qm_normal||data.miete_qm?.mittel);
     put("qmUnsaniert",data.kaufpreis_qm_unsaniert||data.kaufpreis_qm);
     put("qmSaniert",data.kaufpreis_qm_saniert);
-    ortMsg=cached?"Aus der Recherche der letzten 30 Tage übernommen.":"Fertig. Werte sind eingetragen.";
-  }catch(e){ ortMsg=e.code==="cancelled"?"":errCopy(e.code); }
-  finally{ ortBusy=false; renderObjForm(); renderEvalForm(); refresh(); }
+    ortMsg=cached?"":"Aktualisiert.";
+  }catch(e){ ortErr=e.code!=="cancelled"; ortMsg=ortErr?errCopy(e.code):""; }
+  finally{
+    ortBusy=false;
+    if(!$("#mktForm").contains(document.activeElement)) renderMktForm(); else renderOrtBox();
+    if(!$("#evalForm").contains(document.activeElement)) renderEvalForm();
+    refresh();
+  }
 }
-document.addEventListener("click",e=>{ if(e.target.id==="btnOrt") lookupOrt(!!(S.ortInfo&&S.ortInfo.anfrage===(S.obj.ort||"").trim())); });
+document.addEventListener("click",e=>{ if(e.target.id==="btnOrt") lookupOrt(!ortErr); });
 document.addEventListener("change",e=>{
   const k=e.target.dataset?.k; if(k!=="obj.ort"&&k!=="obj.typ") return;
-  const i=S.ortInfo, ort=(S.obj.ort||"").trim();
-  if(ort&&SESSION&&(!i||i.anfrage!==ort||i.art!==(S.obj.typ==="wohnung"?"wohnung":"haus"))) lookupOrt(false); else renderOrtBox();
+  ortMsg=""; ortErr=false; renderOrtBox(); autoOrt();
 });
 
 /* ---------- Rendering: Ausgaben ---------- */
@@ -846,15 +1042,15 @@ function renderSummary(F,X,R,V){
   const o=S.obj;
   $("#objTitle").textContent=[o.titel||"Neues Objekt",o.wfl?`${fmt(o.wfl)} m²`:"",o.baujahr?`Bj. ${o.baujahr}`:"",o.ort].filter(Boolean).join(" · ");
   let k4;
-  if(S.mode==="flip") k4=`<div class="kpi"><span class="label">Gewinn vor Steuer</span><span class="v">${eurR(X.gewinn)}</span><span class="s">Marge ${pct(X.marge)} · ${X.h} Monate</span></div>`;
-  else if(S.mode==="miete") k4=`<div class="kpi"><span class="label">Cashflow nach Steuer</span><span class="v">${eur(R.cfNach)}/M</span><span class="s">Bruttorendite ${pct(R.brutto,2)}</span></div>`;
-  else k4=`<div class="kpi"><span class="label">Anteil am Netto</span><span class="v">${isFinite(F.quote)?pct(F.quote,0):"–"}</span><span class="s">gesund bis 35 %</span></div>`;
+  if(S.mode==="flip") k4=`<div class="kpi"><span class="label">Gewinn vor Steuer${ib("kpi.gewinn")}</span><span class="v">${eurR(X.gewinn)}</span><span class="s">Marge ${pct(X.marge)} · ${X.h} Monate</span></div>`;
+  else if(S.mode==="miete") k4=`<div class="kpi"><span class="label">Cashflow nach Steuer${ib("kpi.cf")}</span><span class="v">${eur(R.cfNach)}/M</span><span class="s">Bruttorendite ${pct(R.brutto,2)}</span></div>`;
+  else k4=`<div class="kpi"><span class="label">Anteil am Netto${ib("kpi.quote")}</span><span class="v">${isFinite(F.quote)?pct(F.quote,0):"–"}</span><span class="s">gesund bis 35 %</span></div>`;
   $("#summary").innerHTML=`
-    <div class="kpi"><span class="label">Gesamtinvestition</span><span class="v">${eurR(F.gesamt)}</span><span class="s">inkl. ${eurR(F.nk.sum)} Nebenkosten, ${eurR(F.san.val)} Sanierung</span></div>
-    <div class="kpi"><span class="label">Kredit</span><span class="v">${eurR(F.kredit)}</span><span class="s">Zins ${dec(F.z)} % · ${F.t} % Tilgung</span></div>
-    <div class="kpi"><span class="label">Monatliche Belastung</span><span class="v">${eur(S.mode==="miete"?R.rateM:F.belastung)}</span><span class="s">${S.mode==="miete"?"Kreditrate":"Rate + Wohnnebenkosten"}</span></div>
+    <div class="kpi"><span class="label">Gesamtinvestition${ib("kpi.gesamt")}</span><span class="v">${eurR(F.gesamt)}</span><span class="s">inkl. ${eurR(F.nk.sum)} Nebenkosten, ${eurR(F.san.val)} Sanierung</span></div>
+    <div class="kpi"><span class="label">Kredit${ib("kpi.kredit")}</span><span class="v">${eurR(F.kredit)}</span><span class="s">Zins ${dec(F.z)} % · ${F.t} % Tilgung</span></div>
+    <div class="kpi"><span class="label">Monatliche Belastung${ib("kpi.belastung")}</span><span class="v">${eur(S.mode==="miete"?R.rateM:F.belastung)}</span><span class="s">${S.mode==="miete"?"Kreditrate":"Rate + Wohnnebenkosten"}</span></div>
     ${k4}
-    <div class="kpi stampbox"><span class="stamp ${V.c}">${esc(V.t)}</span></div>`;
+    <div class="kpi stampbox"><span class="stamp ${V.c}">${esc(V.t)}</span><span style="margin-top:6px">${ib("kpi.stamp")}</span></div>`;
 }
 function renderFind(){
   const f=S.find; $("#findCard").hidden=!f; if(!f) return;
@@ -868,9 +1064,9 @@ function renderFind(){
 function renderMatrix(){
   const c=ctx(), st=["leicht","mittel","kern"], res={}; st.forEach(s=>res[s]=stageCalc(s));
   const wfl=Math.max(1,c.wfl);
-  let h=`<thead><tr><th></th>${st.map(s=>`<th>${STAGES[s].l}<small>${STAGES[s].d}</small></th>`).join("")}</tr></thead><tbody>`;
+  let h=`<thead><tr><th></th>${st.map(s=>`<th>${STAGES[s].l}${ib("st."+s)}<small>${STAGES[s].d}</small></th>`).join("")}</tr></thead><tbody>`;
   ["diy","mix","firm"].forEach(ex=>{
-    h+=`<tr><th>${EXEC[ex]}</th>`;
+    h+=`<tr><th>${EXEC[ex]}${ib("ex."+ex)}</th>`;
     st.forEach(s=>{
       const puf=S.puffer?STAGES[s].puffer:0; const [lo,hi]=res[s][ex].map(x=>x*(1+puf));
       const sel=S.fin.src===s&&S.fin.ex===ex;
@@ -880,7 +1076,7 @@ function renderMatrix(){
     });
     h+="</tr>";
   });
-  h+=`<tr><th class="small muted">Richtwert Firma (regional)</th>${st.map(s=>{const b=benchmark(s);const f=res[s].firm.map(x=>x/wfl);const mid=(f[0]+f[1])/2;const ok=mid>=b[0]*.85&&mid<=b[1]*1.15;
+  h+=`<tr><th class="small muted">Richtwert Firma (regional)${ib("richtwert")}</th>${st.map(s=>{const b=benchmark(s);const f=res[s].firm.map(x=>x/wfl);const mid=(f[0]+f[1])/2;const ok=mid>=b[0]*.85&&mid<=b[1]*1.15;
     return `<td class="bench"><span class="pill ${ok?"good":"warn"}">${fmt(b[0])}–${fmt(b[1])} €/m²</span></td>`}).join("")}</tr></tbody>`;
   $("#matrix").innerHTML=h;
   $("#pufferIn").checked=!!S.puffer;
@@ -892,45 +1088,59 @@ function renderMatrix(){
     <span class="k"><b>Mittel</b></span><span class="v" style="text-align:left;font-family:var(--f-body)">Bad und Küche neu, Türen, Elektrik teilweise, Heizkörper${isHaus(S.obj)?", Dachboden- und Kellerdecke dämmen":""}</span>
     <span class="k"><b>Kern</b></span><span class="v" style="text-align:left;font-family:var(--f-body)">${isHaus(S.obj)?"Dach, Fassade, Heizung, Leitungen, Elektrik, Estrich, Putz, Fenster":"Leitungen, Elektrik, Estrich, Putz, Fenster, Bad, Küche + Puffer für Sonderumlage"}</span>`;
 }
+const sameQ=it=>JSON.stringify(it.g)===JSON.stringify(it.m)&&JSON.stringify(it.m)===JSON.stringify(it.l);
+function segHtml(attr,id,map,cur,label){return `<div class="seg xs" role="group" aria-label="${label}">${Object.entries(map).map(([v,l])=>`<button type="button" ${attr}="${id}" data-v="${v}" aria-pressed="${cur===v}">${l}</button>`).join("")}</div>`;}
+function allSame(fn){const vals=new Set(S.rooms.map(fn));return vals.size===1?[...vals][0]:null;}
 function renderPlanner(){
-  const c=ctx(), ex=S.exec;
-  $$("#execSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.exec===ex));
+  const c=ctx();
+  const gq=allSame(r=>Object.keys(r.sel).filter(id=>r.sel[id]).every(id=>iQ(r,id)===r.q)?r.q:"x");
+  const gx=allSame(r=>Object.keys(r.sel).filter(id=>r.sel[id]&&IT[id]?.diy!==0).every(id=>iX(r,id)===(r.ex||"firm"))?(r.ex||"firm"):"x");
+  $("#globalBulk").innerHTML=`<span class="label">Alle Räume${ib("bulk")}</span><div class="grp">${segHtml("data-gq","all",QL,gq,"Qualität für alle Räume")}</div><div class="grp">${segHtml("data-gx","all",EXS,gx,"Ausführung für alle Räume")}</div>`;
   $("#addType").innerHTML=Object.entries(RT).filter(([k])=>k!=="geb").map(([k,v])=>`<option value="${k}">${v.l}</option>`).join("");
   const {per}=calcRooms(S.rooms,c);
   $("#rooms").innerHTML=S.rooms.map((r,i)=>{
-    const items=visibleItems(r,c);
-    const isGeb=r.typ==="geb";
+    const items=visibleItems(r,c), isGeb=r.typ==="geb", sel=items.filter(id=>r.sel[id]);
+    const rq=sel.length&&sel.every(id=>iQ(r,id)===r.q)?r.q:(sel.length?"x":r.q);
+    const rx=sel.length&&sel.filter(id=>IT[id].diy!==0).every(id=>iX(r,id)===(r.ex||"firm"))?(r.ex||"firm"):(sel.length?"x":(r.ex||"firm"));
     return `<article class="room" data-room="${r.id}">
       <div class="room-h">
         <div class="top2"><input class="name" value="${esc(r.name)}" data-rf="name" aria-label="Raumname">
-          ${isGeb?"":`<input class="qm" type="number" min="0" step="0.5" value="${r.a}" data-rf="a" aria-label="Fläche"> <span class="small muted">m²</span>`}
+          ${isGeb?"":`<input class="qm" type="number" min="0" step="0.5" value="${r.a}" data-rf="a" aria-label="Fläche in m²"> <span class="small muted">m²</span>`}
           <button class="iconbtn" data-del="${r.id}" aria-label="Raum entfernen" title="Raum entfernen">✕</button></div>
-        <div class="row" style="justify-content:space-between"><span class="label">${esc(RT[r.typ].l)}</span>
-          <div class="seg sm">${Object.entries(QL).map(([q,l])=>`<button data-q="${q}" aria-pressed="${r.q===q}">${l}</button>`).join("")}</div></div>
+        <div class="bulk"><span class="label">${esc(RT[r.typ].l)} · alle Arbeiten${ib("bulk")}</span>
+          <div class="grp">${segHtml("data-rq",r.id,QL,rq,"Qualität für den ganzen Raum")}</div>
+          <div class="grp">${segHtml("data-rx",r.id,EXS,rx,"Ausführung für den ganzen Raum")}</div></div>
       </div>
-      <ul class="items">${items.map(id=>{const it=IT[id];const x=itemCalc(id,r,c);const on=!!r.sel[id];
-        const hint=it.h?.[r.q]||"";
-        const unit=it.u==="m2"?`${fmt(x.qty)} m²`:it.u==="wfl"?`${fmt(c.wfl)} m² Wfl.`:it.u==="stk"?"":"pauschal";
-        return `<li class="${on?"":"off"}"><input type="checkbox" data-it="${id}" ${on?"checked":""} aria-label="${esc(it.n)}">
-          <span class="nm">${esc(it.n)}<small>${esc([hint,unit].filter(Boolean).join(" · "))}${it.u==="stk"?` <input class="cnt" type="number" min="0" step="1" value="${x.qty}" data-cnt="${id}" aria-label="Anzahl"> Stk.`:""}</small></span>
-          <span class="rng small">${rng(x[ex][0],x[ex][1])}</span></li>`}).join("")}</ul>
-      <div class="room-f"><span class="label">Summe ${EXEC[ex]}</span><span class="rng">${rng(per[i][ex][0],per[i][ex][1])}</span></div>
+      <ul class="items">${items.map(id=>{const it=IT[id];const x=itemCalc(id,r,c);const on=!!r.sel[id];const q=iQ(r,id),ex=iX(r,id);
+        const hint=it.h?.[q]||"";
+        const unit=it.u==="m2"?`${fmt(x.qty)} m²`:it.u==="wfl"?`${fmt(c.wfl)} m² Wohnfläche`:it.u==="stk"?"":"pauschal";
+        const ctl=on?`<div class="ctl">
+            ${sameQ(it)?"":`<div class="grp"><span class="small muted">Qualität${ib("q")}</span>${segHtml("data-iq",id,QL,q,"Qualität")}</div>`}
+            ${it.diy===0?`<span class="note2">nur Fachbetrieb</span>`:`<div class="grp"><span class="small muted">Ausführung${ib("x")}</span>${segHtml("data-ix",id,EXS,ex,"Ausführung")}</div>`}
+            ${it.u==="stk"?`<label class="grp small muted">Anzahl <input class="cnt" type="number" min="0" step="1" value="${x.qty}" data-cnt="${id}"></label>`:""}
+          </div>`:"";
+        return `<li class="${on?"on":"off"}"><input type="checkbox" data-it="${id}" ${on?"checked":""} aria-label="${esc(it.n)}">
+          <span class="nm">${esc(it.n)}${ib("it:"+id)}<small>${esc([on?QL[q]+(it.diy===0?"":" · "+EXS[ex]):"",hint,unit].filter(Boolean).join(" · "))}</small></span>
+          <span class="rng">${rng(x[ex][0],x[ex][1])}</span>${ctl}</li>`}).join("")}</ul>
+      <div class="room-f"><span class="label">Summe ${esc(r.name)}</span><span class="rng">${rng(per[i].plan[0],per[i].plan[1])}</span></div>
     </article>`}).join("");
   renderPlanSum();
 }
 function renderPlanSum(){
   const c=ctx(), {tot}=calcRooms(S.rooms,c), puf=S.pufferPlan??.15, wfl=Math.max(1,c.wfl);
+  const row=(label,k,h,cls="")=>`<tr${cls}><th>${label}</th><td class="rng">${rng(tot[k][0],tot[k][1])}</td><td class="rng">${rng(tot[k][0]*(1+puf),tot[k][1]*(1+puf))}</td><td class="sub">${fmt(tot[k][0]/wfl)}–${fmt(tot[k][1]/wfl)} €</td><td class="sub">${h>20?`≈ ${fmt(Math.round(h/10)*10)} Std.`:"–"}</td></tr>`;
   $("#planSum").innerHTML=`<div class="card-h"><h2>Zusammenfassung Raumplaner</h2>
-    <label class="f" style="width:150px"><span>Puffer</span><select id="pufPlan">${[0,.1,.15,.2,.25].map(p=>`<option value="${p}"${p===puf?" selected":""}>${p*100} %</option>`).join("")}</select></label></div>
-    <div class="scroll"><table class="matrix"><thead><tr><th>Ausführung</th><th>Ohne Puffer</th><th>Mit Puffer</th><th>je m² Wfl.</th><th>Eigenleistung</th></tr></thead><tbody>
-    ${["diy","mix","firm"].map(ex=>`<tr><th>${EXEC[ex]}</th><td class="rng">${rng(tot[ex][0],tot[ex][1])}</td><td class="rng">${rng(tot[ex][0]*(1+puf),tot[ex][1]*(1+puf))}</td><td class="sub">${fmt(tot[ex][0]/wfl)}–${fmt(tot[ex][1]/wfl)} €</td><td class="sub">${ex==="firm"?"–":`≈ ${fmt(Math.round((ex==="diy"?tot.hDiy:tot.hMix)/10)*10)} Std.`}</td></tr>`).join("")}
+    <label class="f" style="width:150px" for="pufPlan"><span>Puffer${ib("puffer")}</span><select id="pufPlan">${[0,.1,.15,.2,.25].map(p=>`<option value="${p}"${p===puf?" selected":""}>${p*100} %</option>`).join("")}</select></label></div>
+    <div class="scroll"><table class="matrix"><thead><tr><th>Ausführung${ib("plan")}</th><th>Ohne Puffer</th><th>Mit Puffer</th><th>je m² Wfl.</th><th>Eigenleistung${ib("stunden")}</th></tr></thead><tbody>
+    ${row("<b>Deine Auswahl</b>","plan",tot.hPlan,' style="background:var(--accent-soft)"')}
+    ${row("Zum Vergleich: alles selbst","diy",tot.hDiy)}${row("Zum Vergleich: Mix","mix",tot.hMix)}${row("Zum Vergleich: alles Firma","firm",0)}
     </tbody></table></div>
-    <div class="row"><button class="btn pri" id="btnPlanFin">Raumplaner in Finanzierung übernehmen</button>${S.fin.src==="plan"?'<span class="pill good">wird verwendet</span>':""}</div>`;
+    <div class="row"><button class="btn pri" id="btnPlanFin">Deine Auswahl in die Finanzierung übernehmen</button>${S.fin.src==="plan"?'<span class="pill good">wird verwendet</span>':""}</div>`;
 }
 function renderFin(F){
   const f=S.fin, o=S.obj;
   $("#finStand").textContent=`Zinsen Stand ${M.stand}`;
-  const L=(op,t,v,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
+  const L=(op,t,v,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${LINFO[t]?ib(LINFO[t]):""}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
   let h=L("","Kaufpreis",eur(F.kp))
     +L("+","Kaufnebenkosten",eur(F.nk.sum),"",`${pct(F.nk.pct,2)} vom Kaufpreis`)
     +L("=","Kaufpreis gesamt",eur(F.kp+F.nk.sum),"tot")
@@ -946,16 +1156,16 @@ function renderFin(F){
     +L("=","Monatliche Belastung",eur(F.belastung)+" /Monat","tot big");
   $("#ledger").innerHTML=h;
   $("#nkKv").innerHTML=`
-    <span class="k">Grunderwerbsteuer ${LAENDER[o.land]||""} (${dec(M.grest[o.land],1)} %)</span><span class="v">${eur(F.nk.grest)}</span>
-    <span class="k">Notar (≈ ${dec(M.notar,1)} %)</span><span class="v">${eur(F.nk.notar)}</span>
-    <span class="k">Grundbuch (≈ ${dec(M.grundbuch,1)} %)</span><span class="v">${eur(F.nk.gb)}</span>
-    <span class="k">Makler Käuferanteil (${dec(num(o.makler))} %)</span><span class="v">${eur(F.nk.mak)}</span>
+    <span class="k">Grunderwerbsteuer ${LAENDER[o.land]||""} (${dec(M.grest[o.land],1)} %)${ib("nk.grest")}</span><span class="v">${eur(F.nk.grest)}</span>
+    <span class="k">Notar (≈ ${dec(M.notar,1)} %)${ib("nk.notar")}</span><span class="v">${eur(F.nk.notar)}</span>
+    <span class="k">Grundbuch (≈ ${dec(M.grundbuch,1)} %)${ib("nk.gb")}</span><span class="v">${eur(F.nk.gb)}</span>
+    <span class="k">Makler Käuferanteil (${dec(num(o.makler))} %)${ib("obj.makler")}</span><span class="v">${eur(F.nk.mak)}</span>
     <span class="k"><b>Summe</b></span><span class="v"><b>${eur(F.nk.sum)}</b></span>`;
   $("#loanKv").innerHTML=`
-    <span class="k">Beleihungsauslauf</span><span class="v">${pct(F.ltv,0)}</span>
-    <span class="k">Restschuld nach ${f.bindung} Jahren</span><span class="v">${eurR(Math.max(0,F.rest))}</span>
-    <span class="k">Zinskosten in der Zinsbindung</span><span class="v">${eurR(F.zinsenBind)}</span>
-    <span class="k">Schuldenfrei nach (bei gleichem Zins)</span><span class="v">${isFinite(F.yrs)?dec(F.yrs,1)+" Jahren":"nie"}</span>`;
+    <span class="k">Beleihungsauslauf${ib("loan.ltv")}</span><span class="v">${pct(F.ltv,0)}</span>
+    <span class="k">Restschuld nach ${f.bindung} Jahren${ib("loan.rest")}</span><span class="v">${eurR(Math.max(0,F.rest))}</span>
+    <span class="k">Zinskosten in der Zinsbindung${ib("loan.zinsen")}</span><span class="v">${eurR(F.zinsenBind)}</span>
+    <span class="k">Schuldenfrei nach (bei gleichem Zins)${ib("loan.yrs")}</span><span class="v">${isFinite(F.yrs)?dec(F.yrs,1)+" Jahren":"nie"}</span>`;
   const n=[];
   if(F.ek<F.nk.sum) n.push(["bad",`Dein Eigenkapital deckt nicht einmal die Kaufnebenkosten (${eurR(F.nk.sum)}). Viele Banken finanzieren das nur mit deutlichem Zinsaufschlag.`]);
   else if(F.ekQuote<.2) n.push(["warn","Banken geben die besten Zinsen ab etwa 20 % Eigenkapital. Mit weniger steigt der Zins, das ist oben schon eingerechnet."]);
@@ -970,7 +1180,7 @@ function renderEval(F,X,R,V){
   const vHead=(txt)=>`<div class="card"><div class="verdict"><span class="stamp ${V.c}">${esc(V.t)}</span><p style="flex:1;min-width:220px">${txt}</p></div></div>`;
   if(S.mode==="flip"){
     h+=vHead(X.arv>0?`Bei ${eurR(X.arv)} Verkaufspreis bleiben vor Steuern ${eurR(X.gewinn)} übrig, eine Marge von ${pct(X.marge)}. Profis wollen mindestens 15 %, weil Sanierung und Verkauf fast nie genau nach Plan laufen.`:"Trage den erwarteten Verkaufspreis nach der Sanierung ein oder lass ihn von der KI schätzen.");
-    const L=(op,t,v,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
+    const L=(op,t,v,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${LINFO[t]?ib(LINFO[t]):""}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
     h+=`<div class="cols2"><div class="card"><h3>Deal-Rechnung</h3><div class="ledger">
       ${L("","Verkaufspreis",eur(X.arv),"",`${fmt(X.arv/Math.max(1,num(o.wfl)))} €/m²`)}
       ${L("−","Makler beim Verkauf",eur(X.vk))}
@@ -983,14 +1193,14 @@ function renderEval(F,X,R,V){
       ${L("=","Gewinn nach Steuer",eur(X.netto),"tot big")}
       </div></div>
       <div class="card"><h3>Kennzahlen</h3><div class="kv">
-        <span class="k">Marge vom Verkaufspreis</span><span class="v">${pct(X.marge)}</span>
-        <span class="k">Rendite aufs Eigenkapital</span><span class="v">${pct(X.roi)}</span>
-        <span class="k">… aufs Jahr gerechnet</span><span class="v">${pct(X.pa)}</span>
-        <span class="k"><b>Höchstgebot für ${S.flip.ziel} % Marge</b></span><span class="v"><b>${eurR(X.maxKp)}</b></span>
-        <span class="k">Abstand zum Angebotspreis</span><span class="v">${eurR(X.maxKp-F.kp)}</span>
-        <span class="k">Verkaufspreis/m² vs. Markt saniert</span><span class="v">${fmt(X.arv/Math.max(1,num(o.wfl)))} / ${fmt(num(S.mkt.qmSaniert))} €</span>
+        <span class="k">Marge vom Verkaufspreis${ib("f.marge")}</span><span class="v">${pct(X.marge)}</span>
+        <span class="k">Rendite aufs Eigenkapital${ib("f.roi")}</span><span class="v">${pct(X.roi)}</span>
+        <span class="k">… aufs Jahr gerechnet${ib("f.pa")}</span><span class="v">${pct(X.pa)}</span>
+        <span class="k"><b>Höchstgebot für ${S.flip.ziel} % Marge</b>${ib("f.max")}</span><span class="v"><b>${eurR(X.maxKp)}</b></span>
+        <span class="k">Abstand zum Angebotspreis${ib("f.abst")}</span><span class="v">${eurR(X.maxKp-F.kp)}</span>
+        <span class="k">Verkaufspreis/m² vs. Markt saniert${ib("f.qm")}</span><span class="v">${fmt(X.arv/Math.max(1,num(o.wfl)))} / ${fmt(num(S.mkt.qmSaniert))} €</span>
       </div>
-      <h3>Was passiert, wenn …</h3><div class="scroll"><table class="sens"><thead><tr><th></th><th>Preis −10 %</th><th>Preis wie geplant</th><th>Preis +10 %</th></tr></thead><tbody>
+      <h3>Was passiert, wenn …${ib("f.sens")}</h3><div class="scroll"><table class="sens"><thead><tr><th></th><th>Preis −10 %</th><th>Preis wie geplant</th><th>Preis +10 %</th></tr></thead><tbody>
       ${[0,.2].map(s=>`<tr><th>${s?"Sanierung +20 %":"Sanierung wie geplant"}</th>${X.sens.filter(x=>x.s===s).map(x=>`<td style="color:var(--${x.m>=.15?"good":x.m>=.08?"warn":"bad"})">${fmt(r100(x.g))} €<br><small>${pct(x.m,0)}</small></td>`).join("")}</tr>`).join("")}
       </tbody></table></div></div></div>`;
     const notes=[
@@ -1004,27 +1214,27 @@ function renderEval(F,X,R,V){
       <div class="row"><button class="btn pri" data-ask="flipcoach">Lass dir den Deal von der KI erklären</button></div></div>`;
   } else if(S.mode==="miete"){
     h+=vHead(R.kalt>0?`Mit ${eur(R.kalt)} Kaltmiete im Monat liegt die Bruttomietrendite bei ${pct(R.brutto,2)} (Kaufpreisfaktor ${dec(R.faktor,1)}). Nach Kreditrate, Kosten und Steuern bleiben ${eur(R.cfNach)} pro Monat.`:"Trage eine Marktmiete pro m² unter „Objekt“ ein oder lass sie von der KI schätzen.");
-    h+=`<div class="cols2"><div class="card"><h3>Mietpreis nach Ausstattung</h3>
+    h+=`<div class="cols2"><div class="card"><h3>Mietpreis nach Ausstattung${ib("r.tiers")}</h3>
       <div class="scroll"><table class="matrix"><thead><tr><th>Ausstattung</th><th>€/m²</th><th>Kaltmiete/Monat</th><th>Bruttorendite</th></tr></thead><tbody>
       ${R.tiers.map(t=>`<tr${t.k===S.rent.tier?' style="background:var(--accent-soft)"':""}><th>${TIERL[t.k]}</th><td class="rng">${dec(t.qm)}</td><td class="rng">${eur(t.m)}</td><td class="rng">${pct(t.m*12/Math.max(1,F.kp),2)}</td></tr>`).join("")}
       </tbody></table></div>
-      <p class="small muted">Basis: ${dec(num(S.mkt.mieteQm))} €/m² für normale Ausstattung${S.ortInfo?` in ${esc(S.ortInfo.ort)} (recherchiert ${esc(S.ortInfo.recherchiert||"")}${S.ortInfo.vergleichsmiete_qm?`, ortsübliche Vergleichsmiete ${dec(S.ortInfo.vergleichsmiete_qm)} €/m²`:""})`:" (Schätzung, Ort noch nicht recherchiert)"}. ${S.ortInfo?.mietpreisbremse===true?`In ${esc(S.ortInfo.ort)} gilt die Mietpreisbremse.`:S.ortInfo?.mietpreisbremse===false?`In ${esc(S.ortInfo.ort)} gilt keine Mietpreisbremse.`:esc(M.mietpreisbremse)+"."} In Gebieten mit Mietpreisbremse darf die Miete bei Neuvermietung höchstens 10 % über der ortsüblichen Vergleichsmiete liegen, außer nach umfassender Modernisierung.</p></div>
+      <p class="small muted">Basis: ${dec(R.tiers.find(t=>t.k==="normal").qm)} €/m² für normale Ausstattung${S.rent.lage&&S.rent.lage!=="auto"?` in ${{einfach:"einfacher",mittel:"mittlerer",gut:"guter"}[S.rent.lage]} Lage`:""}${S.ortInfo?` in ${esc(S.ortInfo.ort)} (recherchiert ${esc(S.ortInfo.recherchiert||"")}${S.ortInfo.vergleichsmiete_qm?`, ortsübliche Vergleichsmiete ${dec(S.ortInfo.vergleichsmiete_qm)} €/m²`:""})`:" (Schätzung, Ort noch nicht recherchiert)"}. ${S.ortInfo?.mietpreisbremse===true?`In ${esc(S.ortInfo.ort)} gilt die Mietpreisbremse.`:S.ortInfo?.mietpreisbremse===false?`In ${esc(S.ortInfo.ort)} gilt keine Mietpreisbremse.`:esc(M.mietpreisbremse)+"."} In Gebieten mit Mietpreisbremse darf die Miete bei Neuvermietung höchstens 10 % über der ortsüblichen Vergleichsmiete liegen, außer nach umfassender Modernisierung.</p></div>
       <div class="card"><h3>Cashflow-Rechnung (Jahr 1)</h3><div class="ledger">
-        <div class="ln"><span class="op"></span><span class="t">Jahreskaltmiete</span><span class="val">${eur(R.jkm)}</span></div>
-        <div class="ln"><span class="op">−</span><span class="t">Mietausfall<small>${S.rent.ausfall} %</small></span><span class="val">${eur(R.jkm-R.einnahmen)}</span></div>
-        <div class="ln"><span class="op">−</span><span class="t">Nicht umlagefähige Kosten<small>${eur(R.verw)}/Monat Verwaltung · ${dec(R.inst)} €/m² Instandhaltung</small></span><span class="val">${eur(R.kostenNU)}</span></div>
-        <div class="ln tot"><span class="op">=</span><span class="t">Reinertrag</span><span class="val">${eur(R.reinertrag)}</span></div>
-        <div class="ln"><span class="op">−</span><span class="t">Kreditrate<small>Zins ${eur(R.zinsJ)} + Tilgung ${eur(R.tilgJ)}</small></span><span class="val">${eur(R.rateM*12)}</span></div>
-        <div class="ln tot"><span class="op">=</span><span class="t">Cashflow vor Steuer</span><span class="val">${eur(R.cfVor*12)}</span></div>
-        <div class="ln"><span class="op">${R.steuer>=0?"−":"+"}</span><span class="t">${R.steuer>=0?"Steuer":"Steuerersparnis"}<small>Ergebnis ${eur(R.ergebnis)} nach AfA ${pct(R.afaRate,1)} = ${eur(R.afa)}</small></span><span class="val">${eur(Math.abs(R.steuer))}</span></div>
-        <div class="ln tot big"><span class="op">=</span><span class="t">Cashflow nach Steuer</span><span class="val">${eur(R.cfNach*12)} /Jahr</span></div>
+        <div class="ln"><span class="op"></span><span class="t">Jahreskaltmiete${ib("r.jkm")}</span><span class="val">${eur(R.jkm)}</span></div>
+        <div class="ln"><span class="op">−</span><span class="t">Mietausfall${ib("rent.ausfall")}<small>${S.rent.ausfall} %</small></span><span class="val">${eur(R.jkm-R.einnahmen)}</span></div>
+        <div class="ln"><span class="op">−</span><span class="t">Nicht umlagefähige Kosten${ib("r.nu")}<small>${eur(R.verw)}/Monat Verwaltung · ${dec(R.inst)} €/m² Instandhaltung</small></span><span class="val">${eur(R.kostenNU)}</span></div>
+        <div class="ln tot"><span class="op">=</span><span class="t">Reinertrag${ib("r.rein")}</span><span class="val">${eur(R.reinertrag)}</span></div>
+        <div class="ln"><span class="op">−</span><span class="t">Kreditrate${ib("l.rate")}<small>Zins ${eur(R.zinsJ)} + Tilgung ${eur(R.tilgJ)}</small></span><span class="val">${eur(R.rateM*12)}</span></div>
+        <div class="ln tot"><span class="op">=</span><span class="t">Cashflow vor Steuer${ib("r.cfv")}</span><span class="val">${eur(R.cfVor*12)}</span></div>
+        <div class="ln"><span class="op">${R.steuer>=0?"−":"+"}</span><span class="t">${R.steuer>=0?"Steuer":"Steuerersparnis"}${ib("r.st")}<small>Ergebnis ${eur(R.ergebnis)} nach AfA ${pct(R.afaRate,1)} = ${eur(R.afa)}</small></span><span class="val">${eur(Math.abs(R.steuer))}</span></div>
+        <div class="ln tot big"><span class="op">=</span><span class="t">Cashflow nach Steuer${ib("kpi.cf")}</span><span class="val">${eur(R.cfNach*12)} /Jahr</span></div>
       </div></div></div>
       <div class="cols2"><div class="card"><h3>Kennzahlen</h3><div class="kv">
-        <span class="k">Bruttomietrendite (auf Kaufpreis)</span><span class="v">${pct(R.brutto,2)}</span>
-        <span class="k">Kaufpreisfaktor</span><span class="v">${dec(R.faktor,1)}</span>
-        <span class="k">Nettomietrendite (auf Gesamtinvestition)</span><span class="v">${pct(R.nettoR,2)}</span>
-        <span class="k">Eigenkapitalrendite inkl. Tilgung</span><span class="v">${pct(R.ekR,1)}</span>
-        <span class="k">Cashflow nach Steuer pro Monat</span><span class="v">${eur(R.cfNach)}</span>
+        <span class="k">Bruttomietrendite (auf Kaufpreis)${ib("r.brutto")}</span><span class="v">${pct(R.brutto,2)}</span>
+        <span class="k">Kaufpreisfaktor${ib("r.faktor")}</span><span class="v">${dec(R.faktor,1)}</span>
+        <span class="k">Nettomietrendite (auf Gesamtinvestition)${ib("r.netto")}</span><span class="v">${pct(R.nettoR,2)}</span>
+        <span class="k">Eigenkapitalrendite inkl. Tilgung${ib("r.ekr")}</span><span class="v">${pct(R.ekR,1)}</span>
+        <span class="k">Cashflow nach Steuer pro Monat${ib("kpi.cf")}</span><span class="v">${eur(R.cfNach)}</span>
       </div></div>
       <div class="card"><h3>Hinweise</h3>
         <p class="note ${R.brutto>=.05?"good":R.brutto>=.04?"warn":"bad"}">Faustregel: unter 4 % Bruttorendite trägt sich eine finanzierte Wohnung kaum selbst. Im Raum Stuttgart sind 3–4 % üblich, dort zählt vor allem die Wertentwicklung.</p>
@@ -1037,17 +1247,17 @@ function renderEval(F,X,R,V){
     const zinsM=F.bank*F.z/100/12+(F.kfw*M.kfw308/100/12);
     h+=vHead(isFinite(F.quote)?`Die monatliche Belastung von ${eur(F.belastung)} entspricht ${pct(F.quote,0)} deines Haushaltsnettos. Banken und Verbraucherzentralen empfehlen höchstens 35–40 %, damit Rücklagen für Auto, Urlaub und Reparaturen bleiben.`:"Trage dein Haushaltsnetto unter „Finanzierung“ ein, dann siehst du, ob die Rate tragbar ist.");
     h+=`<div class="cols2"><div class="card"><h3>Kaufen oder mieten?</h3><div class="kv">
-        <span class="k">Vergleichbare Warmmiete</span><span class="v">${eur(vergl)}</span>
-        <span class="k">Deine Belastung als Eigentümer</span><span class="v">${eur(F.belastung)}</span>
-        <span class="k">davon Zinsen (verloren)</span><span class="v">${eur(zinsM)}</span>
-        <span class="k">davon Tilgung (Vermögensaufbau)</span><span class="v">${eur(F.rate-zinsM)}</span>
-        <span class="k">Mehrkosten gegenüber Miete</span><span class="v">${eur(F.belastung-vergl)}</span>
+        <span class="k">Vergleichbare Warmmiete${ib("e.vergl")}</span><span class="v">${eur(vergl)}</span>
+        <span class="k">Deine Belastung als Eigentümer${ib("kpi.belastung")}</span><span class="v">${eur(F.belastung)}</span>
+        <span class="k">davon Zinsen (verloren)${ib("e.zins")}</span><span class="v">${eur(zinsM)}</span>
+        <span class="k">davon Tilgung (Vermögensaufbau)${ib("e.tilg")}</span><span class="v">${eur(F.rate-zinsM)}</span>
+        <span class="k">Mehrkosten gegenüber Miete${ib("e.mehr")}</span><span class="v">${eur(F.belastung-vergl)}</span>
       </div><p class="small muted">Die Tilgung ist kein verlorenes Geld, sie baut dein Vermögen auf. Vergleiche deshalb Zinsen plus Nebenkosten mit der Miete.</p></div>
       <div class="card"><h3>Preis-Check</h3><div class="kv">
-        <span class="k">Angebotspreis je m²</span><span class="v">${fmt(F.kp/Math.max(1,num(o.wfl)))} €</span>
-        <span class="k">Markt unsaniert je m²</span><span class="v">${num(S.mkt.qmUnsaniert)?fmt(num(S.mkt.qmUnsaniert))+" €":"–"}</span>
-        <span class="k">Kosten nach Sanierung je m²</span><span class="v">${fmt((F.kp+F.san.val)/Math.max(1,num(o.wfl)))} €</span>
-        <span class="k">Markt saniert je m²</span><span class="v">${num(S.mkt.qmSaniert)?fmt(num(S.mkt.qmSaniert))+" €":"–"}</span>
+        <span class="k">Angebotspreis je m²${ib("e.qmAng")}</span><span class="v">${fmt(F.kp/Math.max(1,num(o.wfl)))} €</span>
+        <span class="k">Markt unsaniert je m²${ib("mkt.qmUnsaniert")}</span><span class="v">${num(S.mkt.qmUnsaniert)?fmt(num(S.mkt.qmUnsaniert))+" €":"–"}</span>
+        <span class="k">Kosten nach Sanierung je m²${ib("e.qmNach")}</span><span class="v">${fmt((F.kp+F.san.val)/Math.max(1,num(o.wfl)))} €</span>
+        <span class="k">Markt saniert je m²${ib("mkt.qmSaniert")}</span><span class="v">${num(S.mkt.qmSaniert)?fmt(num(S.mkt.qmSaniert))+" €":"–"}</span>
       </div>
       ${num(S.mkt.qmSaniert)&&(F.kp+F.san.val)/Math.max(1,num(o.wfl))>num(S.mkt.qmSaniert)?`<p class="note warn">Kauf plus Sanierung kostet mehr als ein bereits saniertes Objekt. Verhandle den Preis oder vergleiche mit fertig sanierten Angeboten.</p>`:`<p class="note good">Kauf plus Sanierung liegt unter dem Preis für sanierte Objekte.</p>`}</div></div>
       <div class="card"><h3>Förderungen und Pflichten</h3>
@@ -1105,9 +1315,10 @@ document.addEventListener("input",e=>{
   let v=el.type==="checkbox"?el.checked:el.type==="number"?num(el.value):el.value;
   if(k==="fin.bindung") v=num(v);
   setP(S,k,v);
-  const ak=k.split(".").at(-1); if(S.ai[ak]){delete S.ai[ak]; el.closest(".f")?.classList.remove("ai"); el.closest(".f")?.querySelector(".tag")?.remove();}
+  const ak=k.split(".").at(-1); if(k.startsWith("mkt.")){S.manual=S.manual||{};S.manual[ak]=true;}
+  if(S.ai[ak]){delete S.ai[ak]; el.closest(".f")?.classList.remove("ai"); el.closest(".f")?.querySelector(".tag")?.remove();}
   if(S.example&&k.startsWith("obj.")) S.example=false;
-  if(["obj.typ"].includes(k)||k==="fin.zinsAuto"||k==="fin.kfw"){renderObjForm();renderFinForm();renderPlanner();}
+  if(["obj.typ"].includes(k)||k==="fin.zinsAuto"||k==="fin.kfw"||k==="fin.src"){renderObjForm();renderFinForm();renderPlanner();}
   if(["obj.wfl","obj.zimmer","obj.baeder","obj.keller","obj.typ"].includes(k)&&S.roomsAuto){S.rooms=genRooms(S.obj);applyPreset(S.rooms,S.find?.stufe||"mittel",S.obj);renderPlanner();}
   else if(["obj.region","obj.baujahr","obj.wfl"].includes(k)) renderPlanner();
   if(k.startsWith("rent.")||k.startsWith("flip.")){/* Ausgaben reichen */}
@@ -1120,8 +1331,13 @@ $("#matrix").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e
 $("#pufferIn").addEventListener("change",e=>{S.puffer=e.target.checked;refresh();});
 $("#btnRegen").addEventListener("click",()=>{S.rooms=genRooms(S.obj);applyPreset(S.rooms,S.find?.stufe||"mittel",S.obj);S.roomsAuto=true;renderPlanner();refresh();setTab("planer");});
 $$("[data-preset]").forEach(b=>b.addEventListener("click",()=>{applyPreset(S.rooms,b.dataset.preset,S.obj);S.roomsAuto=false;renderPlanner();refresh();}));
-$("#execSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.exec=b.dataset.exec;renderPlanner();});
-$("#btnAddRoom").addEventListener("click",()=>{const t=$("#addType").value;const geb=S.rooms.findIndex(r=>r.typ==="geb");const r={id:uid(),typ:t,name:RT[t].l,a:t==="wc"?3:t==="bad"?6:12,q:"m",sel:{},cnt:{}};
+$("#globalBulk").addEventListener("click",e=>{
+  const q=e.target.closest("[data-gq]"), x=e.target.closest("[data-gx]");
+  if(q) S.rooms.forEach(r=>{r.q=q.dataset.v;r.iq={};});
+  if(x) S.rooms.forEach(r=>{r.ex=x.dataset.v;r.ix={};});
+  if(q||x){S.roomsAuto=false;renderPlanner();refresh();}
+});
+$("#btnAddRoom").addEventListener("click",()=>{const t=$("#addType").value;const geb=S.rooms.findIndex(r=>r.typ==="geb");const r={id:uid(),typ:t,name:RT[t].l,a:t==="wc"?3:t==="bad"?6:12,q:"m",ex:"firm",iq:{},ix:{},sel:{},cnt:{}};
   if(geb>=0)S.rooms.splice(geb,0,r);else S.rooms.push(r);S.roomsAuto=false;renderPlanner();refresh();});
 $("#rooms").addEventListener("change",e=>{
   const card=e.target.closest(".room"); if(!card) return; const r=S.rooms.find(x=>x.id===card.dataset.room); if(!r) return;
@@ -1134,17 +1350,45 @@ $("#rooms").addEventListener("change",e=>{
 });
 $("#rooms").addEventListener("click",e=>{
   const card=e.target.closest(".room"); if(!card) return; const r=S.rooms.find(x=>x.id===card.dataset.room);
-  const q=e.target.closest("[data-q]"); if(q){r.q=q.dataset.q;S.roomsAuto=false;renderPlanner();refresh();return;}
+  const b=e.target.closest("[data-iq],[data-ix],[data-rq],[data-rx]");
+  if(b){ const v=b.dataset.v;
+    if(b.dataset.iq){r.iq=r.iq||{};r.iq[b.dataset.iq]=v;}
+    else if(b.dataset.ix){r.ix=r.ix||{};r.ix[b.dataset.ix]=v;}
+    else if(b.dataset.rq){r.q=v;r.iq={};}
+    else if(b.dataset.rx){r.ex=v;r.ix={};}
+    S.roomsAuto=false;renderPlanner();refresh();return;}
   const d=e.target.closest("[data-del]"); if(d){S.rooms=S.rooms.filter(x=>x.id!==r.id);S.roomsAuto=false;renderPlanner();refresh();}
 });
 document.addEventListener("change",e=>{if(e.target.id==="pufPlan"){S.pufferPlan=num(e.target.value);refresh();}});
 document.addEventListener("click",e=>{
-  if(e.target.id==="btnPlanFin"){S.fin.src="plan";S.fin.ex=S.exec;renderFinForm();refresh();setTab("finanz");}
+  if(e.target.id==="btnPlanFin"){S.fin.src="plan";renderFinForm();refresh();setTab("finanz");}
   const a=e.target.closest("[data-ask]"); if(a){setTab("berater");askPreset(a.dataset.ask);}
 });
 function newObject(){S=blankState();try{localStorage.removeItem("immo-draft")}catch(e){} files=[];renderThumbs();$("#descIn").value="";renderAll();setTab("objekt");}
 $("#btnNew").addEventListener("click",newObject);
 $("#btnNew2").addEventListener("click",newObject);
+
+/* ---------- (i)-Erklärungen ---------- */
+const pop=document.createElement("div"); pop.id="infoPop"; pop.hidden=true; pop.setAttribute("role","tooltip"); document.body.appendChild(pop);
+let popFor=null, popAt=0;
+const infoText=k=>k.startsWith("it:")?(ITI[k.slice(3)]||""):(INFO[k]||"");
+function closePop(){ if(popFor) popFor.setAttribute("aria-expanded","false"); popFor=null; pop.hidden=true; }
+function openPop(b){
+  closePop(); const t=infoText(b.dataset.info); if(!t) return;
+  pop.textContent=t; pop.hidden=false; popFor=b; popAt=Date.now(); b.setAttribute("aria-expanded","true");
+  const r=b.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight;
+  const left=Math.min(Math.max(12,r.left+r.width/2-w/2),innerWidth-w-12);
+  let y=r.bottom+8; if(y+h>innerHeight-12) y=Math.max(12,r.top-h-8);
+  pop.style.left=left+"px"; pop.style.top=y+"px";
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".ib");
+  if(b){ e.preventDefault(); e.stopPropagation(); if(popFor===b) closePop(); else openPop(b); return; }
+  if(popFor&&!e.target.closest("#infoPop")) closePop();
+},true);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closePop(); });
+addEventListener("scroll",()=>{ if(popFor&&Date.now()-popAt>400) closePop(); },{capture:true,passive:true});
+addEventListener("resize",closePop);
 
 /* ---------- Dateien ---------- */
 let files=[]; // {blob,url,name,page}
@@ -1236,7 +1480,7 @@ Antworte NUR mit einem JSON-Objekt in genau dieser Form:
     const images=await Promise.all(imgs.map(toJpegB64));
     const {data:d}=await api("/api/ai",{kind:"analyze",prompt,images},ctlAn.signal);
     applyAI(d); setStatus("Fertig. Gelb markierte Felder bitte kurz prüfen.");
-    if(S.obj.ort) lookupOrt(false);
+    autoOrt();
   }catch(e){ if(e?.code!=="cancelled") setStatus(errCopy(e?.code),true); else setStatus(""); }
   finally{ $("#btnAnalyze").disabled=false; $("#btnStop").hidden=true; }
 }
@@ -1336,8 +1580,8 @@ async function initDb(){
     updateAiAvail(); return;
   }
   const {data}=await SB.auth.getSession(); SESSION=data.session;
-  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); if(s?.user?.id!==was) listSaved();});
-  renderAuth(); updateAiAvail(); renderOrtBox(); loadMarket(); listSaved();
+  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); autoOrt(); if(s?.user?.id!==was) listSaved();});
+  renderAuth(); updateAiAvail(); renderOrtBox(); loadMarket(); listSaved(); autoOrt();
 }
 async function loadMarket(){
   try{
@@ -1396,7 +1640,7 @@ let pendingDel=null;
 $("#savedList").addEventListener("click",async e=>{
   const o=e.target.closest("[data-open]");
   if(o){ const {data,error}=await SB.from("immo_objekte").select("state").eq("id",o.dataset.open).single();
-    if(!error&&data){ S={...blankState(),...data.state}; files=[]; renderThumbs(); renderAll(); } return; }
+    if(!error&&data){ S={...blankState(),...data.state}; files=[]; renderThumbs(); renderAll(); autoOrt(); } return; }
   const x=e.target.closest("[data-delsaved]");
   if(x){
     if(pendingDel!==x.dataset.delsaved){pendingDel=x.dataset.delsaved;x.textContent="Löschen?";x.style.color="var(--bad)";return;}
