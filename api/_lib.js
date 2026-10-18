@@ -66,8 +66,8 @@ export async function sbAdmin(path, init = {}) {
 }
 
 /** Tageslimit pro Nutzer und Art der Anfrage. Zählt VOR dem KI-Aufruf, damit auch Fehlversuche zählen.
- *  Limits per Vercel-Variable änderbar: LIMIT_ANALYZE, LIMIT_CHAT, LIMIT_ORT, LIMIT_MARKET. */
-const DAILY = { analyze: 15, chat: 80, ort: 8, market: 3 };
+ *  Limits per Vercel-Variable änderbar: LIMIT_ANALYZE, LIMIT_CHAT, LIMIT_ORT, LIMIT_MARKET, LIMIT_BEWERTUNG. */
+const DAILY = { analyze: 15, chat: 80, ort: 8, market: 3, bewertung: 4 };
 export async function useQuota(user, kind) {
   const lim = Number(process.env[`LIMIT_${kind.toUpperCase()}`]) || DAILY[kind] || 10;
   const day = new Date().toISOString().slice(0, 10);

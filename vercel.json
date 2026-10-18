@@ -9,6 +9,9 @@
     },
     "api/ort-preise.js": {
       "maxDuration": 300
+    },
+    "api/bewertung.js": {
+      "maxDuration": 300
     }
   },
   "crons": [

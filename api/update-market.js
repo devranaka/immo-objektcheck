@@ -5,7 +5,7 @@ import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply }
 
 const DOMAINS = [
   "drklein.de", "baufi24.de", "interhyp.de", "huettig-rompf.de", "kfw.de",
-  "destatis.de", "baden-wuerttemberg.de", "bundesfinanzministerium.de", "mieterbund.de",
+  "destatis.de", "baden-wuerttemberg.de", "bundesfinanzministerium.de", "mieterbund.de", "bundesbank.de", "pfandbrief.de",
 ];
 
 const inRange = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo && v <= hi;
@@ -34,10 +34,11 @@ Gesucht:
 - grest: Grunderwerbsteuer je Bundesland, NUR melden, wenn sich ein Satz gegenüber den bisherigen Werten geändert hat
 - baupreis: Baupreisindex Instandhaltung Wohngebäude, Veränderung zum Vorjahr in Prozent (Destatis)
 - mietpreisbremse: ein kurzer Satz zum Stand der Mietpreisbremse in Baden-Württemberg
+- pfandbrief: aktuelle Umlaufsrendite von Hypothekenpfandbriefen mit 5–10 Jahren Restlaufzeit in Prozent (Bundesbank-Kapitalmarktstatistik); ersatzweise 10-jährige Bundesanleihe + 0,3
 
 Erfinde nichts. Wenn du einen Wert nicht sicher findest, lass das Feld weg.
 Antworte am Ende NUR mit einem JSON-Objekt:
-{"stand":"TT.MM.JJJJ","zinsQuelle":"Quelle, Datum","zins":{"5":Zahl,"10":Zahl,"15":Zahl,"20":Zahl,"30":Zahl},"aufschlag":Zahl,"kfw308":Zahl,"kfw308Max":{"1":Zahl,"2":Zahl,"3":Zahl},"grest":{"BW":Zahl},"baupreis":Zahl,"mietpreisbremse":"…","quellen":["url", "…"]}`;
+{"stand":"TT.MM.JJJJ","zinsQuelle":"Quelle, Datum","zins":{"5":Zahl,"10":Zahl,"15":Zahl,"20":Zahl,"30":Zahl},"aufschlag":Zahl,"kfw308":Zahl,"kfw308Max":{"1":Zahl,"2":Zahl,"3":Zahl},"grest":{"BW":Zahl},"baupreis":Zahl,"mietpreisbremse":"…","pfandbrief":Zahl,"quellen":["url", "…"]}`;
 
     const tools = [{ type: "web_search_20260318", name: "web_search", max_uses: 8, allowed_domains: DOMAINS }];
     let messages = [{ role: "user", content: prompt }];
@@ -70,6 +71,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
       put("grest", g, old.grest);
     }
     if (inRange(d.baupreis, -10, 25)) put("baupreis", d.baupreis, old.baupreis);
+    if (inRange(d.pfandbrief, -1, 10)) put("pfandbrief", d.pfandbrief, old.pfandbrief);
     if (typeof d.mietpreisbremse === "string" && d.mietpreisbremse.length > 10) put("mietpreisbremse", d.mietpreisbremse.slice(0, 200), old.mietpreisbremse);
     next.quellen = Array.isArray(d.quellen) ? d.quellen.slice(0, 10) : old.quellen;
     next.geprueft = today;

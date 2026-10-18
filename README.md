@@ -1,6 +1,6 @@
 # Immo Objektcheck
 
-Immobilien per Screenshot oder Exposé einschätzen: Sanierungskosten in drei Stufen (selbst, Mix, Firma), Raumplaner, Finanzierung mit aktuellem Zins und Auswertung für **Eigenheim**, **Fix & Flip** und **Vermieten**.
+Immobilien per Screenshot oder Exposé einschätzen, die eigene Immobilie bewerten und den Verkaufserlös nach Kredit, Vorfälligkeit und Steuern berechnen: Sanierungskosten in drei Stufen (selbst, Mix, Firma), Raumplaner, Finanzierung mit aktuellem Zins und Auswertung für **Eigenheim**, **Fix & Flip** und **Vermieten**.
 
 ## Aufbau
 
@@ -9,6 +9,7 @@ Immobilien per Screenshot oder Exposé einschätzen: Sanierungskosten in drei St
 | `index.html` | Die komplette App (Rechnen, Raumplaner, Finanzierung, Auswertung, Chat) |
 | `api/ai.js` | KI-Analyse von Inseraten und KI-Berater über die Claude-API |
 | `api/ort-preise.js` | Recherchiert Miet- und Kaufpreise für den Ort des Objekts (30 Tage zwischengespeichert) |
+| `api/bewertung.js` | Wertermittlung der eigenen Immobilie: Fragebogen, Fotos und Energieausweis plus Vergleichsobjekte aus dem Internet |
 | `api/update-market.js` | Holt Zinsen, KfW-Konditionen usw. per Websuche und speichert sie in Supabase |
 | `api/config.js` | Gibt der Seite die öffentlichen Supabase-Werte |
 | `supabase/schema.sql` | Tabellen für gespeicherte Objekte und Marktdaten |
@@ -47,7 +48,7 @@ Auf console.anthropic.com unter **API Keys** einen neuen Key erstellen (z. B. �
 4. **Deploy**. Danach die Seite öffnen, unter „Meine Objekte“ ein Konto mit der E-Mail aus `ALLOWED_EMAILS` anlegen.
 5. Auf dem Handy: Seite öffnen → Teilen → „Zum Home-Bildschirm“.
 
-**Schutz vor hohen KI-Kosten:** Jedes Konto hat Tageslimits (15 Analysen, 80 Chat-Nachrichten, 8 Ortsrecherchen, 3 Marktdaten-Aktualisierungen). Ändern per Vercel-Variable `LIMIT_ANALYZE`, `LIMIT_CHAT`, `LIMIT_ORT`, `LIMIT_MARKET`. Zusätzlich in der Claude-Konsole unter **Limits** ein Monatslimit setzen.
+**Schutz vor hohen KI-Kosten:** Jedes Konto hat Tageslimits (15 Analysen, 80 Chat-Nachrichten, 8 Ortsrecherchen, 4 Bewertungen, 3 Marktdaten-Aktualisierungen). Ändern per Vercel-Variable `LIMIT_ANALYZE`, `LIMIT_CHAT`, `LIMIT_ORT`, `LIMIT_MARKET`. Zusätzlich in der Claude-Konsole unter **Limits** ein Monatslimit setzen.
 
 > `ALLOWED_EMAILS` schützt dein API-Guthaben: Nur diese Adressen dürfen die KI nutzen, auch wenn sich jemand anderes ein Konto anlegt.
 
@@ -55,6 +56,7 @@ Auf console.anthropic.com unter **API Keys** einen neuen Key erstellen (z. B. �
 - Inserat-Analyse mit Bildern: wenige Cent
 - Chat-Antwort: unter 1 Cent bis wenige Cent
 - Ortspreise recherchieren: ca. 5–15 Cent pro Ort, danach 30 Tage kostenlos aus dem Zwischenspeicher
+- Bewertung der eigenen Immobilie mit Fotos und Websuche: ca. 20–60 Cent
 - Marktdaten-Aktualisierung: ca. 5–15 Cent pro Lauf (Websuche 1 Cent pro Suche)
 
 ## Marktdaten

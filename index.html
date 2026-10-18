@@ -168,6 +168,25 @@ table{border-collapse:collapse;width:100%}
 .room-f .rng{font-size:1.05rem}
 .seg.xs button{padding:5px 11px;font-size:.82rem}
 .seg.xs{flex-wrap:nowrap}
+#modeSeg{border-radius:14px}
+#modeSeg button{border-radius:11px}
+.f.wide{grid-column:1/-1}
+.f textarea{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-height:110px}
+.progress{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress .bar{height:100%;width:0;background:var(--accent);transition:width .3s}
+.btn.big{padding:12px 20px;font-size:1rem}
+.bigval{font-family:var(--f-mono);font-size:clamp(1.8rem,6vw,2.6rem);font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.tiles3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.rb{position:relative;height:74px;margin:6px 8px 4px}
+.rb-t{position:absolute;left:0;right:0;top:12px;height:8px;border-radius:99px;background:var(--line)}
+.rb-b{position:absolute;top:12px;height:8px;border-radius:99px;background:var(--accent);opacity:.35}
+.rb-m{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px}
+.rb-m i{display:block;width:3px;height:32px;border-radius:2px;background:var(--muted)}
+.rb-m.mid i{background:var(--accent);width:4px}
+.rb-m b{font-family:var(--f-mono);font-size:.72rem;font-weight:500;color:var(--muted);text-align:center;line-height:1.25;white-space:nowrap}
+.rb-m.mid b{color:var(--ink);font-weight:600}
+.rb-m.lo b{transform:translateX(-20%)} .rb-m.hi b{transform:translateX(20%)}
+@media (min-width:821px){.sticky{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
 .items .ctl .grp{flex-wrap:wrap}
 @media (max-width:560px){
   .items{padding:6px}
@@ -235,6 +254,7 @@ table{border-collapse:collapse;width:100%}
       <button data-mode="eigen">Eigenheim</button>
       <button data-mode="flip">Fix &amp; Flip</button>
       <button data-mode="miete">Vermieten</button>
+      <button data-mode="wert">Bewerten &amp; Verkaufen</button>
     </div>
   </header>
 
@@ -246,13 +266,16 @@ table{border-collapse:collapse;width:100%}
   <section class="summary" id="summary" aria-live="polite"></section>
 
   <nav class="tabs" id="tabs" role="tablist">
-    <button data-tab="objekt"><span class="n">1</span>Objekt</button>
-    <button data-tab="sanierung"><span class="n">2</span>Sanierung</button>
-    <button data-tab="planer"><span class="n">3</span>Raumplaner</button>
-    <button data-tab="finanz"><span class="n">4</span>Finanzierung</button>
-    <button data-tab="auswertung"><span class="n">5</span>Auswertung</button>
-    <button data-tab="berater"><span class="n">6</span>KI-Berater</button>
-    <button data-tab="markt"><span class="n">7</span>Marktdaten</button>
+    <button class="t-buy" data-tab="objekt"><span class="n">1</span>Objekt</button>
+    <button class="t-buy" data-tab="sanierung"><span class="n">2</span>Sanierung</button>
+    <button class="t-buy" data-tab="planer"><span class="n">3</span>Raumplaner</button>
+    <button class="t-buy" data-tab="finanz"><span class="n">4</span>Finanzierung</button>
+    <button class="t-buy" data-tab="auswertung"><span class="n">5</span>Auswertung</button>
+    <button class="t-buy" data-tab="berater"><span class="n">6</span>KI-Berater</button>
+    <button class="t-buy" data-tab="markt"><span class="n">7</span>Marktdaten</button>
+    <button class="t-wert" data-tab="frage" hidden><span class="n">1</span>Fragebogen</button>
+    <button class="t-wert" data-tab="wert" hidden><span class="n">2</span>Wertermittlung</button>
+    <button class="t-wert" data-tab="verkauf" hidden><span class="n">3</span>Verkaufserlös</button>
   </nav>
 
   <main>
@@ -389,6 +412,47 @@ table{border-collapse:collapse;width:100%}
         <div class="scroll"><table class="mtable" id="mtable"></table></div>
       </div>
     </section>
+    <!-- BEWERTEN: FRAGEBOGEN -->
+    <section class="panel" data-panel="frage" hidden>
+      <div class="card">
+        <div class="card-h"><h2>Fragebogen zu deiner Immobilie</h2><button class="btn ghost" id="btnValFromObj">Eckdaten aus „Objekt“ übernehmen</button></div>
+        <p class="small muted">Je mehr du ausfüllst und je mehr Fotos du hochlädst, desto genauer wird die Bewertung. Pflicht sind nur Ort und Wohnfläche.</p>
+        <div class="progress"><div class="bar" id="valBar"></div></div>
+        <span class="small" id="valPct"></span>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Fotos und Unterlagen</h2><span class="pill acc">KI wertet mit aus</span></div>
+        <label class="drop" id="valDrop" for="valFileIn">
+          <b>Fotos, Energieausweis, Grundriss hier ablegen</b>
+          <span class="small muted">Bilder oder PDF · die ersten 10 Bilder bzw. Seiten werden ausgewertet · am besten: Wohnzimmer, Küche, Bad, Balkon, Außenansicht, Energieausweis</span>
+          <span class="btn">Dateien auswählen</span>
+        </label>
+        <input type="file" id="valFileIn" multiple accept="image/*,application/pdf" hidden>
+        <div class="thumbs" id="valThumbs"></div>
+        <span class="status" id="valFileStatus"></span>
+      </div>
+      <div class="panel" id="valSections"></div>
+      <div class="card"><div class="row"><button class="btn pri big" id="btnValRun">Wert jetzt ermitteln</button><span class="small muted" id="valRunHint"></span></div></div>
+    </section>
+
+    <!-- BEWERTEN: ERGEBNIS -->
+    <section class="panel" data-panel="wert" hidden><div class="panel" id="valOut"></div></section>
+
+    <!-- BEWERTEN: VERKAUFSERLÖS -->
+    <section class="panel" data-panel="verkauf" hidden>
+      <div class="cols2">
+        <div class="panel">
+          <div class="card"><h2>Verkaufspreis</h2><div class="grid" id="saleFormPreis"></div></div>
+          <div class="card"><h2>Kosten beim Verkauf</h2><div class="grid" id="saleFormKosten"></div></div>
+          <div class="card"><h2>Kredit ablösen</h2><p class="small muted">Leer lassen, wenn die Immobilie schuldenfrei ist.</p><div class="grid" id="saleFormKredit"></div></div>
+          <div class="card"><h2>Steuer</h2><div class="grid" id="saleFormSteuer"></div></div>
+        </div>
+        <div class="panel sticky" style="align-self:start">
+          <div class="card"><h2>Was dir am Ende bleibt</h2><div class="ledger" id="saleLedger"></div><div id="saleExtra"></div></div>
+          <div class="card"><h3>Hinweise</h3><div id="saleNotes" style="display:flex;flex-direction:column;gap:6px"></div></div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -409,7 +473,8 @@ const MARKET_DEFAULT = {
   instEigen: 1.0,                // €/m²/Monat Eigenheim (LBS-Untergrenze)
   inst22: 13.45, inst32: 17.18,  // €/m²/Jahr II. BV indexiert
   baupreis: 5.6,                 // % Instandhaltung ggü. Vorjahr (Mai 2026)
-  stundensatz: 62,               // Ø Handwerk inkl. MwSt.
+  stundensatz: 62,
+  pfandbrief: 3.75,             // Wiederanlagezins Pfandbrief (≈ Bund 10 J. 3,45 % + 0,3), für Vorfälligkeitsentschädigung               // Ø Handwerk inkl. MwSt.
   mietpreisbremse: "BW: gilt bis 31.12.2026, Verlängerung vom Land geplant (Meldung 22.09.2026)"
 };
 const LAENDER = {BW:"Baden-Württemberg",BY:"Bayern",BE:"Berlin",BB:"Brandenburg",HB:"Bremen",HH:"Hamburg",HE:"Hessen",MV:"Mecklenburg-Vorpommern",NI:"Niedersachsen",NW:"Nordrhein-Westfalen",RP:"Rheinland-Pfalz",SL:"Saarland",SN:"Sachsen",ST:"Sachsen-Anhalt",SH:"Schleswig-Holstein",TH:"Thüringen"};
@@ -652,7 +717,7 @@ function blankState(){
     fin:{ek:0,bindung:10,tilgung:2,zinsAuto:true,zins:4.5,src:"mittel",ex:"firm",pos:"hi",kinder:0,kfw:false,netto:0},
     flip:{arv:0,monate:8,vkMakler:3.57,steuer:42,lfd:0,ziel:15},
     rent:{tier:"normal",lage:"auto",manual:0,ausfall:2,verw:0,inst:0,geb:75,steuer:42},
-    chat:[]};
+    chat:[],val:valBlank()};
 }
 function exampleState(){
   const s = blankState();
@@ -901,9 +966,10 @@ function field(k,label,type="number",opts={}){
   const id="f_"+k.replace(/\./g,"_");
   let ctl;
   if(type==="select") ctl=`<select id="${id}" data-k="${k}">${opts.options.map(([val,l])=>`<option value="${esc(val)}"${String(v)===String(val)?" selected":""}>${esc(l)}</option>`).join("")}</select>`;
+  else if(type==="textarea") ctl=`<textarea id="${id}" data-k="${k}" rows="5" placeholder="${esc(opts.ph||"")}">${esc(v)}</textarea>`;
   else if(type==="check") return `<span class="chk"><label class="chk" for="${id}"><input type="checkbox" id="${id}" data-k="${k}"${v?" checked":""}> ${esc(label)}</label>${INFO[k]?ib(k):""}</span>`;
   else ctl=`<input id="${id}" type="${type}" data-k="${k}" value="${esc(v===0&&type==="number"?"":v)}"${type==="number"?` step="${opts.step||"any"}" min="0" inputmode="decimal"`:""} placeholder="${esc(opts.ph||"")}">`;
-  return `<label class="f${ai?" ai":""}" for="${id}"><span>${esc(label)}${INFO[opts.info||k]?ib(opts.info||k):""}${ai?` <span class="tag">${S.ai[aiK]==="web"?"Web":"KI"}</span>`:""}${opts.unit?` <span class="muted">(${esc(opts.unit)})</span>`:""}</span>${ctl}</label>`;
+  return `<label class="f${ai?" ai":""}${opts.wide?" wide":""}" for="${id}"><span>${esc(label)}${INFO[opts.info||k]?ib(opts.info||k):""}${ai?` <span class="tag">${S.ai[aiK]==="web"?"Web":"KI"}</span>`:""}${opts.unit?` <span class="muted">(${esc(opts.unit)})</span>`:""}</span>${ctl}</label>`;
 }
 function renderObjForm(){
   const o=S.obj;
@@ -1040,6 +1106,17 @@ document.addEventListener("change",e=>{
 
 /* ---------- Rendering: Ausgaben ---------- */
 function renderSummary(F,X,R,V){
+  if(S.mode==="wert"){
+    const q=S.val.q, r=S.val.res, Y=saleCalc();
+    $("#objTitle").textContent=[q.titel||"Meine Immobilie",num(q.wfl)?`${fmt(q.wfl)} m²`:"",num(q.baujahr)?`Bj. ${q.baujahr}`:"",q.ort].filter(Boolean).join(" · ");
+    $("#summary").innerHTML=`
+      <div class="kpi"><span class="label">Marktwert${ib("v.markt")}</span><span class="v">${r?eurR(r.marktwert):"–"}</span><span class="s">${r?`${eurR(r.spanne.min)} – ${eurR(r.spanne.max)}`:"noch nicht bewertet"}</span></div>
+      <div class="kpi"><span class="label">Verkaufspreis${ib("val.sale.preisWahl")}</span><span class="v">${Y.preis?eurR(Y.preis):"–"}</span><span class="s">im Verkaufsrechner</span></div>
+      <div class="kpi"><span class="label">Restschuld + Bank${ib("s.restschuld")}</span><span class="v">${eurR(Y.B+Y.vfe+Y.gebuehr)}</span><span class="s">${Y.vfe?`inkl. ${eurR(Y.vfe)} Vorfälligkeit`:"keine Vorfälligkeit"}</span></div>
+      <div class="kpi"><span class="label">Steuer${ib("s.steuer")}</span><span class="v">${eurR(Y.steuer)}</span><span class="s">${Y.steuer?"Spekulationssteuer":"steuerfrei"}</span></div>
+      <div class="kpi"><span class="label">In der Tasche${ib("s.netto")}</span><span class="v" style="color:var(--${Y.netto>=0?"good":"bad"})">${Y.preis?eurR(Y.netto):"–"}</span><span class="s">nach allen Abzügen</span></div>`;
+    return;
+  }
   const o=S.obj;
   $("#objTitle").textContent=[o.titel||"Neues Objekt",o.wfl?`${fmt(o.wfl)} m²`:"",o.baujahr?`Bj. ${o.baujahr}`:"",o.ort].filter(Boolean).join(" · ");
   let k4;
@@ -1298,17 +1375,472 @@ function renderMarket(){
   $("#mtable").innerHTML=`<thead><tr><th>Kennzahl</th><th>Wert</th><th>Quelle</th></tr></thead><tbody>${rows.map(([a,b,c,u])=>`<tr><td>${esc(a)}</td><td class="r">${esc(b)}</td><td>${u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(c)}</a>`:esc(c)}</td></tr>`).join("")}</tbody>`;
 }
 
+/* ================= BEWERTEN & VERKAUFEN ================= */
+const VTABS=["frage","wert","verkauf"];
+const YR={ph:"Jahr, leer = nie",step:1};
+const VSEC=[
+  {t:"Lage",f:[
+    ["titel","Bezeichnung","text",{ph:"z. B. Meine Wohnung Sindelfingen"}],
+    ["ort","Ort","text",{ph:"z. B. Sindelfingen"}],
+    ["plz","Postleitzahl","text",{ph:"z. B. 71065"}],
+    ["stadtteil","Stadtteil oder Straße","text",{ph:"optional, macht es genauer"}],
+    ["land","Bundesland","select",{options:Object.entries(LAENDER)}],
+    ["lage","Lage im Ort","select",{options:[["einfach","einfach"],["mittel","mittel"],["gut","gut"],["sehrgut","sehr gut"]]}],
+    ["laerm","Lärm","select",{options:[["ruhig","ruhig"],["normal","normal"],["laut","laut (Hauptstraße, Bahn, Fluglärm)"]]}],
+    ["oepnv","Bus und Bahn","select",{options:[["gut","unter 5 Min. zu Fuß"],["mittel","5–15 Min."],["schlecht","weiter / kaum Anbindung"]]}],
+    ["infra","Einkaufen, Schulen, Ärzte","select",{options:[["gut","alles zu Fuß"],["mittel","mit dem Auto nah"],["schlecht","weit weg"]]}],
+    ["ausblick","Besonderer Ausblick","select",{options:[["nein","nein"],["gruen","ins Grüne"],["weit","Fernblick"],["wasser","Wasser"]]}]
+  ]},
+  {t:"Gebäude und Wohnung",f:[
+    ["typ","Objektart","select",{options:[["wohnung","Eigentumswohnung"],["efh","Einfamilienhaus"],["dhh","Doppelhaushälfte"],["rh","Reihenhaus"],["mfh","Mehrfamilienhaus"]]}],
+    ["wfl","Wohnfläche","number",{unit:"m²"}],
+    ["zimmer","Zimmer","number",{step:.5}],
+    ["baeder","Bäder","number",{step:1}],
+    ["baujahr","Baujahr","number",{step:1}],
+    ["etage","Etage","number",{step:1,ph:"0 = Erdgeschoss",only:"wohnung"}],
+    ["etagenGesamt","Etagen im Haus","number",{step:1,only:"wohnung"}],
+    ["einheiten","Wohnungen im Haus","number",{step:1,only:"wohnung"}],
+    ["aufzug","Aufzug vorhanden","check",{only:"wohnung"}],
+    ["grund","Grundstück","number",{unit:"m²",only:"haus"}],
+    ["aussen","Außenbereich","select",{options:[["keiner","keiner"],["balkon","Balkon"],["loggia","Loggia"],["terrasse","Terrasse"],["garten","Garten / Gartenanteil"],["dachterrasse","Dachterrasse"]]}],
+    ["aussenQm","Größe Außenbereich","number",{unit:"m²"}],
+    ["ausrichtung","Ausrichtung Balkon/Garten","select",{options:[["","unbekannt"],["S","Süd"],["SW","Südwest"],["W","West"],["SO","Südost"],["O","Ost"],["NW","Nordwest"],["NO","Nordost"],["N","Nord"]]}],
+    ["stellplatz","Stellplatz","select",{options:[["keiner","keiner"],["aussen","Außenstellplatz"],["carport","Carport"],["garage","Garage"],["tiefgarage","Tiefgarage"]]}],
+    ["stellplatzAnz","Anzahl Stellplätze","number",{step:1}],
+    ["keller","Keller / Kellerabteil","check",{}]
+  ]},
+  {t:"Zustand und Modernisierungen",f:[
+    ["zustand","Zustand insgesamt","select",{options:[["neuwertig","neuwertig / kernsaniert"],["gepflegt","gepflegt, modernisiert"],["normal","normal, leicht abgewohnt"],["renovierungsbeduerftig","renovierungsbedürftig"],["sanierungsbeduerftig","sanierungsbedürftig"]]}],
+    ["modBad","Bad erneuert","number",YR],
+    ["modKueche","Küche erneuert","number",YR],
+    ["modBoden","Böden erneuert","number",YR],
+    ["modFenster","Fenster erneuert","number",YR],
+    ["modHeizung","Heizung erneuert","number",YR],
+    ["modElektrik","Elektrik erneuert","number",YR],
+    ["modLeitungen","Wasserleitungen erneuert","number",YR],
+    ["modDach","Dach erneuert / gedämmt","number",YR],
+    ["modFassade","Fassade gedämmt","number",YR],
+    ["maengel","Bekannte Mängel","text",{ph:"z. B. Feuchtigkeit im Keller, Risse"}]
+  ]},
+  {t:"Ausstattung",f:[
+    ["ausstattung","Ausstattung insgesamt","select",{options:[["einfach","einfach"],["normal","normal"],["gehoben","gehoben"],["luxus","Luxus"]]}],
+    ["bodenart","Bodenbeläge","select",{options:[["laminat","Laminat / Vinyl / Teppich"],["fliesen","Fliesen"],["parkett","Parkett / Dielen"],["mix","gemischt"]]}],
+    ["kueche","Einbauküche wird mitverkauft","check",{}],
+    ["kuecheWert","Zeitwert der Küche","number",{unit:"€",step:500}],
+    ["fbh","Fußbodenheizung","check",{}],
+    ["kamin","Kamin / Kaminofen","check",{}],
+    ["barrierefrei","Barrierearm / ebenerdige Dusche","check",{}],
+    ["smarthome","Smart Home, Rollläden elektrisch","check",{}],
+    ["klima","Klimaanlage","check",{}]
+  ]},
+  {t:"Energie",f:[
+    ["heizart","Heizung","select",{options:[["","unbekannt"],["gas","Gas"],["oel","Öl"],["waermepumpe","Wärmepumpe"],["fernwaerme","Fernwärme"],["pellet","Pellets / Holz"],["nachtspeicher","Nachtspeicher / Strom"],["sonstiges","Sonstiges"]]}],
+    ["heizBj","Baujahr der Heizung","number",{step:1}],
+    ["energie","Energieklasse","select",{options:[["","unbekannt"],...["A+","A","B","C","D","E","F","G","H"].map(x=>[x,x])]}],
+    ["verbrauch","Energiekennwert","number",{unit:"kWh/m² im Jahr",step:1}],
+    ["ausweis","Energieausweis","select",{options:[["","unbekannt"],["bedarf","Bedarfsausweis"],["verbrauch","Verbrauchsausweis"],["keiner","keiner vorhanden"]]}],
+    ["pv","Photovoltaik / Solar","check",{}]
+  ]},
+  {t:"Kosten, Rechte, Vermietung",f:[
+    ["hausgeld","Hausgeld","number",{unit:"€/Monat",only:"wohnung"}],
+    ["ruecklage","Erhaltungsrücklage der Gemeinschaft","number",{unit:"€ gesamt",step:1000,only:"wohnung"}],
+    ["sonderumlage","Sonderumlage","select",{options:[["nein","keine bekannt"],["geplant","wird besprochen"],["beschlossen","beschlossen, noch offen"]],only:"wohnung"}],
+    ["vermietet","Derzeit vermietet","check",{}],
+    ["kaltmiete","Kaltmiete","number",{unit:"€/Monat"}],
+    ["denkmal","Denkmalschutz","check",{}],
+    ["erbbau","Erbbaurecht (Grundstück gepachtet)","check",{}],
+    ["rechte","Rechte und Lasten","text",{ph:"z. B. Wohnrecht, Wegerecht, Baulast"}]
+  ]},
+  {t:"Was ist besonders?",f:[
+    ["besonderes","Besonderheiten, die den Wert beeinflussen","textarea",{wide:1,ph:"z. B. 2023 komplett neues Bad mit bodengleicher Dusche, ruhige Lage am Feld, Hobbyraum im Keller, Nachbarn sehr angenehm, Straße wird 2027 saniert …"}]
+  ]}
+];
+const VIMPORTANT=["ort","plz","typ","wfl","zimmer","baujahr","lage","zustand","ausstattung","aussen","stellplatz","heizart","heizBj","energie","besonderes"];
+const isHausT=t=>t!=="wohnung";
+function valBlank(){
+  return {q:{titel:"",ort:"",plz:"",stadtteil:"",land:"BW",lage:"mittel",laerm:"normal",oepnv:"mittel",infra:"mittel",ausblick:"nein",
+      typ:"wohnung",wfl:0,zimmer:0,baeder:1,baujahr:0,etage:"",etagenGesamt:0,einheiten:0,aufzug:false,grund:0,aussen:"balkon",aussenQm:0,ausrichtung:"",stellplatz:"keiner",stellplatzAnz:0,keller:true,
+      zustand:"gepflegt",modBad:0,modKueche:0,modBoden:0,modFenster:0,modHeizung:0,modElektrik:0,modLeitungen:0,modDach:0,modFassade:0,maengel:"",
+      ausstattung:"normal",bodenart:"mix",kueche:false,kuecheWert:0,fbh:false,kamin:false,barrierefrei:false,smarthome:false,klima:false,
+      heizart:"",heizBj:0,energie:"",verbrauch:0,ausweis:"",pv:false,
+      hausgeld:0,ruecklage:0,sonderumlage:"nein",vermietet:false,kaltmiete:0,denkmal:false,erbbau:false,rechte:"",besonderes:""},
+    res:null,resKey:"",
+    sale:{preisWahl:"markt",preis:0,datum:"",makler:3.57,energieausweis:0,unterlagen:100,gutachten:0,staging:0,reparatur:0,umzug:0,
+      restschuld:0,zins:0,rate:0,sonder:0,zinsEnde:"",auszahlung:"",wiederanlage:0,vfeManual:0,vfeGebuehr:250,grundschuld:0,weitere:0,
+      nutzung:"selbst",selbst3:false,kaufdatum:"",kaufpreis:0,kaufNk:0,modKosten:0,afaSumme:0,steuersatz:42}};
+}
+Object.assign(INFO,{
+  "val.q.titel":"Ein Name für dich, damit du die Bewertung unter „Meine Objekte“ wiederfindest.",
+  "val.q.ort":"Pflichtfeld. Der Ort, in dem die Immobilie liegt. Die KI sucht damit Vergleichspreise aus dem Internet.",
+  "val.q.plz":"Die Postleitzahl macht den Vergleich genauer, weil Preise innerhalb einer Stadt stark schwanken.",
+  "val.q.stadtteil":"Stadtteil oder Straße. Hilft der KI, die Mikrolage einzuschätzen. Die genaue Hausnummer brauchst du nicht.",
+  "val.q.land":"Für die Einordnung des Marktes und der Grunderwerbsteuer, die Käufer zahlen müssen.",
+  "val.q.lage":"Wie gut die Lage innerhalb des Orts ist. Gute Lagen bringen oft 10–20 % mehr als einfache.",
+  "val.q.laerm":"Lärm von Hauptstraße, Bahn oder Flugzeugen drückt den Preis spürbar, oft um 5–10 %.",
+  "val.q.oepnv":"Wie schnell man zu Fuß an Bus oder Bahn ist. Gute Anbindung ist vor allem in Ballungsräumen viel wert.",
+  "val.q.infra":"Ob Supermarkt, Schulen, Kitas und Ärzte gut erreichbar sind.",
+  "val.q.ausblick":"Ein besonderer Ausblick kann den Preis deutlich erhöhen.",
+  "val.q.typ":"Pflichtfeld. Davon hängt ab, welche Vergleichsobjekte die KI sucht und welche Fragen gestellt werden.",
+  "val.q.wfl":"Pflichtfeld. Wohnfläche laut Kaufvertrag, Teilungserklärung oder Grundriss. Keller und Garage zählen nicht.",
+  "val.q.zimmer":"Zimmer ohne Küche und Bad.",
+  "val.q.baeder":"Anzahl der Bäder und Duschbäder. Ein zweites Bad oder Gäste-WC erhöht den Wert.",
+  "val.q.baujahr":"Baujahr des Gebäudes laut Unterlagen.",
+  "val.q.etage":"In welchem Stockwerk die Wohnung liegt. Hohe Etagen ohne Aufzug sind schwerer zu verkaufen, Dachgeschoss mit Aufzug oft beliebt.",
+  "val.q.etagenGesamt":"Wie viele Stockwerke das Haus hat.",
+  "val.q.einheiten":"Wie viele Wohnungen im Haus sind. Kleine Gemeinschaften sind meist beliebter.",
+  "val.q.aufzug":"Ein Aufzug macht obere Etagen deutlich attraktiver, besonders für ältere Käufer.",
+  "val.q.grund":"Grundstücksgröße laut Grundbuch. Bei Häusern ein großer Teil des Werts (Bodenrichtwert × Fläche).",
+  "val.q.aussen":"Balkon, Terrasse oder Garten. Ohne Außenbereich sind Wohnungen schwerer zu verkaufen.",
+  "val.q.aussenQm":"Größe von Balkon, Terrasse oder Garten.",
+  "val.q.ausrichtung":"In welche Richtung Balkon oder Garten zeigt. Süd und West bringen am meisten.",
+  "val.q.stellplatz":"Ein Stellplatz oder eine Garage ist in Städten oft 10.000–35.000 € wert.",
+  "val.q.stellplatzAnz":"Wie viele Stellplätze mitverkauft werden.",
+  "val.q.keller":"Ob ein Keller oder Kellerabteil dazugehört.",
+  "val.q.zustand":"Der Gesamtzustand. Sei ehrlich: Käufer und Gutachter sehen es sowieso.",
+  "val.q.modBad":"In welchem Jahr das Bad zuletzt komplett erneuert wurde. Leer lassen, wenn noch original.",
+  "val.q.modKueche":"Jahr der letzten Küchenerneuerung.",
+  "val.q.modBoden":"Jahr, in dem die Böden zuletzt erneuert wurden.",
+  "val.q.modFenster":"Jahr des Fenstertauschs. Fenster älter als ca. 25 Jahre sind ein Minuspunkt.",
+  "val.q.modHeizung":"Jahr der neuen Heizung. Bei Wohnungen die Heizung des Hauses.",
+  "val.q.modElektrik":"Jahr, in dem die Elektrik erneuert wurde.",
+  "val.q.modLeitungen":"Jahr, in dem Wasser- und Abwasserleitungen erneuert wurden.",
+  "val.q.modDach":"Jahr, in dem das Dach erneuert oder gedämmt wurde.",
+  "val.q.modFassade":"Jahr der Fassadendämmung.",
+  "val.q.maengel":"Mängel, die du kennst. Verschweigen kann teuer werden, weil Käufer dich später haftbar machen können.",
+  "val.q.ausstattung":"Wie hochwertig Bad, Küche, Böden und Türen insgesamt sind.",
+  "val.q.bodenart":"Welche Bodenbeläge überwiegend liegen.",
+  "val.q.kueche":"Ob die Einbauküche mitverkauft wird. Sie kann im Kaufvertrag extra ausgewiesen werden, dann spart der Käufer Grunderwerbsteuer.",
+  "val.q.kuecheWert":"Was die Küche heute noch wert ist. Grobe Faustregel: nach 10 Jahren noch etwa 20–30 % vom Neupreis.",
+  "val.q.fbh":"Fußbodenheizung ist ein Komfortplus.",
+  "val.q.kamin":"Kamin oder Kaminofen.",
+  "val.q.barrierefrei":"Ebenerdige Dusche, wenige Stufen, breite Türen. Gefragt bei älteren Käufern.",
+  "val.q.smarthome":"Elektrische Rollläden, Smart-Home-Steuerung.",
+  "val.q.klima":"Fest eingebaute Klimaanlage.",
+  "val.q.heizart":"Wie geheizt wird. Alte Öl- und Gasheizungen sind wegen des Heizungsgesetzes ein Minuspunkt, Wärmepumpe und Fernwärme ein Plus.",
+  "val.q.heizBj":"Baujahr der Heizung. Über 30 Jahre alte Kessel müssen oft getauscht werden.",
+  "val.q.energie":"Energieklasse aus dem Energieausweis (A+ sehr gut bis H sehr schlecht). Seit 2024 ein immer wichtigerer Preisfaktor.",
+  "val.q.verbrauch":"Der Wert in kWh pro m² und Jahr aus dem Energieausweis.",
+  "val.q.ausweis":"Beim Verkauf musst du einen gültigen Energieausweis vorlegen, sonst droht ein Bußgeld.",
+  "val.q.pv":"Eine Photovoltaik- oder Solaranlage erhöht den Wert.",
+  "val.q.hausgeld":"Monatliches Hausgeld an die Eigentümergemeinschaft. Ein hohes Hausgeld schreckt Käufer ab.",
+  "val.q.ruecklage":"Wie viel Geld die Eigentümergemeinschaft insgesamt für Reparaturen angespart hat. Steht in der Jahresabrechnung. Eine niedrige Rücklage ist ein Risiko für Käufer.",
+  "val.q.sonderumlage":"Ob große Reparaturen anstehen, die alle Eigentümer extra zahlen müssen. Steht in den Protokollen der Eigentümerversammlung.",
+  "val.q.vermietet":"Vermietete Wohnungen verkaufen sich oft 10–20 % günstiger, weil Selbstnutzer nicht einziehen können.",
+  "val.q.kaltmiete":"Die aktuelle Kaltmiete. Wichtig für Kapitalanleger als Käufer.",
+  "val.q.denkmal":"Denkmalschutz bringt Steuervorteile für Käufer, aber Auflagen bei Sanierungen.",
+  "val.q.erbbau":"Beim Erbbaurecht gehört das Grundstück jemand anderem und kostet jährlichen Erbbauzins. Das senkt den Wert deutlich.",
+  "val.q.rechte":"Eingetragene Rechte und Lasten aus dem Grundbuch, z. B. Wohnrecht, Wegerecht, Baulast.",
+  "val.q.besonderes":"Alles, was im Fragebogen fehlt und den Wert erhöht oder senkt. Je konkreter, desto besser kann die KI es einrechnen.",
+  "val.sale.preisWahl":"Mit welchem Preis gerechnet wird: realistischer Marktwert, der höhere Angebotspreis (wenn du verhandeln lässt), der Preis für einen schnellen Verkauf oder dein eigener Wert.",
+  "val.sale.preis":"Der Preis, zu dem du verkaufen willst oder ein Käufer geboten hat.",
+  "val.sale.datum":"Der geplante Termin beim Notar. Davon hängen Restschuld, Vorfälligkeitsentschädigung und Steuer ab. Leer = in 3 Monaten.",
+  "val.sale.makler":"Provision, die du als Verkäufer zahlst. Bei Wohnungen und Einfamilienhäusern meist 3,57 % inkl. Mehrwertsteuer (die Hälfte der Gesamtprovision). Bei privatem Verkauf 0.",
+  "val.sale.energieausweis":"Kosten für einen neuen Energieausweis, falls keiner gültig ist: Verbrauchsausweis ca. 50–150 €, Bedarfsausweis ca. 300–600 €.",
+  "val.sale.unterlagen":"Grundbuchauszug, Flurkarte, Teilungserklärung und Protokolle besorgen. Meist 50–150 €.",
+  "val.sale.gutachten":"Optional: ein Verkehrswertgutachten kostet 1.500–3.000 €. Ein Kurzgutachten ca. 500–1.000 €.",
+  "val.sale.staging":"Optional: Profi-Fotos, Home-Staging, Inserate.",
+  "val.sale.reparatur":"Kleine Reparaturen und Schönheitsarbeiten vor dem Verkauf.",
+  "val.sale.umzug":"Umzugskosten, falls du selbst ausziehst.",
+  "val.sale.restschuld":"Was du heute noch bei der Bank schuldest. Steht im letzten Kontoauszug oder Jahreskontoauszug des Darlehens. Das Tool rechnet bis zum Notartermin weiter.",
+  "val.sale.zins":"Dein vereinbarter Sollzins aus dem Darlehensvertrag.",
+  "val.sale.rate":"Deine monatliche Kreditrate (Zins und Tilgung).",
+  "val.sale.sonder":"Wie viel du laut Vertrag jedes Jahr zusätzlich kostenlos tilgen darfst. Senkt die Vorfälligkeitsentschädigung.",
+  "val.sale.zinsEnde":"Bis wann dein Zins festgeschrieben ist. Verkaufst du danach, fällt keine Vorfälligkeitsentschädigung an.",
+  "val.sale.auszahlung":"Wann das Darlehen vollständig ausgezahlt wurde. 10 Jahre danach kannst du mit 6 Monaten Frist ohne Entschädigung kündigen (§ 489 BGB).",
+  "val.sale.wiederanlage":"Der Zins, zu dem die Bank dein Geld heute wieder anlegen kann (Pfandbrief-Rendite). Je niedriger, desto höher die Vorfälligkeitsentschädigung. Leer = aktueller Marktwert.",
+  "val.sale.vfeManual":"Wenn die Bank dir schon eine Vorfälligkeitsentschädigung genannt hat, trag sie hier ein. Dann wird nicht geschätzt.",
+  "val.sale.vfeGebuehr":"Manche Banken verlangen eine Bearbeitungsgebühr für die vorzeitige Ablösung, meist 0–300 €.",
+  "val.sale.grundschuld":"Höhe der Grundschuld im Grundbuch, meist der ursprüngliche Kreditbetrag. Die Löschung kostet etwa 0,2–0,4 % davon. Leer = Restschuld.",
+  "val.sale.weitere":"Weitere Schulden, die mit dem Verkauf abgelöst werden müssen, z. B. ein KfW-Darlehen oder Privatkredit.",
+  "val.sale.nutzung":"Wie du die Immobilie genutzt hast. Selbst bewohnt bleibt der Verkauf steuerfrei.",
+  "val.sale.selbst3":"Steuerfrei ist der Verkauf auch, wenn du im Verkaufsjahr und den beiden Jahren davor selbst darin gewohnt hast (zwei angefangene Kalenderjahre reichen).",
+  "val.sale.kaufdatum":"Datum des Kaufvertrags beim Notar. 10 Jahre danach ist der Verkauf immer steuerfrei.",
+  "val.sale.kaufpreis":"Was du damals bezahlt hast.",
+  "val.sale.kaufNk":"Kaufnebenkosten damals: Grunderwerbsteuer, Notar, Grundbuch, Makler.",
+  "val.sale.modKosten":"Was du seitdem in Modernisierung und Ausbau gesteckt hast (mit Rechnungen). Senkt den steuerpflichtigen Gewinn.",
+  "val.sale.afaSumme":"Bei Vermietung: Summe der Abschreibungen (AfA), die du in den Steuererklärungen angesetzt hast. Sie erhöht den Gewinn. Leer = Schätzung.",
+  "val.sale.steuersatz":"Dein persönlicher Steuersatz auf zusätzliches Einkommen, bei mittlerem Einkommen meist 30–42 %.",
+  "v.markt":"Der realistische Verkaufspreis bei normaler Vermarktung (2–4 Monate). Damit rechnet der Verkaufsrechner standardmäßig.",
+  "v.angebot":"Mit diesem Preis kannst du inserieren. Er lässt Platz für die übliche Verhandlung von 3–7 %.",
+  "v.schnell":"Was realistisch ist, wenn du schnell verkaufen musst (ca. 4–8 Wochen).",
+  "v.spanne":"Der Bereich, in dem der Verkaufspreis mit hoher Wahrscheinlichkeit liegt. Je mehr du ausfüllst, desto enger wird er.",
+  "v.sicherheit":"Wie sicher die KI ist. Hoch = viele passende Vergleichsdaten am Ort. Niedrig = wenige Daten oder viele Angaben fehlen.",
+  "v.anpassungen":"Zu- und Abschläge gegenüber einem durchschnittlichen Objekt am Ort, abgeleitet aus deinen Angaben und Fotos.",
+  "v.vergleich":"Echte Angebote und Preisdaten aus dem Internet, mit denen verglichen wurde. Angebotspreise liegen meist 5–10 % über den späteren Verkaufspreisen.",
+  "s.netto":"Was nach allen Kosten, Kreditablösung und Steuern auf deinem Konto ankommt.",
+  "s.restschuld":"Restschuld am Notartermin, hochgerechnet aus heutiger Restschuld, Zins und Rate.",
+  "s.vfe":"Entschädigung, die die Bank verlangt, weil sie durch die frühe Rückzahlung Zinsen verliert. Geschätzt nach dem Verfahren der Banken (Aktiv-Passiv-Methode). Die echte Zahl nennt dir die Bank.",
+  "s.loesch":"Notar und Grundbuchamt für die Löschung der Grundschuld, etwa 0,3 % des eingetragenen Betrags.",
+  "s.steuer":"Steuer auf den Gewinn (Spekulationssteuer), nur wenn du nicht selbst darin gewohnt hast und weniger als 10 Jahre seit dem Kauf vergangen sind.",
+  "s.kosten":"Energieausweis, Unterlagen, Gutachten, Fotos, Reparaturen und Umzug zusammen.",
+  "s.gewinn":"Verkaufspreis minus damaliger Kaufpreis, Kaufnebenkosten und Modernisierungen. Zeigt, ob sich die Immobilie gelohnt hat."
+});
+
+/* ---------- Datum-Helfer ---------- */
+const parseD=s=>{ if(!s) return null; const d=new Date(s+"T12:00:00"); return isNaN(d)?null:d; };
+const addMonths=(d,m)=>{ const x=new Date(d); x.setMonth(x.getMonth()+m); return x; };
+const monthsBetween=(a,b)=>Math.max(0,Math.round((b-a)/(30.4375*864e5)));
+const fmtD=d=>d?d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"}):"–";
+const isoD=d=>d.toISOString().slice(0,10);
+
+/* ---------- Fragebogen ---------- */
+function vf([k,label,type,opts]){
+  const o={...(opts||{})}; const key="val.q."+k;
+  if(type==="check") return `<div class="f"><span>&nbsp;</span>${field(key,label,"check",o)}</div>`;
+  return field(key,label,type,o);
+}
+function renderValForm(){
+  const q=S.val.q, haus=isHausT(q.typ);
+  $("#valSections").innerHTML=VSEC.map(sec=>`<div class="card"><h2>${sec.t}</h2><div class="grid">${sec.f.filter(f=>!f[3]?.only||(f[3].only==="haus"?haus:!haus)).map(vf).join("")}</div></div>`).join("");
+  renderValProgress();
+}
+function valPct(){
+  const q=S.val.q; let have=0, all=VIMPORTANT.length+2;
+  VIMPORTANT.forEach(k=>{ const v=q[k]; if(v!==""&&v!==0&&v!=null) have++; });
+  if(["bad","kueche","fenster","heizung"].some(x=>num(q["mod"+x[0].toUpperCase()+x.slice(1)]))||q.zustand==="neuwertig") have++;
+  if(valFiles.length) have++;
+  return Math.round(have/all*100);
+}
+function renderValProgress(){
+  const p=valPct(); $("#valBar").style.width=p+"%";
+  $("#valPct").textContent=`${p} % der wichtigen Angaben ausgefüllt${valFiles.length?` · ${valFiles.length} Bild${valFiles.length>1?"er":""}`:" · noch keine Fotos"}`;
+  const q=S.val.q, miss=[]; if(!q.ort) miss.push("Ort"); if(!num(q.wfl)) miss.push("Wohnfläche");
+  $("#valRunHint").textContent=miss.length?`Es fehlt noch: ${miss.join(", ")}.`:!SESSION?"Zum Bewerten bitte unter „Meine Objekte“ anmelden.":"Dauert 1–3 Minuten. Die KI sucht dabei Vergleichsobjekte im Internet.";
+  $("#btnValRun").disabled=!!miss.length||!SESSION||valBusy;
+}
+
+/* ---------- Uploads für die Bewertung ---------- */
+let valFiles=[];
+const vdrop=$("#valDrop");
+["dragenter","dragover"].forEach(t=>vdrop.addEventListener(t,e=>{e.preventDefault();vdrop.classList.add("over")}));
+["dragleave","drop"].forEach(t=>vdrop.addEventListener(t,e=>{e.preventDefault();vdrop.classList.remove("over")}));
+vdrop.addEventListener("drop",e=>addValFiles(e.dataTransfer.files));
+$("#valFileIn").addEventListener("change",e=>{addValFiles(e.target.files);e.target.value=""});
+async function addValFiles(list){
+  const st=$("#valFileStatus");
+  for(const f of [...list]){
+    if(f.type==="application/pdf"){ st.textContent="PDF wird gelesen …"; try{ const pages=await pdfToImages(f); pages.forEach((b,i)=>valFiles.push({blob:b,url:URL.createObjectURL(b),name:f.name,page:i+1})); st.textContent=""; }catch(err){ st.textContent="Das PDF konnte nicht gelesen werden. Mach Fotos oder Screenshots der Seiten."; } }
+    else if(f.type.startsWith("image/")) valFiles.push({blob:f,url:URL.createObjectURL(f),name:f.name});
+  }
+  if(valFiles.length>10) st.textContent=`${valFiles.length} Bilder: die KI wertet die ersten 10 aus. Sortiere die wichtigsten nach vorne, indem du andere entfernst.`;
+  renderValThumbs(); renderValProgress();
+}
+function renderValThumbs(){$("#valThumbs").innerHTML=valFiles.map((f,i)=>`<div class="thumb"><img src="${f.url}" alt="${esc(f.name)}">${f.page?`<span class="pg">S. ${f.page}</span>`:""}<button data-vrm="${i}" aria-label="Entfernen">✕</button></div>`).join("");}
+$("#valThumbs").addEventListener("click",e=>{const b=e.target.closest("[data-vrm]");if(!b)return;valFiles.splice(num(b.dataset.vrm),1);renderValThumbs();renderValProgress();});
+
+/* ---------- KI-Bewertung ---------- */
+let valBusy=false, valErr="", ctlVal=null;
+async function runVal(){
+  const q=S.val.q; if(!SESSION||valBusy||!q.ort||!num(q.wfl)) return;
+  valBusy=true; valErr=""; ctlVal=new AbortController(); setTab("wert"); renderValOut(); renderValProgress();
+  try{
+    const images=await Promise.all(valFiles.slice(0,10).map(f=>toJpegB64(f.blob)));
+    const daten={...q,bundesland:LAENDER[q.land],objektart:{wohnung:"Eigentumswohnung",efh:"Einfamilienhaus",dhh:"Doppelhaushälfte",rh:"Reihenhaus",mfh:"Mehrfamilienhaus"}[q.typ]};
+    const oi=S.ortInfo&&S.ortInfo.anfrage===(q.ort||"").trim()?S.ortInfo:null;
+    const {data}=await api("/api/bewertung",{daten,ortInfo:oi,images},ctlVal.signal);
+    S.val.res=data; S.val.resKey=JSON.stringify(S.val.q);
+    if(S.val.sale.preisWahl==="eigen"&&!num(S.val.sale.preis)) S.val.sale.preisWahl="markt";
+  }catch(e){ valErr=e.code==="cancelled"?"":(e.code==="limit"?e.message:e.code==="invalid_json"?(e.message||errCopy(e.code)):errCopy(e.code)); }
+  finally{ valBusy=false; ctlVal=null; renderValOut(); renderSaleForm(); renderValProgress(); refresh(); }
+}
+$("#btnValRun").addEventListener("click",runVal);
+$("#btnValFromObj").addEventListener("click",()=>{
+  const o=S.obj, q=S.val.q;
+  Object.assign(q,{ort:o.ort||q.ort,typ:o.typ||q.typ,wfl:num(o.wfl)||q.wfl,zimmer:num(o.zimmer)||q.zimmer,baeder:num(o.baeder)||q.baeder,baujahr:num(o.baujahr)||q.baujahr,
+    land:o.land||q.land,energie:o.energie||q.energie,hausgeld:num(o.hausgeld)||q.hausgeld,grund:num(o.grund)||q.grund,keller:!!o.keller,
+    vermietet:num(o.istMiete)>0||q.vermietet,kaltmiete:num(o.istMiete)||q.kaltmiete,
+    zustand:({neuwertig:"neuwertig",gepflegt:"gepflegt",renovierungsbeduerftig:"renovierungsbeduerftig",sanierungsbeduerftig:"sanierungsbeduerftig",kernsanierung:"sanierungsbeduerftig"})[o.zustand]||q.zustand});
+  if(num(o.kaufpreis)&&!num(S.val.sale.kaufpreis)) S.val.sale.kaufpreis=num(o.kaufpreis);
+  renderValForm(); renderSaleForm(); refresh();
+});
+
+function valRangeBar(r){
+  const lo=Math.min(r.spanne.min,r.schnellverkauf)*0.97, hi=Math.max(r.spanne.max,r.angebotspreis)*1.03, P=v=>((v-lo)/(hi-lo)*100).toFixed(2)+"%";
+  const mk=(v,cls,l)=>`<span class="rb-m ${cls}" style="left:${P(v)}"><i></i><b>${l}<br>${eurR(v)}</b></span>`;
+  return `<div class="rb" aria-hidden="true"><div class="rb-t"></div><div class="rb-b" style="left:${P(r.spanne.min)};width:calc(${P(r.spanne.max)} - ${P(r.spanne.min)})"></div>
+    ${mk(r.schnellverkauf,"lo","Schnell")}${mk(r.marktwert,"mid","Marktwert")}${mk(r.angebotspreis,"hi","Angebot")}</div>`;
+}
+function renderValOut(){
+  const out=$("#valOut"), r=S.val.res, q=S.val.q;
+  if(valBusy){ out.innerHTML=`<div class="card"><h2>Bewertung läuft …</h2><p>Die KI sucht aktuelle Kaufpreise und Vergleichsobjekte für ${esc(q.ort)}${valFiles.length?`, wertet ${Math.min(10,valFiles.length)} Bilder aus`:""} und rechnet Zu- und Abschläge. Das dauert meist 1–3 Minuten.</p><div class="row"><button class="btn ghost" id="btnValStop">Abbrechen</button></div></div>`; return; }
+  if(!r){ out.innerHTML=`<div class="card"><h2>Noch keine Bewertung</h2><p class="muted">Füll den Fragebogen aus, lade Fotos und den Energieausweis hoch und tippe auf „Wert jetzt ermitteln“.</p>${valErr?`<p class="note bad">${esc(valErr)}</p>`:""}<div class="row"><button class="btn pri" data-goto="frage">Zum Fragebogen</button></div></div>`; return; }
+  const stale=S.val.resKey&&S.val.resKey!==JSON.stringify(q);
+  const sp={hoch:"good",mittel:"warn",niedrig:"bad"}[r.sicherheit]||"warn";
+  const wfl=Math.max(1,num(q.wfl));
+  let h=`${valErr?`<p class="note bad">${esc(valErr)}</p>`:""}
+  ${stale?`<div class="banner"><span>Du hast seit der Bewertung Angaben geändert.</span><button class="btn pri" id="btnValRerun"${SESSION?"":" disabled"}>Neu bewerten</button></div>`:""}
+  <div class="card"><div class="card-h"><span class="label">Geschätzter Marktwert${ib("v.markt")}</span><span><span class="pill ${sp}">Sicherheit ${esc(r.sicherheit)}</span>${ib("v.sicherheit")}</span></div>
+    <div class="bigval">${eurR(r.marktwert)}</div>
+    <p class="muted">Spanne ${eurR(r.spanne.min)} bis ${eurR(r.spanne.max)}${ib("v.spanne")} · ${fmt(r.preis_qm||r.marktwert/wfl)} €/m² · bewertet am ${esc(r.erstellt||"")}${r.sicherheit_grund?` · ${esc(r.sicherheit_grund)}`:""}</p>
+    ${valRangeBar(r)}
+    <div class="tiles3">
+      <div class="kpi"><span class="label">Angebotspreis${ib("v.angebot")}</span><span class="v">${eurR(r.angebotspreis)}</span><span class="s">zum Inserieren</span></div>
+      <div class="kpi"><span class="label">Marktwert${ib("v.markt")}</span><span class="v">${eurR(r.marktwert)}</span><span class="s">realistischer Verkaufspreis</span></div>
+      <div class="kpi"><span class="label">Schnellverkauf${ib("v.schnell")}</span><span class="v">${eurR(r.schnellverkauf)}</span><span class="s">in ca. 4–8 Wochen</span></div>
+    </div>
+    ${r.fazit?`<p>${esc(r.fazit)}</p>`:""}
+    <div class="row"><button class="btn pri big" id="btnToSale">Verkauf durchrechnen: was bleibt mir?</button></div>
+  </div>
+  <div class="cols2">
+    <div class="card"><h3>Markt in ${esc(r.markt?.ort||q.ort)}</h3><div class="kv">
+      ${r.markt?.kauf_qm_durchschnitt?K("Durchschnitt Kaufpreis",fmt(r.markt.kauf_qm_durchschnitt)+" €/m²"):""}
+      ${r.markt?.kauf_qm_min&&r.markt?.kauf_qm_max?K("Übliche Spanne",`${fmt(r.markt.kauf_qm_min)} – ${fmt(r.markt.kauf_qm_max)} €/m²`):""}
+      ${K("Deine Immobilie",fmt(r.preis_qm||r.marktwert/wfl)+" €/m²")}
+      ${r.markt?.bodenrichtwert?K("Bodenrichtwert",fmt(r.markt.bodenrichtwert)+" €/m²"):""}
+      ${r.markt?.miete_qm?K("Kaltmiete am Ort",dec(r.markt.miete_qm)+" €/m²"):""}
+    </div>${r.markt?.trend?`<p class="small muted">${esc(r.markt.trend)}${r.markt.stand?` (${esc(r.markt.stand)})`:""}</p>`:""}</div>
+    <div class="card"><h3>Bewertungsverfahren</h3><div class="kv">${r.methoden.map(m=>K(esc(m.name),eurR(m.wert))).join("")}</div>
+      ${r.methoden.map(m=>m.erklaerung?`<p class="small muted"><b>${esc(m.name)}:</b> ${esc(m.erklaerung)}</p>`:"").join("")}</div>
+  </div>`;
+  if(r.anpassungen.length) h+=`<div class="card"><h3>Zu- und Abschläge${ib("v.anpassungen")}</h3><div class="scroll"><table class="mtable"><thead><tr><th>Merkmal</th><th>Wirkung</th><th>Begründung</th></tr></thead><tbody>
+    ${r.anpassungen.map(a=>`<tr><td>${esc(a.faktor)}</td><td class="r" style="color:var(--${a.prozent>0?"good":a.prozent<0?"bad":"muted"})">${a.prozent>0?"+":""}${dec(a.prozent,1)} %</td><td>${esc(a.grund)}</td></tr>`).join("")}</tbody></table></div></div>`;
+  if(r.vergleichsobjekte.length) h+=`<div class="card"><h3>Vergleichsobjekte aus dem Internet${ib("v.vergleich")}</h3><div class="scroll"><table class="mtable"><thead><tr><th>Objekt</th><th>Fläche</th><th>Baujahr</th><th>Preis</th><th>€/m²</th><th>Art</th></tr></thead><tbody>
+    <tr style="background:var(--accent-soft)"><td><b>Deine Immobilie</b></td><td class="r">${fmt(wfl)} m²</td><td class="r">${num(q.baujahr)||"–"}</td><td class="r">${eurR(r.marktwert)}</td><td class="r">${fmt(r.preis_qm||r.marktwert/wfl)}</td><td>Bewertung</td></tr>
+    ${r.vergleichsobjekte.map(v=>`<tr><td><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.titel||"Angebot")}</a></td><td class="r">${v.wfl?fmt(v.wfl)+" m²":"–"}</td><td class="r">${v.baujahr||"–"}</td><td class="r">${eurR(v.preis)}</td><td class="r">${v.preis_qm?fmt(v.preis_qm):v.wfl?fmt(v.preis/v.wfl):"–"}</td><td>${esc(v.art)}</td></tr>`).join("")}
+    </tbody></table></div></div>`;
+  const li=(t,a)=>a&&a.length?`<div><span class="label">${t}</span><ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:"";
+  h+=`<div class="card"><div class="facts">${li("Aus Fotos und Unterlagen erkannt",r.aus_bildern)}${li("Stärken",r.staerken)}${li("Schwächen",r.schwaechen)}${li("Tipps vor dem Verkauf",r.tipps_wertsteigerung)}</div></div>
+  <p class="note">Das ist eine KI-gestützte Marktwerteinschätzung auf Basis öffentlicher Angebots- und Preisdaten, kein Verkehrswertgutachten nach § 194 BauGB. Für Erbschaft, Scheidung, Finanzamt oder Gericht brauchst du ein Gutachten eines Sachverständigen.</p>`;
+  out.innerHTML=h;
+}
+document.addEventListener("click",e=>{
+  if(e.target.id==="btnValStop") ctlVal?.abort();
+  if(e.target.id==="btnValRerun") runVal();
+  if(e.target.id==="btnToSale"){ if(S.val.sale.preisWahl==="eigen"&&!num(S.val.sale.preis)) S.val.sale.preisWahl="markt"; renderSaleForm(); refresh(); setTab("verkauf"); scrollTo({top:0}); }
+  const g=e.target.closest("[data-goto]"); if(g) setTab(g.dataset.goto);
+});
+
+/* ---------- Verkaufsrechner ---------- */
+function amort(B,zins,rate,months,sonder){
+  let b=B; const i=zins/1200;
+  for(let m=1;m<=months&&b>0;m++){ const int=b*i; const pay=rate>0?rate:int; b=b+int-pay; if(m%12===0&&sonder>0) b-=Math.min(sonder,Math.max(0,b)); b=Math.max(0,b); }
+  return b;
+}
+function vfeCalc(B,sl,sd){
+  if(B<=0) return {v:0,why:"Kein Kredit mehr offen."};
+  if(num(sl.vfeManual)>0) return {v:num(sl.vfeManual),why:"Wert laut Bank."};
+  const ze=parseD(sl.zinsEnde);
+  if(!ze) return {v:null,why:"Trag ein, bis wann dein Zins festgeschrieben ist, dann wird die Vorfälligkeitsentschädigung geschätzt."};
+  if(ze<=sd) return {v:0,why:`Die Zinsbindung endet am ${fmtD(ze)} vor dem Notartermin, also keine Entschädigung.`};
+  let end=ze, frei=ze; const az=parseD(sl.auszahlung);
+  if(az){ const k=addMonths(az,126); if(k<=sd) return {v:0,why:"Das Darlehen ist über 10 Jahre ausgezahlt: Mit 6 Monaten Frist kündbar ohne Entschädigung (§ 489 BGB). Kündigung rechtzeitig schicken!"}; if(k<end){ end=k; frei=k; } }
+  const n=monthsBetween(sd,end), i=num(sl.zins)/1200, w=(num(sl.wiederanlage)||M.pfandbrief)/1200, rate=num(sl.rate), sonder=num(sl.sonder);
+  let b=B, pv=0, sumB=0;
+  for(let t=1;t<=n;t++){ const int=b*i; let pay=Math.min(rate>0?rate:int,b+int); b=b+int-pay; if(t%12===0&&sonder>0){const s=Math.min(sonder,b); b-=s; pay+=s;} pv+=pay/Math.pow(1+w,t); sumB+=b; }
+  pv+=b/Math.pow(1+w,n);
+  const saving=0.001*sumB/12;
+  return {v:Math.max(0,pv-B-saving),why:`Geschätzt für ${n} Monate bis ${fmtD(end)} mit ${dec(num(sl.zins))} % Vertragszins gegen ${dec(w*1200)} % Wiederanlagezins.`,frei,n};
+}
+function saleCalc(){
+  const v=S.val, sl=v.sale, q=v.q, r=v.res, today=new Date();
+  const wahl=r?(sl.preisWahl==="eigen"&&!num(sl.preis)?"markt":(sl.preisWahl||"markt")):"eigen";
+  const preis=wahl==="eigen"?num(sl.preis):wahl==="angebot"?r.angebotspreis:wahl==="schnell"?r.schnellverkauf:r.marktwert;
+  const sd=parseD(sl.datum)||addMonths(today,3);
+  const mak=preis*num(sl.makler)/100;
+  const kostenV=num(sl.energieausweis)+num(sl.unterlagen)+num(sl.gutachten)+num(sl.staging)+num(sl.reparatur);
+  const kosten=kostenV+num(sl.umzug);
+  const B=amort(num(sl.restschuld),num(sl.zins),num(sl.rate),monthsBetween(today,sd),num(sl.sonder));
+  const vf=vfeCalc(B,sl,sd); const vfe=vf.v||0;
+  const gebuehr=B>0&&vfe>0?num(sl.vfeGebuehr):0;
+  const gs=num(sl.grundschuld)||(num(sl.restschuld)>0?num(sl.restschuld):0);
+  const loesch=gs>0?gs*0.003:0;
+  const weitere=num(sl.weitere);
+  // Steuer
+  const kd=parseD(sl.kaufdatum), frei10=kd?addMonths(kd,120):null, jahre=kd?(sd-kd)/(365.25*864e5):0;
+  let steuer=0, gewinnSt=null, stWhy="", afa=0;
+  if(sl.nutzung==="selbst") stWhy="Selbst bewohnt: Der Verkauf ist steuerfrei.";
+  else if(sl.nutzung==="gemischt"&&sl.selbst3) stWhy="Im Verkaufsjahr und den zwei Jahren davor selbst bewohnt: steuerfrei.";
+  else if(!kd) stWhy="Trag das Kaufdatum ein, dann prüft das Tool die 10-Jahres-Frist.";
+  else if(sd>=frei10) stWhy=`Mehr als 10 Jahre im Besitz (seit ${fmtD(kd)}): steuerfrei.`;
+  else {
+    afa=num(sl.afaSumme)||(num(sl.kaufpreis)+num(sl.kaufNk))*0.75*0.02*Math.max(0,jahre);
+    const ansch=num(sl.kaufpreis)+num(sl.kaufNk)+num(sl.modKosten)-afa;
+    gewinnSt=preis-mak-kostenV-loesch-vfe-gebuehr-ansch;
+    if(!num(sl.kaufpreis)) stWhy="Trag den damaligen Kaufpreis ein, dann wird der Gewinn berechnet.";
+    else if(gewinnSt<1000){ steuer=0; stWhy=gewinnSt<=0?"Kein Gewinn, also keine Steuer.":"Gewinn unter der Freigrenze von 1.000 € im Jahr: steuerfrei."; }
+    else { steuer=gewinnSt*num(sl.steuersatz)/100; stWhy=`Verkauf vor Ablauf von 10 Jahren (steuerfrei ab ${fmtD(frei10)}): Gewinn wird mit deinem Steuersatz versteuert.`; }
+  }
+  const netto=preis-mak-kosten-B-vfe-gebuehr-loesch-weitere-steuer;
+  const gewinnKauf=num(sl.kaufpreis)?preis-num(sl.kaufpreis)-num(sl.kaufNk)-num(sl.modKosten):null;
+  return {preis,wahl,sd,mak,kosten,kostenV,B,vf,vfe,gebuehr,gs,loesch,weitere,steuer,gewinnSt,stWhy,afa,kd,frei10,netto,gewinnKauf};
+}
+function renderSaleForm(){
+  const r=S.val.res, sl=S.val.sale;
+  const opts=r?[["markt",`Marktwert laut Bewertung · ${eurR(r.marktwert)}`],["angebot",`Angebotspreis · ${eurR(r.angebotspreis)}`],["schnell",`Schnellverkauf · ${eurR(r.schnellverkauf)}`],["eigen","Eigener Preis"]]:[["eigen","Eigener Preis (noch keine Bewertung)"]];
+  const def=isoD(addMonths(new Date(),3));
+  $("#saleFormPreis").innerHTML=[field("val.sale.preisWahl","Mit welchem Preis rechnen?","select",{options:opts}),
+    (!r||sl.preisWahl==="eigen")?field("val.sale.preis","Verkaufspreis","number",{unit:"€",step:1000}):"",
+    field("val.sale.datum","Geplanter Notartermin","date",{ph:def})].join("");
+  $("#saleFormKosten").innerHTML=[field("val.sale.makler","Maklerprovision Verkäufer","number",{unit:"%",step:.01}),
+    field("val.sale.energieausweis","Energieausweis","number",{unit:"€"}),field("val.sale.unterlagen","Unterlagen, Grundbuchauszug","number",{unit:"€"}),
+    field("val.sale.gutachten","Gutachten (optional)","number",{unit:"€"}),field("val.sale.staging","Fotos, Home-Staging","number",{unit:"€"}),
+    field("val.sale.reparatur","Reparaturen vor Verkauf","number",{unit:"€"}),field("val.sale.umzug","Umzug","number",{unit:"€"})].join("");
+  $("#saleFormKredit").innerHTML=[field("val.sale.restschuld","Restschuld heute","number",{unit:"€",step:1000,ph:"0 = kein Kredit"}),
+    field("val.sale.zins","Sollzins","number",{unit:"%",step:.01}),field("val.sale.rate","Monatliche Rate","number",{unit:"€"}),
+    field("val.sale.sonder","Sondertilgungsrecht","number",{unit:"€ pro Jahr",step:500}),
+    field("val.sale.zinsEnde","Zinsbindung endet am","date"),field("val.sale.auszahlung","Darlehen voll ausgezahlt am","date"),
+    field("val.sale.wiederanlage","Wiederanlagezins","number",{unit:"%",step:.01,ph:`aktuell ca. ${dec(M.pfandbrief)}`}),
+    field("val.sale.vfeManual","Vorfälligkeitsentschädigung laut Bank","number",{unit:"€",ph:"leer = schätzen"}),
+    field("val.sale.vfeGebuehr","Bearbeitungsgebühr Bank","number",{unit:"€"}),
+    field("val.sale.grundschuld","Grundschuld im Grundbuch","number",{unit:"€",step:1000,ph:"leer = Restschuld"}),
+    field("val.sale.weitere","Weitere Schulden ablösen","number",{unit:"€"})].join("");
+  $("#saleFormSteuer").innerHTML=[field("val.sale.nutzung","Wie genutzt?","select",{options:[["selbst","Die ganze Zeit selbst bewohnt"],["vermietet","Vermietet"],["gemischt","Teils vermietet, teils selbst bewohnt"]]}),
+    sl.nutzung==="gemischt"?`<div class="f"><span>&nbsp;</span>${field("val.sale.selbst3","Im Verkaufsjahr + 2 Jahren davor selbst bewohnt","check")}</div>`:"",
+    field("val.sale.kaufdatum","Kaufdatum (Notarvertrag)","date"),field("val.sale.kaufpreis","Kaufpreis damals","number",{unit:"€",step:1000}),
+    field("val.sale.kaufNk","Kaufnebenkosten damals","number",{unit:"€",step:500}),field("val.sale.modKosten","Modernisierungen seitdem","number",{unit:"€",step:500}),
+    sl.nutzung!=="selbst"?field("val.sale.afaSumme","Bisherige Abschreibung (AfA)","number",{unit:"€",ph:"leer = Schätzung"}):"",
+    sl.nutzung!=="selbst"?field("val.sale.steuersatz","Persönlicher Steuersatz","number",{unit:"%",step:1}):""].join("");
+}
+function renderSale(){
+  const X=saleCalc(), sl=S.val.sale;
+  const L=(op,t,v,info,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${info?ib(info):""}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
+  let h=L("","Verkaufspreis",eur(X.preis),"val.sale.preisWahl","",X.wahl==="eigen"?"eigener Wert":{markt:"Marktwert laut Bewertung",angebot:"Angebotspreis laut Bewertung",schnell:"Schnellverkauf laut Bewertung"}[X.wahl])
+   +(X.mak?L("−","Maklerprovision",eur(X.mak),"val.sale.makler","",`${dec(num(sl.makler))} %`):"")
+   +(X.kosten?L("−","Kosten rund um den Verkauf",eur(X.kosten),"s.kosten"):"")
+   +L("=","Erlös vor Kredit und Steuer",eur(X.preis-X.mak-X.kosten),"","tot");
+  if(X.B>0||num(sl.restschuld)>0){
+    h+=L("−","Restschuld am Notartermin",eur(X.B),"s.restschuld","",`am ${fmtD(X.sd)}`)
+     +L("−","Vorfälligkeitsentschädigung",X.vf.v==null?"?":eur(X.vfe),"s.vfe","",X.vf.why)
+     +(X.gebuehr?L("−","Bearbeitungsgebühr Bank",eur(X.gebuehr),"val.sale.vfeGebuehr"):"")
+     +(X.loesch?L("−","Löschung Grundschuld",eur(X.loesch),"s.loesch","",`ca. 0,3 % von ${eurR(X.gs)}`):"");
+  }
+  if(X.weitere) h+=L("−","Weitere Schulden",eur(X.weitere),"val.sale.weitere");
+  h+=L("−","Steuer auf den Gewinn",eur(X.steuer),"s.steuer","",X.stWhy+(X.gewinnSt!=null&&X.gewinnSt>0?` Steuerpflichtiger Gewinn ${eurR(X.gewinnSt)}${X.afa?` (inkl. ${eurR(X.afa)} Abschreibung)`:""}.`:""))
+   +L("=","Bleibt dir in der Tasche",eur(X.netto),"s.netto","tot big");
+  $("#saleLedger").innerHTML=h;
+  const n=[];
+  if(X.netto<0) n.push(["bad",`Der Verkauf deckt deine Schulden nicht. Dir fehlen rund ${eurR(-X.netto)}, die du aus eigenem Geld zahlen müsstest.`]);
+  if(X.vfe>0){
+    n.push(["warn",`Ohne Vorfälligkeitsentschädigung kannst du den Kredit ab ${fmtD(X.vf.frei)} ablösen. Verkaufst du erst dann, sparst du rund ${eurR(X.vfe+X.gebuehr)}.`]);
+    n.push(["",`Wege, die Entschädigung zu senken: vor dem Verkauf das Sondertilgungsrecht nutzen, den Kredit auf eine neue Immobilie übertragen (Pfandtausch), den Käufer das Darlehen übernehmen lassen, oder die Berechnung der Bank von der Verbraucherzentrale prüfen lassen.`]);
+  }
+  if(X.vf.v==null&&num(sl.restschuld)>0) n.push(["warn","Ohne Ende der Zinsbindung kann die Vorfälligkeitsentschädigung nicht geschätzt werden. Sie kann bei 5–10 Jahren Restlaufzeit mehrere zehntausend Euro betragen."]);
+  if(X.steuer>0){ n.push(["warn",`Wartest du bis ${fmtD(X.frei10)}, ist der Verkauf steuerfrei. Das spart rund ${eurR(X.steuer)}.`]);
+    n.push(["","Steuerfrei wird es auch, wenn du selbst einziehst und im Verkaufsjahr und den zwei Kalenderjahren davor selbst darin wohnst. Lass dich dazu von einem Steuerberater beraten."]); }
+  if(sl.nutzung!=="selbst") n.push(["","Verkaufst du innerhalb von 5 Jahren mehr als drei Immobilien, kann das Finanzamt das als gewerblichen Handel werten. Dann kommt Gewerbesteuer dazu."]);
+  if(S.val.q.typ==="wohnung") n.push(["","Die Erhaltungsrücklage gehört der Eigentümergemeinschaft und wird beim Verkauf nicht an dich ausgezahlt."]);
+  if(!S.val.q.ausweis||S.val.q.ausweis==="keiner") n.push(["","Für Inserat und Besichtigung brauchst du einen gültigen Energieausweis. Fehlt er, droht ein Bußgeld bis 15.000 €."]);
+  if(num(sl.makler)>0) n.push(["",`Verkaufst du privat ohne Makler, sparst du ${eurR(X.mak)}, hast aber selbst die Arbeit mit Inseraten, Besichtigungen und Unterlagen.`]);
+  if(S.val.q.kueche&&num(S.val.q.kuecheWert)) n.push(["good",`Weise die Küche (${eurR(num(S.val.q.kuecheWert))}) im Kaufvertrag gesondert aus. Der Käufer spart darauf Grunderwerbsteuer, das macht dein Angebot attraktiver.`]);
+  $("#saleNotes").innerHTML=n.map(([c,t])=>`<p class="note ${c}">${esc(t)}</p>`).join("");
+  $("#saleExtra").innerHTML=`<div class="kv">${K("Restschuld am Notartermin",eurR(X.B),"s.restschuld")}${X.gewinnKauf!=null?K("Gewinn gegenüber deinem Kauf",eurR(X.gewinnKauf),"s.gewinn"):""}${X.kd?K("Steuerfrei verkaufen ab",fmtD(X.frei10),"val.sale.kaufdatum"):""}${X.vfe>0?K("Ohne Entschädigung ab",fmtD(X.vf.frei),"val.sale.zinsEnde"):""}</div>`;
+}
+
 /* ---------- Haupt-Refresh ---------- */
 let saveT;
 function refresh(){
   const F=finCalc(), X=flipCalc(F), R=rentCalc(F), V=verdict(F,X,R);
+  applyModeUI(); renderSale();
   renderSummary(F,X,R,V); renderMatrix(); renderPlanSum(); renderFin(F); renderEval(F,X,R,V); renderFind();
-  $("#exampleBanner").hidden=!S.example;
+  $("#exampleBanner").hidden=!S.example||S.mode==="wert";
   $$("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===S.mode));
   clearTimeout(saveT); saveT=setTimeout(()=>{try{localStorage.setItem("immo-draft",JSON.stringify(S))}catch(e){}},400);
 }
-function renderAll(){renderObjForm();renderFinForm();renderEvalForm();renderPlanner();renderMarket();renderChat();setTab(S.tab||"objekt");refresh();}
-function setTab(t){S.tab=t;$$("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));$$("[data-panel]").forEach(p=>p.hidden=p.dataset.panel!==t)}
+function renderAll(){if(!S.val) S.val=valBlank(); S.val={...valBlank(),...S.val,q:{...valBlank().q,...S.val.q},sale:{...valBlank().sale,...S.val.sale}};
+  renderObjForm();renderFinForm();renderEvalForm();renderPlanner();renderMarket();renderChat();renderValForm();renderValThumbs();renderValOut();renderSaleForm();
+  applyModeUI(); setTab(S.mode==="wert"?(VTABS.includes(S.tab)?S.tab:"frage"):(VTABS.includes(S.tab)?(S.btab||"objekt"):(S.tab||"objekt"))); refresh();}
+function applyModeUI(){ const w=S.mode==="wert"; $$(".t-buy").forEach(b=>b.hidden=w); $$(".t-wert").forEach(b=>b.hidden=!w); }
+function setTab(t){S.tab=t; if(VTABS.includes(t)) S.vtab=t; else S.btab=t;$$("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));$$("[data-panel]").forEach(p=>p.hidden=p.dataset.panel!==t)}
 
 /* ---------- Events ---------- */
 document.addEventListener("input",e=>{
@@ -1322,10 +1854,13 @@ document.addEventListener("input",e=>{
   if(["obj.typ"].includes(k)||k==="fin.zinsAuto"||k==="fin.kfw"||k==="fin.src"){renderObjForm();renderFinForm();renderPlanner();}
   if(["obj.wfl","obj.zimmer","obj.baeder","obj.keller","obj.typ"].includes(k)&&S.roomsAuto){S.rooms=genRooms(S.obj);applyPreset(S.rooms,S.find?.stufe||"mittel",S.obj);renderPlanner();}
   else if(["obj.region","obj.baujahr","obj.wfl"].includes(k)) renderPlanner();
-  if(k.startsWith("rent.")||k.startsWith("flip.")){/* Ausgaben reichen */}
+  if(k==="val.q.typ") renderValForm(); else if(k.startsWith("val.q.")) renderValProgress();
+  if(k==="val.sale.preisWahl"||k==="val.sale.nutzung") renderSaleForm();
   refresh();
 });
-$("#modeSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.mode=b.dataset.mode;renderFinForm();renderEvalForm();renderChatIntro();refresh();});
+$("#modeSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const was=S.mode;S.mode=b.dataset.mode;
+  if(S.mode==="wert"&&was!=="wert") setTab(S.vtab||"frage"); else if(S.mode!=="wert"&&was==="wert") setTab(S.btab||"objekt");
+  applyModeUI();renderFinForm();renderEvalForm();renderChatIntro();refresh();});
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){setTab(b.dataset.tab);if(b.dataset.tab==="planer")renderPlanner();}});
 $("#matrix").addEventListener("click",e=>{const td=e.target.closest("td.cell");if(!td)return;S.fin.src=td.dataset.s;S.fin.ex=td.dataset.ex;renderFinForm();refresh();});
 $("#matrix").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("td.cell")){e.preventDefault();e.target.click();}});
@@ -1398,7 +1933,7 @@ const drop=$("#drop");
 ["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
 drop.addEventListener("drop",e=>addFiles(e.dataTransfer.files));
 $("#fileIn").addEventListener("change",e=>{addFiles(e.target.files);e.target.value=""});
-document.addEventListener("paste",e=>{const its=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith("image/"));if(its.length){addFiles(its);}});
+document.addEventListener("paste",e=>{const its=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith("image/"));if(its.length){ if(S.mode==="wert") addValFiles(its); else addFiles(its);}});
 async function addFiles(list){
   for(const f of [...list]){
     if(f.type==="application/pdf"){ setStatus("PDF wird gelesen …"); try{ const pages=await pdfToImages(f); pages.forEach((b,i)=>files.push({blob:b,url:URL.createObjectURL(b),name:f.name,page:i+1})); setStatus(""); }catch(err){ setStatus("Das PDF konnte nicht gelesen werden. Mach Screenshots der wichtigsten Seiten.",true);} }
@@ -1523,9 +2058,9 @@ const CHIPS={
 const PRESETS={flipcoach:"Erklär mir diesen Fix-&-Flip-Deal Schritt für Schritt wie einem Anfänger: Lohnt er sich, was ist mein Höchstgebot, wo sind die größten Risiken, und was sind meine nächsten 5 konkreten Schritte?",
   eigencheck:"Erstelle mir eine Besichtigungs-Checkliste speziell für dieses Objekt (Baujahr, Zustand, Mängel beachten) und sag mir, welche Unterlagen ich vom Verkäufer anfordern muss."};
 function renderChatIntro(){
-  $("#chatTitle").textContent={eigen:"KI-Berater Eigenheim",flip:"KI-Mentor Fix & Flip",miete:"KI-Berater Vermietung"}[S.mode];
+  $("#chatTitle").textContent={eigen:"KI-Berater Eigenheim",flip:"KI-Mentor Fix & Flip",miete:"KI-Berater Vermietung"}[S.mode]||"KI-Berater";
   $("#chatIntro").textContent=S.mode==="flip"?"Dein Mentor kennt alle Zahlen dieses Objekts und erklärt dir jeden Schritt. Frag ruhig auch Grundlagenfragen.":"Der Berater kennt alle Zahlen dieses Objekts. Er ersetzt keinen Steuerberater, Notar oder Gutachter.";
-  $("#chips").innerHTML=CHIPS[S.mode].map(c=>`<button class="chip">${esc(c)}</button>`).join("");
+  $("#chips").innerHTML=(CHIPS[S.mode]||CHIPS.eigen).map(c=>`<button class="chip">${esc(c)}</button>`).join("");
 }
 function md(t){
   const lines=esc(t).split("\n"); let h="",list=null;
@@ -1556,7 +2091,7 @@ async function send(text){
   if(ctlChat) return;
   S.chat.push({role:"user",content:text}); renderChat();
   const bubble=document.createElement("div"); bubble.className="msg assistant"; bubble.textContent="Denkt nach …"; $("#chatlog").appendChild(bubble); $("#chatlog").scrollTop=1e9;
-  const rules=`Du bist ein erfahrener, ehrlicher Immobilienberater in Deutschland, Stand Oktober 2026. ${PERSONA[S.mode]}
+  const rules=`Du bist ein erfahrener, ehrlicher Immobilienberater in Deutschland, Stand Oktober 2026. ${(PERSONA[S.mode]||PERSONA.eigen)}
 Regeln: Antworte auf Deutsch, in einfacher Sprache, konkret mit den Zahlen aus den Objektdaten unten. Halte dich kurz (meist unter 250 Wörter), nutze kurze Listen, wenn sie helfen. Du kannst nicht im Internet suchen; Marktpreise sind Schätzungen, sag das, wenn es wichtig ist. Bei Steuer- und Rechtsfragen gib eine Orientierung und empfehle für die Entscheidung Steuerberater oder Notar. Erfinde keine Fakten über das Objekt.
 OBJEKTDATEN (aktuell aus dem Tool):
 ${stateSummary()}`;
@@ -1581,7 +2116,7 @@ async function initDb(){
     updateAiAvail(); return;
   }
   const {data}=await SB.auth.getSession(); SESSION=data.session;
-  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); if(s?.user?.id!==was){ listSaved(); if(s) autoOrt(); }});
+  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); renderValProgress(); if(s?.user?.id!==was){ listSaved(); if(s) autoOrt(); }});
   renderAuth(); updateAiAvail(); renderOrtBox(); loadMarket(); listSaved(); autoOrt();
 }
 async function loadMarket(){
@@ -1632,8 +2167,8 @@ async function listSaved(){
 $("#btnSave").addEventListener("click",async()=>{
   if(!SB||!SESSION) return; const st=$("#saveStatus");
   const copy={...S,chat:S.chat.slice(-16),example:false};
-  const {error}=await SB.from("immo_objekte").upsert({id:S.id,name:S.obj.titel||"Objekt ohne Namen",
-    info:`${eurR(S.obj.kaufpreis)} · ${fmt(S.obj.wfl)} m² · ${{eigen:"Eigenheim",flip:"Fix & Flip",miete:"Vermieten"}[S.mode]}`,state:copy,saved_at:new Date().toISOString()});
+  const {error}=await SB.from("immo_objekte").upsert({id:S.id,name:S.mode==="wert"?(S.val.q.titel||"Meine Immobilie"):(S.obj.titel||"Objekt ohne Namen"),
+    info:S.mode==="wert"?`${S.val.res?eurR(S.val.res.marktwert)+" Marktwert":"noch nicht bewertet"} · ${fmt(S.val.q.wfl)} m² · Bewertung`:`${eurR(S.obj.kaufpreis)} · ${fmt(S.obj.wfl)} m² · ${{eigen:"Eigenheim",flip:"Fix & Flip",miete:"Vermieten"}[S.mode]}`,state:copy,saved_at:new Date().toISOString()});
   st.textContent=error?"Speichern hat nicht geklappt. Bitte nochmal versuchen.":"Gespeichert."; st.classList.toggle("err",!!error);
   if(!error){S.example=false; listSaved(); refresh();}
 });
