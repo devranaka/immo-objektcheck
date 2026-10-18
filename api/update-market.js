@@ -1,7 +1,7 @@
 // Aktualisiert die Marktdaten (Zinsen, KfW, Grunderwerbsteuer …) per Claude + Websuche
 // und schreibt sie in Supabase. Läuft automatisch über Vercel Cron (siehe vercel.json)
 // oder per Knopf im Tool (nur für angemeldete Nutzer aus ALLOWED_EMAILS).
-import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
+import { requireUser, claude, finalText, allText, parseJsonLoose, sbAdmin, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
 
 const DOMAINS = [
   "drklein.de", "baufi24.de", "interhyp.de", "huettig-rompf.de", "kfw.de",
@@ -52,7 +52,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
     }
-    const d = parseJson(textOf(msg));
+    const d = parseJsonLoose(finalText(msg)) || parseJsonLoose(allText(track));
     if (!d) return res.status(502).json({ error: "invalid_json", message: "Keine verwertbare Antwort" });
 
     // Plausibilitätsprüfung: nur sinnvolle Werte übernehmen

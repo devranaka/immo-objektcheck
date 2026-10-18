@@ -108,7 +108,7 @@ const CAPS = {
   analyze:   { in: 25000,  out: 4000,  s: 0 },
   chat:      { in: 30000,  out: 2000,  s: 0 },
   ort:       { in: 120000, out: 6000,  s: 5 },
-  bewertung: { in: 180000, out: 12000, s: 8 },
+  bewertung: { in: 230000, out: 22000, s: 8 },
   market:    { in: 120000, out: 8000,  s: 8 },
 };
 export const estimateMilli = (kind) => { const c = CAPS[kind] || CAPS.chat; return milliOf(c.in, c.out, c.s); };
@@ -167,3 +167,50 @@ export async function settleBudget(r, msgs) {
 }
 export const budgetReply = (res, b) => res.status(b.code === "budget_setup" ? 503 : 429).json({ error: b.code, message: b.message });
 export const budgetInfo = budgets;
+
+/* ---------- Robustes Auslesen von JSON aus KI-Antworten ----------
+ * Mit Websuche zerlegt Claude seinen Text in viele Blöcke (wegen der Quellenangaben).
+ * Diese Blöcke müssen OHNE Trennzeichen zusammengefügt werden, sonst landen Zeilenumbrüche mitten im JSON. */
+export function finalText(msg) {
+  const c = msg?.content || [];
+  let last = -1;
+  c.forEach((b, i) => { if (b.type !== "text") last = i; });
+  return c.slice(last + 1).filter((b) => b.type === "text").map((b) => b.text).join("");
+}
+export const allText = (msgs) => (msgs || []).flatMap((m) => (m?.content || []).filter((b) => b.type === "text").map((b) => b.text)).join("");
+function normNums(o) {
+  if (Array.isArray(o)) return o.map(normNums);
+  if (o && typeof o === "object") { for (const k in o) o[k] = normNums(o[k]); return o; }
+  if (typeof o === "string") {
+    const s = o.replace(/[€\s]/g, "").replace(/%$/, "");
+    if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) return Number(s.replace(/\./g, "").replace(",", "."));
+    if (/^-?\d+,\d+$/.test(s)) return Number(s.replace(",", "."));
+    if (/^-?\d+(\.\d+)?$/.test(s) && s.length < 12) return Number(s);
+  }
+  return o;
+}
+function lastObject(text) {
+  const end = text.lastIndexOf("}");
+  if (end < 0) return null;
+  let depth = 0, inStr = false;
+  for (let i = end; i >= 0; i--) {
+    const ch = text[i];
+    if (ch === '"' && text[i - 1] !== "\\") inStr = !inStr;
+    if (inStr) continue;
+    if (ch === "}") depth++;
+    else if (ch === "{" && --depth === 0) return text.slice(i, end + 1);
+  }
+  return null;
+}
+export function parseJsonLoose(text) {
+  if (!text) return null;
+  const cands = [...text.matchAll(/```(?:json)?\s*([\s\S]*?)```/g)].map((m) => m[1]).reverse();
+  const lo = lastObject(text); if (lo) cands.push(lo);
+  const a = text.indexOf("{"), b = text.lastIndexOf("}"); if (a >= 0 && b > a) cands.push(text.slice(a, b + 1));
+  for (const c of cands) {
+    for (const v of [c, c.replace(/[\u0000-\u001f]+/g, " "), c.replace(/[\u0000-\u001f]+/g, " ").replace(/,\s*([}\]])/g, "$1")]) {
+      try { const o = JSON.parse(v); if (o && typeof o === "object") return normNums(o); } catch {}
+    }
+  }
+  return null;
+}

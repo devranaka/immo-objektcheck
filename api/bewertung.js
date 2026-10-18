@@ -1,8 +1,17 @@
 // Wertermittlung einer eigenen Immobilie: Fragebogen + Fotos/Energieausweis + Websuche nach Vergleichsobjekten.
 // Ergebnis: Marktwert mit Spanne, Vergleichsobjekte mit Links, Zu- und Abschläge, Angebots- und Schnellverkaufspreis.
-import { requireUser, claude, textOf, parseJson, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
+import { requireUser, claude, finalText, allText, parseJsonLoose, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
 
 const MAX_IMAGES = 10;
+const SCHEMA = `{"marktwert":Zahl,"spanne":{"min":Zahl,"max":Zahl},"preis_qm":Zahl,"angebotspreis":Zahl,"schnellverkauf":Zahl,
+"sicherheit":"hoch|mittel|niedrig","sicherheit_grund":"1 Satz",
+"methoden":[{"name":"Vergleichswert","wert":Zahl,"erklaerung":"1-2 Sätze"}],
+"markt":{"ort":"…","kauf_qm_durchschnitt":Zahl,"kauf_qm_min":Zahl,"kauf_qm_max":Zahl,"miete_qm":Zahl|null,"bodenrichtwert":Zahl|null,"trend":"1 Satz zur Preisentwicklung","stand":"Monat Jahr"},
+"vergleichsobjekte":[{"titel":"…","wfl":Zahl,"baujahr":Zahl|null,"preis":Zahl,"preis_qm":Zahl,"art":"Angebot|Verkauf|Statistik","url":"https://…"}],
+"anpassungen":[{"faktor":"z. B. Balkon Südwest","prozent":Zahl,"grund":"kurz"}],
+"aus_bildern":["was du aus Fotos/Energieausweis/Grundriss erkannt hast"],
+"staerken":["…"],"schwaechen":["…"],"tipps_wertsteigerung":["konkrete Tipps vor dem Verkauf mit grober Kosten-Nutzen-Angabe"],
+"fazit":"3-4 Sätze für den Eigentümer, verständlich"}`;
 const inRange = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo && v <= hi;
 const str = (v, n = 300) => (typeof v === "string" ? v.slice(0, n) : "");
 const list = (a, n = 8, len = 240) => (Array.isArray(a) ? a.filter((x) => typeof x === "string").slice(0, n).map((x) => x.slice(0, len)) : []);
@@ -40,15 +49,7 @@ VORGEHEN:
 Sei ehrlich und eher vorsichtig, Eigentümer überschätzen ihre Immobilie oft. Erfinde keine Vergleichsobjekte: nur, was du wirklich gefunden hast, mit URL.
 
 Antworte am Ende NUR mit einem JSON-Objekt:
-{"marktwert":Zahl,"spanne":{"min":Zahl,"max":Zahl},"preis_qm":Zahl,"angebotspreis":Zahl,"schnellverkauf":Zahl,
-"sicherheit":"hoch|mittel|niedrig","sicherheit_grund":"1 Satz",
-"methoden":[{"name":"Vergleichswert","wert":Zahl,"erklaerung":"1-2 Sätze"}],
-"markt":{"ort":"…","kauf_qm_durchschnitt":Zahl,"kauf_qm_min":Zahl,"kauf_qm_max":Zahl,"miete_qm":Zahl|null,"bodenrichtwert":Zahl|null,"trend":"1 Satz zur Preisentwicklung","stand":"Monat Jahr"},
-"vergleichsobjekte":[{"titel":"…","wfl":Zahl,"baujahr":Zahl|null,"preis":Zahl,"preis_qm":Zahl,"art":"Angebot|Verkauf|Statistik","url":"https://…"}],
-"anpassungen":[{"faktor":"z. B. Balkon Südwest","prozent":Zahl,"grund":"kurz"}],
-"aus_bildern":["was du aus Fotos/Energieausweis/Grundriss erkannt hast"],
-"staerken":["…"],"schwaechen":["…"],"tipps_wertsteigerung":["konkrete Tipps vor dem Verkauf mit grober Kosten-Nutzen-Angabe"],
-"fazit":"3-4 Sätze für den Eigentümer, verständlich"}`;
+${SCHEMA}`;
 
   const content = [
     ...imgs.map((data) => ({ type: "image", source: { type: "base64", media_type: "image/jpeg", data } })),
@@ -60,14 +61,29 @@ Antworte am Ende NUR mit einem JSON-Objekt:
   try {
     let messages = [{ role: "user", content }];
     let msg;
-    for (let i = 0; i < 2; i++) {
-      msg = await claude({ max_tokens: 6000, tools, messages, ...(model ? { model } : {}) }, track);
+    for (let i = 0; i < 3; i++) {
+      msg = await claude({ max_tokens: 8000, tools, messages, ...(model ? { model } : {}) }, track);
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
     }
-    const d = parseJson(textOf(msg));
-    if (!d || !inRange(d.marktwert, 10000, 50000000)) {
-      return res.status(502).json({ error: "invalid_json", message: "Die Bewertung war unvollständig. Bitte nochmal versuchen." });
+    const ok = (o) => o && inRange(o.marktwert, 10000, 50000000);
+    let d = parseJsonLoose(finalText(msg));
+    if (!ok(d)) d = parseJsonLoose(allText(track));
+    if (!ok(d)) {
+      // Rettung: den bisherigen Text ohne Websuche in das JSON-Format umwandeln lassen (kostet wenige Cent)
+      const raw = allText(track).slice(-60000);
+      console.error("Bewertung: JSON nicht lesbar, stop_reason=", msg?.stop_reason, "Textanfang:", raw.slice(0, 1500));
+      if (raw.trim()) {
+        const fix = await claude({ max_tokens: 6000, messages: [{ role: "user", content:
+          `Unten steht eine Immobilienbewertung als Text. Gib sie als genau dieses JSON aus, ohne jeden weiteren Text. Erfinde nichts, fehlende Werte sind null. Zahlen ohne Tausenderpunkte.\n\nFORMAT:\n${SCHEMA}\n\nTEXT:\n${raw}` }] }, track);
+        d = parseJsonLoose(finalText(fix));
+      }
+    }
+    if (!ok(d)) {
+      console.error("Bewertung endgültig nicht lesbar:", allText(track).slice(-3000));
+      return res.status(502).json({ error: "invalid_json", message: msg?.stop_reason === "max_tokens"
+        ? "Die Bewertung wurde zu lang und abgeschnitten. Bitte nochmal versuchen, eventuell mit weniger Bildern."
+        : "Die KI hat keinen Wert geliefert. Bitte nochmal versuchen. Tipp: Ort und Postleitzahl prüfen." });
     }
     const mw = d.marktwert;
     const near = (v) => (inRange(v, mw * 0.5, mw * 1.6) ? v : null);

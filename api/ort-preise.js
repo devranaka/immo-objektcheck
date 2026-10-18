@@ -1,7 +1,7 @@
 // Recherchiert per Claude + Websuche die aktuellen Kauf- und Mietpreise für einen bestimmten Ort.
 // Ergebnisse werden 30 Tage in Supabase (Tabelle immo_market, id "ort:…") zwischengespeichert,
 // damit derselbe Ort nicht jedes Mal neu bezahlt werden muss.
-import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
+import { requireUser, claude, finalText, allText, parseJsonLoose, sbAdmin, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
 
 const CACHE_TAGE = 30;
 const inRange = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo && v <= hi;
@@ -58,7 +58,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
     }
-    const d = parseJson(textOf(msg));
+    const d = parseJsonLoose(finalText(msg)) || parseJsonLoose(allText(track));
     if (!d) return res.status(502).json({ error: "invalid_json", message: "Keine verwertbare Antwort" });
 
     // Plausibilität prüfen
