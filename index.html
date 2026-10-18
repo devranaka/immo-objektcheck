@@ -453,6 +453,16 @@ table{border-collapse:collapse;width:100%}
         <div class="panel sticky" style="align-self:start">
           <div class="card"><h2>Was dir am Ende bleibt</h2><div class="ledger" id="saleLedger"></div><div id="saleExtra"></div></div>
           <div class="card"><h3>Hinweise</h3><div id="saleNotes" style="display:flex;flex-direction:column;gap:6px"></div></div>
+          <div class="card">
+            <h2>Exposé als PDF</h2>
+            <p class="small muted">Modernes Exposé wie vom Makler: Titelbild, Kennzahlen, Beschreibung, Fotos, Lage, Marktwert und Vergleichsangebote. Das erste Foto aus dem Fragebogen wird das Titelbild.</p>
+            <label class="f wide" for="pdfText"><span>Beschreibungstext<button type="button" class="ib" data-info="pdf.text" aria-label="Erklärung anzeigen" aria-expanded="false">i</button></span><textarea id="pdfText" rows="7" placeholder="Leer lassen, selbst schreiben oder von der KI schreiben lassen"></textarea></label>
+            <div class="row"><button class="btn" id="btnPdfAi">Text von der KI schreiben lassen</button></div>
+            <label class="chk"><input type="checkbox" id="pdfAiText"> Text automatisch von der KI schreiben lassen, wenn das Feld leer ist</label>
+            <label class="chk"><input type="checkbox" id="pdfPrivate" checked> Seite „Was dir bleibt“ mit Kredit und Steuer anhängen (nur für dich, für Käufer abwählen)</label>
+            <div class="row"><button class="btn pri big" id="btnPdf">PDF erstellen</button></div>
+            <span class="status" id="pdfStatus"></span>
+          </div>
         </div>
       </div>
     </section>
@@ -1467,7 +1477,7 @@ function valBlank(){
       ausstattung:"normal",bodenart:"mix",kueche:false,kuecheWert:0,fbh:false,kamin:false,barrierefrei:false,smarthome:false,klima:false,
       heizart:"",heizBj:0,energie:"",verbrauch:0,ausweis:"",pv:false,
       hausgeld:0,ruecklage:0,sonderumlage:"nein",vermietet:false,kaltmiete:0,denkmal:false,erbbau:false,rechte:"",besonderes:""},
-    res:null,resKey:"",
+    res:null,resKey:"",exposeText:"",
     sale:{preisWahl:"markt",preis:0,datum:"",makler:3.57,energieausweis:0,unterlagen:100,gutachten:0,staging:0,reparatur:0,umzug:0,
       restschuld:0,zins:0,rate:0,sonder:0,zinsEnde:"",auszahlung:"",wiederanlage:0,vfeManual:0,vfeGebuehr:250,grundschuld:0,weitere:0,
       nutzung:"selbst",selbst3:false,kaufdatum:"",kaufpreis:0,kaufNk:0,modKosten:0,afaSumme:0,steuersatz:42}};
@@ -1682,7 +1692,7 @@ function renderValOut(){
       <div class="kpi"><span class="label">Schnellverkauf${ib("v.schnell")}</span><span class="v">${eurR(r.schnellverkauf)}</span><span class="s">in ca. 4–8 Wochen</span></div>
     </div>
     ${r.fazit?`<p>${esc(r.fazit)}</p>`:""}
-    <div class="row"><button class="btn pri big" id="btnToSale">Verkauf durchrechnen: was bleibt mir?</button></div>
+    <div class="row"><button class="btn pri big" id="btnToSale">Verkauf durchrechnen: was bleibt mir?</button><button class="btn big" data-goto="verkauf">Exposé als PDF</button></div>
   </div>
   <div class="cols2">
     <div class="card"><h3>Markt in ${esc(r.markt?.ort||q.ort)}</h3><div class="kv">
@@ -1769,6 +1779,7 @@ function saleCalc(){
 }
 function renderSaleForm(){
   const r=S.val.res, sl=S.val.sale;
+  const pt=$("#pdfText"); if(pt&&document.activeElement!==pt) pt.value=S.val.exposeText||"";
   const opts=r?[["markt",`Marktwert laut Bewertung · ${eurR(r.marktwert)}`],["angebot",`Angebotspreis · ${eurR(r.angebotspreis)}`],["schnell",`Schnellverkauf · ${eurR(r.schnellverkauf)}`],["eigen","Eigener Preis"]]:[["eigen","Eigener Preis (noch keine Bewertung)"]];
   const def=isoD(addMonths(new Date(),3));
   $("#saleFormPreis").innerHTML=[field("val.sale.preisWahl","Mit welchem Preis rechnen?","select",{options:opts}),
@@ -1829,6 +1840,190 @@ function renderSale(){
   $("#saleExtra").innerHTML=`<div class="kv">${K("Restschuld am Notartermin",eurR(X.B),"s.restschuld")}${X.gewinnKauf!=null?K("Gewinn gegenüber deinem Kauf",eurR(X.gewinnKauf),"s.gewinn"):""}${X.kd?K("Steuerfrei verkaufen ab",fmtD(X.frei10),"val.sale.kaufdatum"):""}${X.vfe>0?K("Ohne Entschädigung ab",fmtD(X.vf.frei),"val.sale.zinsEnde"):""}</div>`;
 }
 
+/* ================= EXPOSÉ / VERKAUFSBERICHT ALS PDF ================= */
+let jsPdfReady=null, pdfBusy=false;
+function loadJsPdf(){ if(!jsPdfReady) jsPdfReady=loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"); return jsPdfReady; }
+const TYPN={wohnung:"Eigentumswohnung",efh:"Einfamilienhaus",dhh:"Doppelhaushälfte",rh:"Reihenhaus",mfh:"Mehrfamilienhaus"};
+const LAB={lage:{einfach:"einfache Lage",mittel:"mittlere Lage",gut:"gute Lage",sehrgut:"sehr gute Lage"},
+  laerm:{ruhig:"ruhig",normal:"normale Geräuschkulisse",laut:"belebte Lage"},
+  oepnv:{gut:"Bus und Bahn unter 5 Min. zu Fuß",mittel:"Bus und Bahn in 5–15 Min.",schlecht:"Auto empfehlenswert"},
+  infra:{gut:"Einkaufen, Schulen und Ärzte zu Fuß",mittel:"Einkaufen und Schulen mit dem Auto nah",schlecht:"ländlich"},
+  ausblick:{nein:"",gruen:"Blick ins Grüne",weit:"Fernblick",wasser:"Wasserblick"},
+  aussen:{keiner:"–",balkon:"Balkon",loggia:"Loggia",terrasse:"Terrasse",garten:"Garten",dachterrasse:"Dachterrasse"},
+  stellplatz:{keiner:"–",aussen:"Außenstellplatz",carport:"Carport",garage:"Garage",tiefgarage:"Tiefgaragenstellplatz"},
+  zustand:{neuwertig:"neuwertig / kernsaniert",gepflegt:"gepflegt, modernisiert",normal:"normal",renovierungsbeduerftig:"renovierungsbedürftig",sanierungsbeduerftig:"sanierungsbedürftig"},
+  ausstattung:{einfach:"einfach",normal:"normal",gehoben:"gehoben",luxus:"luxuriös"},
+  heizart:{gas:"Gas",oel:"Öl",waermepumpe:"Wärmepumpe",fernwaerme:"Fernwärme",pellet:"Pellets / Holz",nachtspeicher:"Nachtspeicher",sonstiges:"Sonstige"},
+  richt:{S:"Süd",SW:"Südwest",W:"West",SO:"Südost",O:"Ost",NW:"Nordwest",NO:"Nordost",N:"Nord"}};
+// Zeichen, die die Standardschrift im PDF nicht kennt, ersetzen
+const pdfTxt=s=>String(s??"").replace(/[≈~]/g,"ca. ").replace(/[→➜]/g,"->").replace(/[“”„]/g,'"').replace(/[‘’‚]/g,"'").replace(/[^\x00-\xFF€–—…•·²³½]/g,"");
+async function blobToCover(blob,ratio,maxW=1600){
+  const bmp=await createImageBitmap(blob); let sw=bmp.width, sh=bmp.height, sx=0, sy=0;
+  if(sw/sh>ratio){ const nw=sh*ratio; sx=(sw-nw)/2; sw=nw; } else { const nh=sw/ratio; sy=(sh-nh)/2; sh=nh; }
+  const w=Math.min(maxW,Math.round(sw)), h=Math.round(w/ratio), cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+  cv.getContext("2d").drawImage(bmp,sx,sy,sw,sh,0,0,w,h); return cv.toDataURL("image/jpeg",.85);
+}
+function exposeFacts(){
+  const q=S.val.q, haus=isHausT(q.typ), f=[];
+  const add=(k,v)=>{ if(v!==""&&v!=null&&v!=="–"&&v!==0) f.push([k,String(v)]); };
+  add("Objektart",TYPN[q.typ]); add("Wohnfläche",num(q.wfl)?`ca. ${fmt(q.wfl)} m²`:""); add("Zimmer",num(q.zimmer)?String(q.zimmer).replace(".",","):"");
+  add("Bäder",num(q.baeder)||""); add("Baujahr",num(q.baujahr)||"");
+  if(!haus){ add("Etage",q.etage!==""&&q.etage!=null?(num(q.etage)===0?"Erdgeschoss":`${q.etage}. OG`)+(num(q.etagenGesamt)?` von ${q.etagenGesamt}`:""):""); add("Wohneinheiten",num(q.einheiten)||""); add("Aufzug",q.aufzug?"ja":""); }
+  else add("Grundstück",num(q.grund)?`ca. ${fmt(q.grund)} m²`:"");
+  add("Außenbereich",q.aussen!=="keiner"?LAB.aussen[q.aussen]+(num(q.aussenQm)?` (ca. ${fmt(q.aussenQm)} m²)`:"")+(q.ausrichtung?`, ${LAB.richt[q.ausrichtung]}`:""):"");
+  add("Stellplatz",q.stellplatz!=="keiner"?(num(q.stellplatzAnz)>1?`${q.stellplatzAnz} × `:"")+LAB.stellplatz[q.stellplatz]:"");
+  add("Keller",q.keller?"ja":""); add("Zustand",LAB.zustand[q.zustand]); add("Ausstattung",LAB.ausstattung[q.ausstattung]);
+  add("Heizung",(LAB.heizart[q.heizart]||"")+(num(q.heizBj)?` (Baujahr ${q.heizBj})`:""));
+  add("Energieklasse",q.energie); add("Energiekennwert",num(q.verbrauch)?`${fmt(q.verbrauch)} kWh/(m²·a)`:"");
+  add("Energieausweis",{bedarf:"Bedarfsausweis",verbrauch:"Verbrauchsausweis"}[q.ausweis]||"");
+  if(!haus) add("Hausgeld",num(q.hausgeld)?`${fmt(q.hausgeld)} € / Monat`:"");
+  add("Vermietet",q.vermietet?(num(q.kaltmiete)?`ja, ${fmt(q.kaltmiete)} € Kaltmiete`:"ja"):"");
+  return f;
+}
+function exposeHighlights(){
+  const q=S.val.q, h=[];
+  const mods=[["modBad","Bad"],["modKueche","Küche"],["modBoden","Böden"],["modFenster","Fenster"],["modHeizung","Heizung"],["modElektrik","Elektrik"],["modLeitungen","Leitungen"],["modDach","Dach"],["modFassade","Fassade"]].filter(([k])=>num(q[k])).map(([k,l])=>`${l} ${q[k]}`);
+  if(mods.length) h.push("Modernisiert: "+mods.join(", "));
+  if(q.aussen!=="keiner") h.push(LAB.aussen[q.aussen]+(q.ausrichtung?` in ${LAB.richt[q.ausrichtung]}ausrichtung`:""));
+  if(q.kueche) h.push("Einbauküche inklusive"+(num(q.kuecheWert)?` (Zeitwert ca. ${fmt(q.kuecheWert)} €)`:""));
+  [["fbh","Fußbodenheizung"],["kamin","Kamin"],["barrierefrei","Barrierearm"],["smarthome","Elektrische Rollläden / Smart Home"],["klima","Klimaanlage"],["pv","Photovoltaik / Solar"],["aufzug","Aufzug"]].forEach(([k,l])=>{ if(q[k]) h.push(l); });
+  if(q.stellplatz!=="keiner") h.push(LAB.stellplatz[q.stellplatz]);
+  if(LAB.ausblick[q.ausblick]) h.push(LAB.ausblick[q.ausblick]);
+  (S.val.res?.staerken||[]).forEach(x=>h.push(x));
+  return [...new Set(h)].slice(0,10);
+}
+async function makeExposeText(){
+  const q=S.val.q, r=S.val.res;
+  const rules="Du schreibst Exposé-Texte wie ein guter Immobilienmakler in Deutschland: seriös, modern, warm, konkret. 130–180 Wörter, 2–3 Absätze, keine Überschrift, keine Aufzählung, keine Übertreibungen, nichts erfinden, was nicht in den Daten steht. Keine Preise und keine Adresse mit Hausnummer nennen. Nur den Text ausgeben.";
+  const daten=JSON.stringify({objekt:{...q,objektart:TYPN[q.typ]},staerken:r?.staerken,aus_fotos:r?.aus_bildern,markt_ort:r?.markt?.ort});
+  const {text}=await api("/api/ai",{kind:"chat",system:rules,messages:[{role:"user",content:"Daten der Immobilie:\n"+daten}]});
+  return text.trim();
+}
+async function buildPdf(){
+  if(pdfBusy) return; pdfBusy=true; const st=$("#pdfStatus"); st.classList.remove("err");
+  try{
+    if($("#pdfAiText").checked&&!S.val.exposeText){
+      if(!SESSION) throw {code:"auth"};
+      st.textContent="Die KI schreibt den Exposé-Text …"; S.val.exposeText=await makeExposeText(); $("#pdfText").value=S.val.exposeText;
+    }
+    st.textContent="PDF wird erstellt …"; await loadJsPdf();
+    const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"}), W=210, H=297, M=16;
+    const q=S.val.q, r=S.val.res, X=saleCalc(), priv=$("#pdfPrivate").checked;
+    const C={ink:[22,32,42],muted:[90,102,114],line:[213,219,214],soft:[238,241,238],acc:[13,95,107],sun:[184,119,15],good:[43,122,75],bad:[176,60,43],white:[255,255,255]};
+    const fill=c=>doc.setFillColor(...c), color=c=>doc.setTextColor(...c), draw=c=>doc.setDrawColor(...c);
+    const font=(sz,b="normal")=>{doc.setFont("helvetica",b);doc.setFontSize(sz);};
+    const T=(s,x,y,o={})=>doc.text(Array.isArray(s)?s.map(pdfTxt):pdfTxt(s),x,y,o);
+    const wrap=(s,w)=>doc.splitTextToSize(pdfTxt(s),w);
+    const title=TYPN[q.typ]+(q.ort?` in ${q.ort}`:"");
+    const headline=q.titel&&!/^meine /i.test(q.titel)?q.titel:title;
+    const preis=r?r.angebotspreis:X.preis;
+    const photos=valFiles.filter(f=>!f.page);
+    const docs=valFiles.filter(f=>f.page);
+    let pageNo=0;
+    const header=(t)=>{ pageNo++; fill(C.acc); doc.rect(0,0,W,3,"F"); font(8,"bold"); color(C.acc); T(pdfTxt(headline).toUpperCase(),M,12); font(8); color(C.muted); T(fmtD(new Date()),W-M,12,{align:"right"});
+      font(20,"bold"); color(C.ink); T(t,M,26); draw(C.line); doc.setLineWidth(.3); doc.line(M,30,W-M,30); return 38; };
+    const footer=()=>{ font(7.5); color(C.muted); T(`Seite ${doc.getNumberOfPages()}`,W-M,H-8,{align:"right"});
+      T("Alle Angaben ohne Gewähr. Wertangaben: KI-gestützte Marktschätzung, kein Gutachten nach § 194 BauGB.",M,H-8); };
+    const sectionTitle=(t,y)=>{ font(11,"bold"); color(C.acc); T(t.toUpperCase(),M,y); return y+6; };
+    const ensure=(y,need,t)=>{ if(y+need>H-18){ footer(); doc.addPage(); return header(t); } return y; };
+
+    /* --- Seite 1: Titel --- */
+    const coverH=photos.length?168:120;
+    if(photos.length){ doc.addImage(await blobToCover(photos[0].blob,W/coverH),"JPEG",0,0,W,coverH); fill([0,0,0]); doc.setGState(new doc.GState({opacity:.35})); doc.rect(0,coverH-60,W,60,"F"); doc.setGState(new doc.GState({opacity:1})); }
+    else { fill(C.acc); doc.rect(0,0,W,coverH,"F"); }
+    font(10,"bold"); color(C.white); T("EXPOSÉ",M,photos.length?coverH-44:30);
+    font(26,"bold"); const hl=wrap(headline,W-2*M); T(hl.slice(0,2),M,photos.length?coverH-32:48);
+    font(12); T([q.plz,q.ort].filter(Boolean).join(" ")+(q.stadtteil?` · ${q.stadtteil}`:""),M,photos.length?coverH-(hl.length>1?10:20):(hl.length>1?72:62));
+    // Kennzahlen-Kacheln
+    const tiles=[["Wohnfläche",num(q.wfl)?`${fmt(q.wfl)} m²`:"–"],["Zimmer",num(q.zimmer)?String(q.zimmer).replace(".",","):"–"],["Baujahr",num(q.baujahr)?String(q.baujahr):"–"],["Kaufpreis",preis?eurR(preis):"auf Anfrage"]];
+    let y=coverH+14; const tw=(W-2*M-9)/4;
+    tiles.forEach(([l,v],i)=>{ const x=M+i*(tw+3); fill(i===3?C.acc:C.soft); doc.roundedRect(x,y,tw,26,2,2,"F");
+      font(7.5,"bold"); color(i===3?C.white:C.muted); T(l.toUpperCase(),x+5,y+8); font(i===3?13:15,"bold"); color(i===3?C.white:C.ink); T(v,x+5,y+19); });
+    y+=38;
+    const hi=exposeHighlights().slice(0,6);
+    if(hi.length){ font(11,"bold"); color(C.ink); T("Das Besondere",M,y); y+=6; font(10); color(C.muted);
+      hi.forEach((t,i)=>{ const col=i%2, row=Math.floor(i/2), x=M+col*((W-2*M)/2); const yy=y+row*7; fill(C.sun); doc.circle(x+1.5,yy-1.2,1,"F"); T(wrap(t,(W-2*M)/2-8)[0],x+5,yy); });
+      y+=Math.ceil(hi.length/2)*7; }
+    footer();
+
+    /* --- Seite 2: Objekt --- */
+    doc.addPage(); y=header("Das Objekt auf einen Blick");
+    const facts=exposeFacts(), half=Math.ceil(facts.length/2), cw=(W-2*M-8)/2;
+    font(9.5);
+    facts.forEach(([k,v],i)=>{ const col=i<half?0:1, row=col?i-half:i, x=M+col*(cw+8), yy=y+row*8.2;
+      draw(C.line); doc.line(x,yy+2.6,x+cw,yy+2.6); color(C.muted); font(9.5); T(k,x,yy); color(C.ink); font(9.5,"bold"); T(wrap(v,cw*0.58)[0],x+cw,yy,{align:"right"}); });
+    y+=half*8.2+8;
+    const desc=($("#pdfText").value||"").trim()||[r?.fazit,q.besonderes].filter(Boolean).join("\n\n");
+    if(desc){ y=sectionTitle("Beschreibung",y); font(10.5); color(C.ink); const lines=wrap(desc,W-2*M);
+      for(const ln of lines){ y=ensure(y,6,"Das Objekt auf einen Blick"); T(ln,M,y); y+=5.2; } y+=4; }
+    if(q.besonderes&&desc!==q.besonderes&&!desc.includes(q.besonderes)){ y=ensure(y,20,"Das Objekt auf einen Blick"); y=sectionTitle("Was diese Immobilie besonders macht",y); font(10.5); color(C.ink); for(const ln of wrap(q.besonderes,W-2*M)){ y=ensure(y,6,"Das Objekt"); T(ln,M,y); y+=5.2; } }
+    footer();
+
+    /* --- Seite 3: Bilder --- */
+    const gal=photos.slice(1,7);
+    if(gal.length){ doc.addPage(); y=header("Impressionen"); const gw=(W-2*M-6)/2, gh=gw*0.68;
+      for(let i=0;i<gal.length;i++){ const x=M+(i%2)*(gw+6), yy=y+Math.floor(i/2)*(gh+6); doc.addImage(await blobToCover(gal[i].blob,gw/gh,1000),"JPEG",x,yy,gw,gh); }
+      footer(); }
+
+    /* --- Seite 4: Lage & Marktwert --- */
+    doc.addPage(); y=header("Lage und Marktwert");
+    y=sectionTitle("Lage",y); font(10.5); color(C.ink);
+    const lage=[`${LAB.lage[q.lage]||""} in ${q.ort||""}${q.stadtteil?`, ${q.stadtteil}`:""}`,LAB.laerm[q.laerm],LAB.oepnv[q.oepnv],LAB.infra[q.infra],LAB.ausblick[q.ausblick]].filter(Boolean);
+    lage.forEach(t=>{ fill(C.acc); doc.circle(M+1.5,y-1.2,1,"F"); T(t,M+5,y); y+=6.5; }); y+=4;
+    if(r){
+      y=sectionTitle("Marktwert",y);
+      fill(C.soft); doc.roundedRect(M,y,W-2*M,44,2,2,"F");
+      font(8,"bold"); color(C.muted); T("GESCHÄTZTER MARKTWERT",M+6,y+9); font(24,"bold"); color(C.ink); T(eurR(r.marktwert),M+6,y+21);
+      font(9); color(C.muted); T(`Spanne ${eurR(r.spanne.min)} – ${eurR(r.spanne.max)} · ${fmt(r.preis_qm||r.marktwert/Math.max(1,num(q.wfl)))} €/m² · Stand ${r.erstellt||""}`,M+6,y+28);
+      // Skala
+      const lo=Math.min(r.spanne.min,r.schnellverkauf)*0.97, hi2=Math.max(r.spanne.max,r.angebotspreis)*1.03, bx=M+6, bw=W-2*M-12, P=v=>bx+(v-lo)/(hi2-lo)*bw, by=y+35;
+      fill(C.line); doc.roundedRect(bx,by,bw,2.4,1.2,1.2,"F"); fill([157,196,201]); doc.rect(P(r.spanne.min),by,P(r.spanne.max)-P(r.spanne.min),2.4,"F");
+      [[r.schnellverkauf,"Schnellverkauf",C.muted],[r.marktwert,"Marktwert",C.acc],[r.angebotspreis,"Angebotspreis",C.sun]].forEach(([v,l,c])=>{ fill(c); doc.rect(P(v)-.5,by-2,1,6.4,"F"); font(7); color(c); T(`${l} ${eurR(v)}`,P(v),by+8,{align:"center"}); });
+      y+=52;
+      if(r.markt?.kauf_qm_durchschnitt){ font(9.5); color(C.ink); T(`Vergleich am Ort: Durchschnitt ${fmt(r.markt.kauf_qm_durchschnitt)} €/m²${r.markt.kauf_qm_min&&r.markt.kauf_qm_max?`, übliche Spanne ${fmt(r.markt.kauf_qm_min)} – ${fmt(r.markt.kauf_qm_max)} €/m²`:""}.`,M,y); y+=6;
+        if(r.markt.trend){ color(C.muted); for(const ln of wrap(r.markt.trend,W-2*M)){ T(ln,M,y); y+=5; } } y+=3; }
+      if(r.vergleichsobjekte.length){
+        y=ensure(y,30,"Lage und Marktwert"); y=sectionTitle("Vergleichsangebote",y);
+        const cols=[["Objekt",M,"left"],["Fläche",M+112,"right"],["Preis",M+145,"right"],["€/m²",W-M,"right"]];
+        font(8,"bold"); color(C.muted); cols.forEach(([l,x,a])=>T(l,x,y,{align:a})); y+=2; draw(C.line); doc.line(M,y,W-M,y); y+=5;
+        font(9); r.vergleichsobjekte.slice(0,8).forEach(v=>{ y=ensure(y,7,"Lage und Marktwert"); color(C.ink); T(wrap(v.titel||"Angebot",108)[0],M,y); color(C.muted);
+          T(v.wfl?`${fmt(v.wfl)} m²`:"–",M+112,y,{align:"right"}); T(eurR(v.preis),M+145,y,{align:"right"}); T(v.preis_qm?fmt(v.preis_qm):v.wfl?fmt(v.preis/v.wfl):"–",W-M,y,{align:"right"}); y+=6.5; });
+        font(7.5); color(C.muted); T("Angebotspreise aus Immobilienportalen, Stand der Bewertung. Verkaufspreise liegen meist 5–10 % darunter.",M,y+1); y+=6;
+      }
+    } else { font(10); color(C.muted); T("Noch keine Wertermittlung durchgeführt.",M,y); }
+    footer();
+
+    /* --- Seite 5: Verkaufserlös (privat) --- */
+    if(priv){
+      doc.addPage(); y=header("Verkaufserlös: was dir bleibt");
+      font(9); color(C.muted); T("Nur für dich, nicht für Kaufinteressenten bestimmt.",M,y); y+=8;
+      const rows=[["Verkaufspreis",X.preis,""],["Maklerprovision",-X.mak,`${dec(num(S.val.sale.makler))} %`],["Kosten rund um den Verkauf",-X.kosten,""],
+        ["Restschuld am Notartermin",-X.B,`am ${fmtD(X.sd)}`],["Vorfälligkeitsentschädigung",-X.vfe,X.vf.why||""],["Bearbeitungsgebühr Bank",-X.gebuehr,""],
+        ["Löschung Grundschuld",-X.loesch,""],["Weitere Schulden",-X.weitere,""],["Steuer auf den Gewinn",-X.steuer,X.stWhy]].filter(([,v],i)=>i===0||Math.round(v)!==0||i===8);
+      rows.forEach(([l,v,s])=>{ y=ensure(y,12,"Verkaufserlös"); font(10.5); color(C.ink); T(l,M,y); font(10.5,"bold"); T((v<0?"– ":"")+eur(Math.abs(v)),W-M,y,{align:"right"});
+        if(s){ font(8); color(C.muted); const sl=wrap(s,W-2*M-50); T(sl.slice(0,2),M,y+4.5); y+=4.2*Math.min(2,sl.length); }
+        y+=4; draw(C.line); doc.line(M,y,W-M,y); y+=6; });
+      fill(X.netto>=0?C.acc:C.bad); doc.roundedRect(M,y,W-2*M,20,2,2,"F"); font(10,"bold"); color(C.white); T("BLEIBT DIR IN DER TASCHE",M+6,y+12.5); font(18,"bold"); T(eur(X.netto),W-M-6,y+13,{align:"right"}); y+=30;
+      const extra=[]; if(X.gewinnKauf!=null) extra.push(`Gewinn gegenüber deinem Kauf: ${eurR(X.gewinnKauf)}`); if(X.kd) extra.push(`Steuerfrei verkaufen ab: ${fmtD(X.frei10)}`); if(X.vfe>0) extra.push(`Ohne Vorfälligkeitsentschädigung ab: ${fmtD(X.vf.frei)}`);
+      font(10); color(C.ink); extra.forEach(t=>{ T(t,M,y); y+=6; }); y+=4;
+      const notes=$$("#saleNotes .note").map(n=>n.textContent).slice(0,6);
+      if(notes.length){ y=ensure(y,20,"Verkaufserlös"); y=sectionTitle("Hinweise",y); font(9); color(C.muted);
+        notes.forEach(t=>{ for(const [i,ln] of wrap(t,W-2*M-5).entries()){ y=ensure(y,6,"Verkaufserlös"); if(i===0){fill(C.sun);doc.circle(M+1.5,y-1.2,.9,"F");} T(ln,M+5,y); y+=4.6; } y+=2; }); }
+      footer();
+    }
+    const name=(pdfTxt(headline).replace(/[^\wäöüÄÖÜß -]/g,"").trim().replace(/\s+/g,"-")||"Immobilie")+(priv?"-Verkaufsbericht":"-Expose")+".pdf";
+    doc.save(name);
+    st.textContent=`Fertig: ${name}${docs.length?" · Seiten aus PDF-Unterlagen (z. B. Energieausweis) wurden nicht als Fotos verwendet.":""}`;
+  }catch(e){ st.classList.add("err"); st.textContent=e?.code?errMsg(e):"Das PDF konnte nicht erstellt werden. Bitte nochmal versuchen."; console.error(e); }
+  finally{ pdfBusy=false; refresh(); }
+}
+$("#btnPdf").addEventListener("click",buildPdf);
+$("#btnPdfAi").addEventListener("click",async()=>{ const st=$("#pdfStatus"); st.classList.remove("err");
+  if(!SESSION){ st.textContent="Bitte zuerst anmelden."; return; }
+  st.textContent="Die KI schreibt den Exposé-Text …"; try{ S.val.exposeText=await makeExposeText(); $("#pdfText").value=S.val.exposeText; st.textContent="Text fertig. Du kannst ihn noch anpassen."; refresh(); }catch(e){ st.classList.add("err"); st.textContent=errMsg(e); } });
+$("#pdfText").addEventListener("input",e=>{ S.val.exposeText=e.target.value; refresh(); });
+
+INFO["pdf.text"]="Der Text auf Seite 2 des Exposés. Die KI schreibt ihn aus deinen Angaben im Stil eines Maklers (kostet ca. 1–3 Cent). Du kannst ihn danach frei ändern.";
 /* ---------- Haupt-Refresh ---------- */
 let saveT;
 function refresh(){
