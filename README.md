@@ -10,6 +10,7 @@ Immobilien per Screenshot oder Exposé einschätzen, die eigene Immobilie bewert
 | `api/ai.js` | KI-Analyse von Inseraten und KI-Berater über die Claude-API |
 | `api/ort-preise.js` | Recherchiert Miet- und Kaufpreise für den Ort des Objekts (30 Tage zwischengespeichert) |
 | `api/bewertung.js` | Wertermittlung der eigenen Immobilie: Fragebogen, Fotos und Energieausweis plus Vergleichsobjekte aus dem Internet |
+| `api/budget.js` | Zeigt, wie viel vom monatlichen KI-Budget verbraucht ist |
 | `api/update-market.js` | Holt Zinsen, KfW-Konditionen usw. per Websuche und speichert sie in Supabase |
 | `api/config.js` | Gibt der Seite die öffentlichen Supabase-Werte |
 | `supabase/schema.sql` | Tabellen für gespeicherte Objekte und Marktdaten |
@@ -43,12 +44,16 @@ Auf console.anthropic.com unter **API Keys** einen neuen Key erstellen (z. B. �
 | `ANTHROPIC_API_KEY` | Claude-API-Key (geheim!), gerne ein zweiter Key im selben Konto wie beim Händler-Tool |
 | `ALLOWED_EMAILS` | deine E-Mail-Adresse, mehrere mit Komma getrennt |
 | `CRON_SECRET` | ein beliebiges langes Passwort, z. B. 40 zufällige Zeichen |
-| `AI_MODEL` | optional, Standard ist `claude-sonnet-5-5` |
+| `BUDGET_MONTH_EUR` | Höchstbetrag für alle KI-Kosten pro Monat, Standard 10 |
+| `BUDGET_USER_EUR` | optional: Höchstbetrag pro Konto und Monat |
+| `AI_MODEL` | optional, Standard ist `claude-sonnet-5-5`. Bei einem anderen Modell auch `PRICE_IN_PER_MTOK` und `PRICE_OUT_PER_MTOK` (Preis in $ pro Million Token) setzen |
 
 4. **Deploy**. Danach die Seite öffnen, unter „Meine Objekte“ ein Konto mit der E-Mail aus `ALLOWED_EMAILS` anlegen.
 5. Auf dem Handy: Seite öffnen → Teilen → „Zum Home-Bildschirm“.
 
-**Schutz vor hohen KI-Kosten:** Jedes Konto hat Tageslimits (15 Analysen, 80 Chat-Nachrichten, 8 Ortsrecherchen, 4 Bewertungen, 3 Marktdaten-Aktualisierungen). Ändern per Vercel-Variable `LIMIT_ANALYZE`, `LIMIT_CHAT`, `LIMIT_ORT`, `LIMIT_MARKET`. Zusätzlich in der Claude-Konsole unter **Limits** ein Monatslimit setzen.
+**Kostenbremse (Monatsbudget):** Vor jeder KI-Anfrage reserviert der Server die höchstmöglichen Kosten dieser Anfrage. Würde das Monatsbudget (`BUDGET_MONTH_EUR`) dadurch überschritten, wird die Anfrage gar nicht gestellt. Danach werden die echten Kosten aus den Token-Zahlen der Claude-API eingetragen (Tabelle `immo_spend`, dort siehst du jede Anfrage mit Kosten). Fehlt die Tabelle, führt der Server keine KI-Anfrage aus.
+
+**Tageslimits:** Jedes Konto hat Tageslimits (15 Analysen, 80 Chat-Nachrichten, 8 Ortsrecherchen, 4 Bewertungen, 3 Marktdaten-Aktualisierungen). Ändern per Vercel-Variable `LIMIT_ANALYZE`, `LIMIT_CHAT`, `LIMIT_ORT`, `LIMIT_MARKET`. Zusätzlich in der Claude-Konsole unter **Limits** ein Monatslimit setzen.
 
 > `ALLOWED_EMAILS` schützt dein API-Guthaben: Nur diese Adressen dürfen die KI nutzen, auch wenn sich jemand anderes ein Konto anlegt.
 

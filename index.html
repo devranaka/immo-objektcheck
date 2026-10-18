@@ -307,6 +307,7 @@ table{border-collapse:collapse;width:100%}
             <div class="row"><button class="btn" id="btnSave">Speichern</button><button class="btn ghost" id="btnNew2">Neu</button></div>
           </div>
           <div id="authBox"></div>
+          <div id="budgetBox"></div>
           <div class="saved" id="savedList"><p class="small muted">Gespeicherte Objekte erscheinen hier. Speichere ein Objekt, um es später wieder zu öffnen und Angebote zu vergleichen.</p></div>
           <span class="status" id="saveStatus"></span>
         </div>
@@ -410,6 +411,8 @@ table{border-collapse:collapse;width:100%}
         <span class="status" id="mktStatus"></span>
         <p class="small muted">Diese Werte stecken in allen Rechnungen. Zinsen und Kennzahlen werden am 1. und 15. jedes Monats automatisch aus aktuellen Quellen geholt; die Preisspannen je Gewerk siehst du im Raumplaner.</p>
         <div class="scroll"><table class="mtable" id="mtable"></table></div>
+      </div>
+      <div class="card"><h2>KI-Kosten diesen Monat</h2><div id="budgetBox2"></div>
       </div>
     </section>
     <!-- BEWERTEN: FRAGEBOGEN -->
@@ -1090,7 +1093,7 @@ async function lookupOrt(force){
     put("qmUnsaniert",data.kaufpreis_qm_unsaniert||data.kaufpreis_qm);
     put("qmSaniert",data.kaufpreis_qm_saniert);
     ortMsg=cached?"":"Aktualisiert.";
-  }catch(e){ ortErr=e.code!=="cancelled"; ortMsg=ortErr?(e.code==="limit"?e.message:errCopy(e.code)):""; if(ortErr) ortFailFor=ort; }
+  }catch(e){ ortErr=e.code!=="cancelled"; ortMsg=ortErr?errMsg(e):""; if(ortErr) ortFailFor=ort; }
   finally{
     ortBusy=false;
     if(!$("#mktForm").contains(document.activeElement)) renderMktForm(); else renderOrtBox();
@@ -1605,7 +1608,7 @@ function renderValProgress(){
   const p=valPct(); $("#valBar").style.width=p+"%";
   $("#valPct").textContent=`${p} % der wichtigen Angaben ausgefüllt${valFiles.length?` · ${valFiles.length} Bild${valFiles.length>1?"er":""}`:" · noch keine Fotos"}`;
   const q=S.val.q, miss=[]; if(!q.ort) miss.push("Ort"); if(!num(q.wfl)) miss.push("Wohnfläche");
-  $("#valRunHint").textContent=miss.length?`Es fehlt noch: ${miss.join(", ")}.`:!SESSION?"Zum Bewerten bitte unter „Meine Objekte“ anmelden.":"Dauert 1–3 Minuten. Die KI sucht dabei Vergleichsobjekte im Internet.";
+  $("#valRunHint").textContent=miss.length?`Es fehlt noch: ${miss.join(", ")}.`:!SESSION?"Zum Bewerten bitte unter „Meine Objekte“ anmelden.":`Dauert 1–3 Minuten. Die KI sucht dabei Vergleichsobjekte im Internet. Kosten höchstens ${BUD?.maxEur?dec(BUD.maxEur.bewertung):"0,90"} € aus deinem KI-Budget.`;
   $("#btnValRun").disabled=!!miss.length||!SESSION||valBusy;
 }
 
@@ -1640,7 +1643,7 @@ async function runVal(){
     const {data}=await api("/api/bewertung",{daten,ortInfo:oi,images},ctlVal.signal);
     S.val.res=data; S.val.resKey=JSON.stringify(S.val.q);
     if(S.val.sale.preisWahl==="eigen"&&!num(S.val.sale.preis)) S.val.sale.preisWahl="markt";
-  }catch(e){ valErr=e.code==="cancelled"?"":(e.code==="limit"?e.message:e.code==="invalid_json"?(e.message||errCopy(e.code)):errCopy(e.code)); }
+  }catch(e){ valErr=e.code==="cancelled"?"":(e.code==="invalid_json"&&e.message?e.message:errMsg(e)); }
   finally{ valBusy=false; ctlVal=null; renderValOut(); renderSaleForm(); renderValProgress(); refresh(); }
 }
 $("#btnValRun").addEventListener("click",runVal);
@@ -1960,13 +1963,15 @@ function setStatus(t,err){const s=$("#anStatus");s.textContent=t;s.classList.tog
 /* ---------- KI ---------- */
 let ctlAn=null; const imgLimit=8;
 const AINOTE="Die KI liest Preis, Fläche, Baujahr, Lage und Zustand aus und schätzt den Sanierungsbedarf. Marktpreise sind Schätzungen, gelb markierte Felder bitte prüfen.";
-const errCopy=c=>({limit:"Tageslimit für KI-Anfragen erreicht. Morgen geht es weiter.",auth:"Bitte zuerst anmelden.",config:"Der Server ist noch nicht fertig eingerichtet (Schlüssel in Vercel fehlen, siehe README).",rate_limited:"Zu viele Anfragen gerade. Bitte in einer Minute nochmal.",invalid_json:"Die Antwort war unvollständig. Bitte nochmal versuchen."}[c]||"Das hat nicht geklappt. Bitte nochmal versuchen.");
+const errMsg=e=>["limit","budget","budget_setup"].includes(e?.code)&&e?.message?e.message:errCopy(e?.code);
+const errCopy=c=>({budget:"Das KI-Budget für diesen Monat ist aufgebraucht.",budget_setup:"Der Kostenschutz ist noch nicht eingerichtet (supabase/schema.sql ausführen).",limit:"Tageslimit für KI-Anfragen erreicht. Morgen geht es weiter.",auth:"Bitte zuerst anmelden.",config:"Der Server ist noch nicht fertig eingerichtet (Schlüssel in Vercel fehlen, siehe README).",rate_limited:"Zu viele Anfragen gerade. Bitte in einer Minute nochmal.",invalid_json:"Die Antwort war unvollständig. Bitte nochmal versuchen."}[c]||"Das hat nicht geklappt. Bitte nochmal versuchen.");
 async function api(path,body,signal){
   if(!SESSION) throw {code:"auth"};
   let r;
   try{ r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+SESSION.access_token},body:JSON.stringify(body),signal}); }
   catch(e){ throw {code:e?.name==="AbortError"?"cancelled":"upstream_error"}; }
   const j=await r.json().catch(()=>({}));
+  if(path!=="/api/budget") setTimeout(loadBudget,300);
   if(!r.ok) throw {code:j.error||"upstream_error",message:j.message};
   return j;
 }
@@ -2017,7 +2022,7 @@ Antworte NUR mit einem JSON-Objekt in genau dieser Form:
     const {data:d}=await api("/api/ai",{kind:"analyze",prompt,images},ctlAn.signal);
     applyAI(d); setStatus("Fertig. Gelb markierte Felder bitte kurz prüfen.");
     autoOrt();
-  }catch(e){ if(e?.code!=="cancelled") setStatus(errCopy(e?.code),true); else setStatus(""); }
+  }catch(e){ if(e?.code!=="cancelled") setStatus(errMsg(e),true); else setStatus(""); }
   finally{ $("#btnAnalyze").disabled=false; $("#btnStop").hidden=true; }
 }
 function applyAI(d){
@@ -2099,9 +2104,32 @@ ${stateSummary()}`;
   try{
     const {text}=await api("/api/ai",{kind:"chat",system:rules,messages:S.chat.slice(-12)},ctlChat.signal);
     S.chat.push({role:"assistant",content:text});
-  }catch(e){ if(e?.text){S.chat.push({role:"assistant",content:e.text});} $("#chatStatus").textContent=e?.code==="cancelled"?"":errCopy(e?.code); }
+  }catch(e){ if(e?.text){S.chat.push({role:"assistant",content:e.text});} $("#chatStatus").textContent=e?.code==="cancelled"?"":errMsg(e); }
   finally{ ctlChat=null; renderChat(); refresh(); }
 }
+
+/* ---------- KI-Budget anzeigen ---------- */
+let BUD=null;
+async function loadBudget(){
+  if(!SESSION){BUD=null;renderBudget();return;}
+  try{ const r=await fetch("/api/budget",{headers:{Authorization:"Bearer "+SESSION.access_token}}); const j=await r.json(); BUD=r.ok?j:{err:j.message||"Budget nicht abrufbar."}; }
+  catch(e){ BUD={err:"Budget nicht abrufbar."}; }
+  renderBudget();
+}
+function renderBudget(){
+  let h="";
+  if(!SESSION||!BUD) h=""; else if(BUD.err) h=`<p class="note warn">${esc(BUD.err)}</p>`;
+  else {
+    const p=Math.min(100,BUD.totalEur/Math.max(.01,BUD.budgetEur)*100), left=Math.max(0,BUD.budgetEur-BUD.totalEur);
+    const cls=p>=90?"bad":p>=70?"warn":"good";
+    h=`<div style="display:flex;flex-direction:column;gap:6px">
+      <div class="row" style="justify-content:space-between"><span class="small"><b>KI-Budget diesen Monat</b>${ib("budget")}</span><span class="small mono">${dec(BUD.totalEur)} € von ${dec(BUD.budgetEur,0)} €</span></div>
+      <div class="progress"><div class="bar" style="width:${p}%;background:var(--${cls})"></div></div>
+      <span class="small muted">Noch ${dec(left)} € frei${BUD.userBudgetEur<BUD.budgetEur?` · dein Konto: ${dec(BUD.mineEur)} € von ${dec(BUD.userBudgetEur,0)} €`:""} · höchstens pro Anfrage: Analyse ${dec(BUD.maxEur.analyze)} €, Chat ${dec(BUD.maxEur.chat)} €, Ortspreise ${dec(BUD.maxEur.ort)} €, Bewertung ${dec(BUD.maxEur.bewertung)} €</span></div>`;
+  }
+  ["#budgetBox","#budgetBox2"].forEach(sel=>{const el=$(sel); if(el) el.innerHTML=h||(sel==="#budgetBox2"?`<p class="small muted">Nach dem Anmelden siehst du hier, wie viel vom KI-Budget verbraucht ist.</p>`:"");});
+}
+INFO.budget="Fester Höchstbetrag für alle KI-Anfragen im Monat. Vor jeder Anfrage reserviert der Server die maximal möglichen Kosten. Würde das Budget überschritten, wird die Anfrage gar nicht erst gestellt. Rechnen und Planen ohne KI funktioniert immer. Das Budget stellst du in Vercel mit BUDGET_MONTH_EUR ein.";
 
 /* ---------- Speicher (Supabase) ---------- */
 let SB=null, SESSION=null;
@@ -2116,8 +2144,8 @@ async function initDb(){
     updateAiAvail(); return;
   }
   const {data}=await SB.auth.getSession(); SESSION=data.session;
-  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); renderValProgress(); if(s?.user?.id!==was){ listSaved(); if(s) autoOrt(); }});
-  renderAuth(); updateAiAvail(); renderOrtBox(); loadMarket(); listSaved(); autoOrt();
+  SB.auth.onAuthStateChange((_e,s)=>{const was=SESSION?.user?.id; SESSION=s; renderAuth(); updateAiAvail(); renderOrtBox(); renderValProgress(); loadBudget(); if(s?.user?.id!==was){ listSaved(); if(s) autoOrt(); }});
+  renderAuth(); updateAiAvail(); renderOrtBox(); loadMarket(); listSaved(); autoOrt(); loadBudget();
 }
 async function loadMarket(){
   try{
@@ -2190,7 +2218,7 @@ $("#btnMktUpd").addEventListener("click",async()=>{
     const j=await api("/api/update-market",{});
     st.textContent=j.changes?.length?`Aktualisiert: ${j.changes.map(c=>c.feld).join(", ")}.`:"Alles aktuell, keine Änderungen.";
     await loadMarket();
-  }catch(e){ st.textContent=e.code==="auth"?"Nur für freigegebene E-Mail-Adressen (ALLOWED_EMAILS in Vercel).":errCopy(e.code); }
+  }catch(e){ st.textContent=e.code==="auth"?"Nur für freigegebene E-Mail-Adressen (ALLOWED_EMAILS in Vercel).":errMsg(e); }
   finally{ b.disabled=!SESSION; }
 });
 

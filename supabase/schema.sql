@@ -58,3 +58,16 @@ create table if not exists public.immo_usage (
   primary key (user_id, day, kind)
 );
 alter table public.immo_usage enable row level security;
+
+-- 5) Kostenbremse: jede KI-Anfrage wird mit ihren Kosten (Tausendstel Euro) eingetragen.
+--    Ohne diese Tabelle führt der Server keine KI-Anfrage aus.
+create table if not exists public.immo_spend (
+  id       bigserial primary key,
+  at       timestamptz not null default now(),
+  user_id  uuid references auth.users(id) on delete set null,
+  kind     text not null,
+  milli    int  not null default 0,
+  est      boolean not null default true
+);
+create index if not exists immo_spend_at on public.immo_spend (at);
+alter table public.immo_spend enable row level security;

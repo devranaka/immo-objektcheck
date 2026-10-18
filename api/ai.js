@@ -1,6 +1,6 @@
 // KI-Endpunkt: Inserat-Analyse (mit Bildern) und Berater-Chat.
 // Nur für angemeldete Nutzer, damit niemand Fremdes dein API-Guthaben verbraucht.
-import { requireUser, claude, textOf, parseJson, useQuota, limitReply } from "./_lib.js";
+import { requireUser, claude, textOf, parseJson, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
 
 const MAX_IMAGES = 8;
 
@@ -10,10 +10,12 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ error: "auth", message: "Bitte anmelden." });
 
   const { kind, prompt, system, messages, images } = req.body || {};
-  if (kind === "analyze" || kind === "chat") {
-    const q = await useQuota(user, kind);
-    if (!q.ok) return limitReply(res, q);
-  }
+  if (kind !== "analyze" && kind !== "chat") return res.status(400).json({ error: "invalid", message: "Unbekannter Typ" });
+  const q = await useQuota(user, kind);
+  if (!q.ok) return limitReply(res, q);
+  const bud = await reserveBudget(user, kind);
+  if (!bud.ok) return budgetReply(res, bud);
+  const track = [];
   try {
     if (kind === "analyze") {
       if (typeof prompt !== "string" || !prompt) return res.status(400).json({ error: "invalid", message: "prompt fehlt" });
@@ -25,7 +27,7 @@ export default async function handler(req, res) {
         })),
         { type: "text", text: prompt.slice(0, 30000) },
       ];
-      const msg = await claude({ max_tokens: 4000, messages: [{ role: "user", content }] });
+      const msg = await claude({ max_tokens: 4000, messages: [{ role: "user", content }] }, track);
       const text = textOf(msg);
       const data = parseJson(text);
       if (!data) return res.status(502).json({ error: "invalid_json", message: "Antwort war kein JSON", text });
@@ -50,7 +52,7 @@ export default async function handler(req, res) {
         max_tokens: 2000,
         system: typeof system === "string" ? system.slice(0, 40000) : undefined,
         messages: clean,
-      });
+      }, track);
       return res.status(200).json({ text: textOf(msg) });
     }
 
@@ -58,5 +60,7 @@ export default async function handler(req, res) {
   } catch (e) {
     const status = e.code === "rate_limited" ? 429 : e.code === "config" ? 500 : 502;
     return res.status(status).json({ error: e.code || "upstream_error", message: e.message });
+  } finally {
+    await settleBudget(bud, track);
   }
 }

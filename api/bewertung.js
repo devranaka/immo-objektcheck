@@ -1,6 +1,6 @@
 // Wertermittlung einer eigenen Immobilie: Fragebogen + Fotos/Energieausweis + Websuche nach Vergleichsobjekten.
 // Ergebnis: Marktwert mit Spanne, Vergleichsobjekte mit Links, Zu- und Abschläge, Angebots- und Schnellverkaufspreis.
-import { requireUser, claude, textOf, parseJson, useQuota, limitReply } from "./_lib.js";
+import { requireUser, claude, textOf, parseJson, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
 
 const MAX_IMAGES = 10;
 const inRange = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo && v <= hi;
@@ -18,6 +18,9 @@ export default async function handler(req, res) {
 
   const q = await useQuota(user, "bewertung");
   if (!q.ok) return limitReply(res, q);
+  const bud = await reserveBudget(user, "bewertung");
+  if (!bud.ok) return budgetReply(res, bud);
+  const track = [];
 
   const heute = new Date().toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" });
   const imgs = Array.isArray(images) ? images.filter((d) => typeof d === "string").slice(0, MAX_IMAGES) : [];
@@ -58,7 +61,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
     let messages = [{ role: "user", content }];
     let msg;
     for (let i = 0; i < 2; i++) {
-      msg = await claude({ max_tokens: 6000, tools, messages, ...(model ? { model } : {}) });
+      msg = await claude({ max_tokens: 6000, tools, messages, ...(model ? { model } : {}) }, track);
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
     }
@@ -106,5 +109,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
   } catch (e) {
     const status = e.code === "rate_limited" ? 429 : e.code === "config" ? 500 : 502;
     return res.status(status).json({ error: e.code || "upstream_error", message: e.message });
+  } finally {
+    await settleBudget(bud, track);
   }
 }

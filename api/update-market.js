@@ -1,7 +1,7 @@
 // Aktualisiert die Marktdaten (Zinsen, KfW, Grunderwerbsteuer …) per Claude + Websuche
 // und schreibt sie in Supabase. Läuft automatisch über Vercel Cron (siehe vercel.json)
 // oder per Knopf im Tool (nur für angemeldete Nutzer aus ALLOWED_EMAILS).
-import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply } from "./_lib.js";
+import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
 
 const DOMAINS = [
   "drklein.de", "baufi24.de", "interhyp.de", "huettig-rompf.de", "kfw.de",
@@ -12,13 +12,17 @@ const inRange = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo &
 
 export default async function handler(req, res) {
   const cron = process.env.CRON_SECRET && req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
+  let user = null;
   if (!cron) {
-    const user = await requireUser(req);
+    user = await requireUser(req);
     if (!user || !process.env.ALLOWED_EMAILS) return res.status(401).json({ error: "auth", message: "Nicht erlaubt." });
     const q = await useQuota(user, "market");
     if (!q.ok) return limitReply(res, q);
   }
 
+  const bud = await reserveBudget(user, "market");
+  if (!bud.ok) return budgetReply(res, bud);
+  const track = [];
   try {
     const rows = await sbAdmin("immo_market?id=eq.current&select=data");
     const old = rows?.[0]?.data || {};
@@ -44,7 +48,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
     let messages = [{ role: "user", content: prompt }];
     let msg;
     for (let i = 0; i < 2; i++) {
-      msg = await claude({ max_tokens: 4000, tools, messages });
+      msg = await claude({ max_tokens: 4000, tools, messages }, track);
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
     }
@@ -84,5 +88,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
     return res.status(200).json({ ok: true, changes, data: next });
   } catch (e) {
     return res.status(e.code === "config" ? 500 : 502).json({ error: e.code || "upstream_error", message: e.message });
+  } finally {
+    await settleBudget(bud, track);
   }
 }

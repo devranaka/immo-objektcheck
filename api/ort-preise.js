@@ -1,7 +1,7 @@
 // Recherchiert per Claude + Websuche die aktuellen Kauf- und Mietpreise für einen bestimmten Ort.
 // Ergebnisse werden 30 Tage in Supabase (Tabelle immo_market, id "ort:…") zwischengespeichert,
 // damit derselbe Ort nicht jedes Mal neu bezahlt werden muss.
-import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply } from "./_lib.js";
+import { requireUser, claude, textOf, parseJson, sbAdmin, useQuota, limitReply, reserveBudget, settleBudget, budgetReply } from "./_lib.js";
 
 const CACHE_TAGE = 30;
 const inRange = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo && v <= hi;
@@ -19,6 +19,7 @@ export default async function handler(req, res) {
   const art = typ === "wohnung" ? "wohnung" : "haus";
   const id = `ort:${slug(ort)}:${art}`;
 
+  let bud = null; const track = [];
   try {
     if (!force) {
       const rows = await sbAdmin(`immo_market?id=eq.${encodeURIComponent(id)}&select=data,updated_at`).catch(() => null);
@@ -30,6 +31,8 @@ export default async function handler(req, res) {
     // Erst ab hier kostet es Geld: Tageslimit prüfen
     const q = await useQuota(user, "ort");
     if (!q.ok) return limitReply(res, q);
+    bud = await reserveBudget(user, "ort");
+    if (!bud.ok) return budgetReply(res, bud);
 
     const heute = new Date().toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" });
     const prompt = `Heute ist der ${heute}. Recherchiere mit der Websuche die aktuellen Immobilienpreise für GENAU diesen Ort: "${ort}".
@@ -51,7 +54,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
     let messages = [{ role: "user", content: prompt }];
     let msg;
     for (let i = 0; i < 2; i++) {
-      msg = await claude({ max_tokens: 3000, tools, messages });
+      msg = await claude({ max_tokens: 3000, tools, messages }, track);
       if (msg.stop_reason !== "pause_turn") break;
       messages = [...messages, { role: "assistant", content: msg.content }];
     }
@@ -92,5 +95,7 @@ Antworte am Ende NUR mit einem JSON-Objekt:
   } catch (e) {
     const status = e.code === "rate_limited" ? 429 : e.code === "config" ? 500 : 502;
     return res.status(status).json({ error: e.code || "upstream_error", message: e.message });
+  } finally {
+    if (bud?.ok) await settleBudget(bud, track);
   }
 }

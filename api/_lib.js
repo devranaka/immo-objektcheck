@@ -20,7 +20,7 @@ export async function requireUser(req) {
 }
 
 /** Ruft die Claude-API auf. Gibt die komplette Antwort zurück. */
-export async function claude(body) {
+export async function claude(body, track) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw Object.assign(new Error("ANTHROPIC_API_KEY fehlt in Vercel"), { code: "config" });
   const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -37,6 +37,7 @@ export async function claude(body) {
     const code = r.status === 429 ? "rate_limited" : r.status === 401 ? "config" : "upstream_error";
     throw Object.assign(new Error(j?.error?.message || `Claude-API Fehler ${r.status}`), { code });
   }
+  if (Array.isArray(track)) track.push(j);
   return j;
 }
 
@@ -91,3 +92,78 @@ export async function useQuota(user, kind) {
 }
 export const limitReply = (res, q) =>
   res.status(429).json({ error: "limit", message: `Tageslimit erreicht (${q.lim} pro Tag). Morgen geht es weiter.` });
+
+/* ---------- Kostenbremse: festes Monatsbudget ----------
+ * Vor jeder KI-Anfrage wird der Höchstbetrag dieser Anfrage reserviert (in Tausendstel Euro).
+ * Würde das Monatsbudget damit überschritten, wird die Anfrage gar nicht erst gestellt.
+ * Nach der Antwort werden die echten Kosten aus den Token-Zahlen der Claude-API eingetragen.
+ * Ohne Tabelle immo_spend wird keine KI-Anfrage ausgeführt (sicher statt teuer).
+ * Einstellbar per Vercel-Variable: BUDGET_MONTH_EUR (gesamt, Standard 10), BUDGET_USER_EUR (pro Konto),
+ * PRICE_IN_PER_MTOK / PRICE_OUT_PER_MTOK (Preis des Modells in $ pro Million Token, Standard 2 / 10). */
+const PIN = Number(process.env.PRICE_IN_PER_MTOK) || 2;
+const POUT = Number(process.env.PRICE_OUT_PER_MTOK) || 10;
+const milliOf = (inT, outT, searches) => Math.ceil((inT * PIN + outT * POUT) / 1000 + searches * 10); // 1 Suche = 0,01 $
+// Obergrenzen je Anfrageart: Eingabe-Token, Ausgabe-Token, Websuchen (inkl. Folge-Runde)
+const CAPS = {
+  analyze:   { in: 25000,  out: 4000,  s: 0 },
+  chat:      { in: 30000,  out: 2000,  s: 0 },
+  ort:       { in: 120000, out: 6000,  s: 5 },
+  bewertung: { in: 180000, out: 12000, s: 8 },
+  market:    { in: 120000, out: 8000,  s: 8 },
+};
+export const estimateMilli = (kind) => { const c = CAPS[kind] || CAPS.chat; return milliOf(c.in, c.out, c.s); };
+export function costMilli(msgs) {
+  let m = 0;
+  for (const msg of msgs || []) {
+    const u = msg?.usage || {};
+    const inT = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) * 1.25 + (u.cache_read_input_tokens || 0) * 0.1;
+    m += milliOf(inT, u.output_tokens || 0, u.server_tool_use?.web_search_requests || 0);
+  }
+  return m;
+}
+const monthStart = () => { const d = new Date(); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString(); };
+const budgets = () => {
+  const total = (Number(process.env.BUDGET_MONTH_EUR) || 10) * 1000;
+  const user = (Number(process.env.BUDGET_USER_EUR) || total / 1000) * 1000;
+  return { total, user };
+};
+export async function spentThisMonth(userId) {
+  const rows = await sbAdmin(`immo_spend?at=gte.${encodeURIComponent(monthStart())}&select=user_id,milli&limit=50000`);
+  let total = 0, mine = 0;
+  for (const r of rows || []) { total += r.milli || 0; if (userId && r.user_id === userId) mine += r.milli || 0; }
+  return { total, mine };
+}
+export async function reserveBudget(user, kind) {
+  const est = estimateMilli(kind), B = budgets();
+  let sp;
+  try { sp = await spentThisMonth(user?.id); }
+  catch (e) {
+    console.error("immo_spend nicht lesbar:", e.message);
+    return { ok: false, code: "budget_setup", message: "Der Kostenschutz ist noch nicht eingerichtet. Bitte supabase/schema.sql in Supabase ausführen." };
+  }
+  if (sp.total + est > B.total)
+    return { ok: false, code: "budget", message: `Das KI-Budget für diesen Monat (${(B.total / 1000).toLocaleString("de-DE")} €) ist aufgebraucht. Am 1. des nächsten Monats geht es weiter.` };
+  if (user && sp.mine + est > B.user)
+    return { ok: false, code: "budget", message: `Dein KI-Budget für diesen Monat (${(B.user / 1000).toLocaleString("de-DE")} €) ist aufgebraucht.` };
+  try {
+    const rows = await sbAdmin("immo_spend", {
+      method: "POST", headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ user_id: user?.id || null, kind, milli: est, est: true }),
+    });
+    return { ok: true, id: rows?.[0]?.id, est };
+  } catch (e) {
+    console.error("immo_spend schreiben fehlgeschlagen:", e.message);
+    return { ok: false, code: "budget_setup", message: "Der Kostenschutz konnte die Anfrage nicht vormerken. Bitte später nochmal versuchen." };
+  }
+}
+export async function settleBudget(r, msgs) {
+  if (!r?.id) return;
+  try {
+    await sbAdmin(`immo_spend?id=eq.${r.id}`, {
+      method: "PATCH", headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({ milli: costMilli(msgs), est: false }),
+    });
+  } catch (e) { console.error("Kosten nachtragen fehlgeschlagen (Reservierung bleibt stehen):", e.message); }
+}
+export const budgetReply = (res, b) => res.status(b.code === "budget_setup" ? 503 : 429).json({ error: b.code, message: b.message });
+export const budgetInfo = budgets;
