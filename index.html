@@ -171,6 +171,16 @@ table{border-collapse:collapse;width:100%}
 #modeSeg{border-radius:14px}
 #modeSeg button{border-radius:11px}
 .f.wide{grid-column:1/-1}
+.tip{border-left:4px solid var(--line);background:var(--soft);padding:12px 14px;border-radius:8px;display:flex;flex-direction:column;gap:6px}
+.tip b{font-size:.98rem}
+.tip p{margin:0;font-size:.92rem}
+.tip ul{margin:0;padding-left:20px;font-size:.9rem;display:flex;flex-direction:column;gap:3px}
+.tip.warn{border-left-color:var(--warn)} .tip.bad{border-left-color:var(--bad)} .tip.good{border-left-color:var(--good)} .tip.info{border-left-color:var(--accent)}
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.choice label{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;background:var(--card)}
+.choice label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.choice input{margin-top:3px;accent-color:var(--accent)}
+.choice small{display:block;color:var(--muted);margin-top:3px;font-size:.84rem}
 .f textarea{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-height:110px}
 .progress{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
 .progress .bar{height:100%;width:0;background:var(--accent);transition:width .3s}
@@ -197,7 +207,7 @@ table{border-collapse:collapse;width:100%}
 }
 .ib{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--muted);font:italic 600 11px/1 Georgia,"Times New Roman",serif;cursor:pointer;padding:0;flex:none;vertical-align:middle;margin-left:5px;text-transform:none;letter-spacing:0}
 .ib:hover,.ib[aria-expanded="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-#infoPop{position:fixed;z-index:60;max-width:min(340px,calc(100vw - 24px));background:var(--ink);color:var(--paper);padding:10px 13px;border-radius:9px;font-size:.87rem;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.28);font-family:var(--f-body);font-weight:400;text-transform:none;letter-spacing:0}
+#infoPop{white-space:pre-line;position:fixed;z-index:60;max-width:min(340px,calc(100vw - 24px));background:var(--ink);color:var(--paper);padding:10px 13px;border-radius:9px;font-size:.87rem;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.28);font-family:var(--f-body);font-weight:400;text-transform:none;letter-spacing:0}
 
 /* Rechenweg */
 .ledger{font-family:var(--f-mono);font-variant-numeric:tabular-nums;display:flex;flex-direction:column}
@@ -276,6 +286,7 @@ table{border-collapse:collapse;width:100%}
     <button class="t-wert" data-tab="frage" hidden><span class="n">1</span>Fragebogen</button>
     <button class="t-wert" data-tab="wert" hidden><span class="n">2</span>Wertermittlung</button>
     <button class="t-wert" data-tab="verkauf" hidden><span class="n">3</span>Verkaufserlös</button>
+    <button class="t-wert" data-tab="pdf" hidden><span class="n">4</span>PDF herunterladen</button>
   </nav>
 
   <main>
@@ -443,6 +454,7 @@ table{border-collapse:collapse;width:100%}
 
     <!-- BEWERTEN: VERKAUFSERLÖS -->
     <section class="panel" data-panel="verkauf" hidden>
+      <div class="banner" style="background:var(--accent-soft);border-color:var(--accent)"><span><b>Alles als PDF?</b> Exposé für Käufer oder kompletten Bericht mit allen Zahlen herunterladen.</span><button class="btn pri" data-goto="pdf">Zum PDF</button></div>
       <div class="cols2">
         <div class="panel">
           <div class="card"><h2>Verkaufspreis</h2><div class="grid" id="saleFormPreis"></div></div>
@@ -453,17 +465,30 @@ table{border-collapse:collapse;width:100%}
         <div class="panel sticky" style="align-self:start">
           <div class="card"><h2>Was dir am Ende bleibt</h2><div class="ledger" id="saleLedger"></div><div id="saleExtra"></div></div>
           <div class="card"><h3>Hinweise</h3><div id="saleNotes" style="display:flex;flex-direction:column;gap:6px"></div></div>
-          <div class="card">
-            <h2>Exposé als PDF</h2>
-            <p class="small muted">Modernes Exposé wie vom Makler: Titelbild, Kennzahlen, Beschreibung, Fotos, Lage, Marktwert und Vergleichsangebote. Das erste Foto aus dem Fragebogen wird das Titelbild.</p>
-            <label class="f wide" for="pdfText"><span>Beschreibungstext<button type="button" class="ib" data-info="pdf.text" aria-label="Erklärung anzeigen" aria-expanded="false">i</button></span><textarea id="pdfText" rows="7" placeholder="Leer lassen, selbst schreiben oder von der KI schreiben lassen"></textarea></label>
-            <div class="row"><button class="btn" id="btnPdfAi">Text von der KI schreiben lassen</button></div>
-            <label class="chk"><input type="checkbox" id="pdfAiText"> Text automatisch von der KI schreiben lassen, wenn das Feld leer ist</label>
-            <label class="chk"><input type="checkbox" id="pdfPrivate" checked> Seite „Was dir bleibt“ mit Kredit und Steuer anhängen (nur für dich, für Käufer abwählen)</label>
-            <div class="row"><button class="btn pri big" id="btnPdf">PDF erstellen</button></div>
-            <span class="status" id="pdfStatus"></span>
-          </div>
+
         </div>
+      </div>
+    </section>
+    <!-- BEWERTEN: PDF -->
+    <section class="panel" data-panel="pdf" hidden>
+      <div class="card">
+        <h2>PDF herunterladen</h2>
+        <p class="muted">Wähle, was du brauchst. Das PDF wird auf deinem Gerät erstellt und direkt heruntergeladen.</p>
+        <div class="choice">
+          <label><input type="radio" name="pdfMode" value="kaeufer"><span><b>Exposé für Käufer</b><small>Wie vom Makler: Titelbild, Kaufpreis, alle Fakten, Beschreibung, Fotos, Lage, Energie. Ohne deine privaten Zahlen. Zum Weitergeben.</small></span></label>
+          <label><input type="radio" name="pdfMode" value="komplett" checked><span><b>Kompletter Bericht für mich</b><small>Alles: Exposé + Marktwert mit Begründung, Vergleichsangebote, Stärken und Schwächen, Verkaufserlös mit Kredit, Bankstrafe, Steuer und allen Tipps. Nicht an Käufer geben.</small></span></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Beschreibungstext fürs Exposé</h3>
+        <label class="f wide" for="pdfText"><span>Text<button type="button" class="ib" data-info="pdf.text" aria-label="Erklärung anzeigen" aria-expanded="false">i</button></span><textarea id="pdfText" rows="7" placeholder="Leer lassen, selbst schreiben oder von der KI schreiben lassen"></textarea></label>
+        <div class="row"><button class="btn" id="btnPdfAi">Text von der KI schreiben lassen</button></div>
+        <label class="chk"><input type="checkbox" id="pdfAiText"> Wenn das Feld leer ist, schreibt die KI den Text beim Erstellen automatisch</label>
+      </div>
+      <div class="card">
+        <p class="small muted" id="pdfContents"></p>
+        <div class="row"><button class="btn pri big" id="btnPdf">PDF jetzt erstellen und herunterladen</button></div>
+        <span class="status" id="pdfStatus"></span>
       </div>
     </section>
   </main>
@@ -1389,7 +1414,7 @@ function renderMarket(){
 }
 
 /* ================= BEWERTEN & VERKAUFEN ================= */
-const VTABS=["frage","wert","verkauf"];
+const VTABS=["frage","wert","verkauf","pdf"];
 const YR={ph:"Jahr, leer = nie",step:1};
 const VSEC=[
   {t:"Lage",f:[
@@ -1638,7 +1663,7 @@ async function addValFiles(list){
   if(valFiles.length>10) st.textContent=`${valFiles.length} Bilder: die KI wertet die ersten 10 aus. Sortiere die wichtigsten nach vorne, indem du andere entfernst.`;
   renderValThumbs(); renderValProgress();
 }
-function renderValThumbs(){$("#valThumbs").innerHTML=valFiles.map((f,i)=>`<div class="thumb"><img src="${f.url}" alt="${esc(f.name)}">${f.page?`<span class="pg">S. ${f.page}</span>`:""}<button data-vrm="${i}" aria-label="Entfernen">✕</button></div>`).join("");}
+function renderValThumbs(){ setTimeout(renderPdfContents,0);$("#valThumbs").innerHTML=valFiles.map((f,i)=>`<div class="thumb"><img src="${f.url}" alt="${esc(f.name)}">${f.page?`<span class="pg">S. ${f.page}</span>`:""}<button data-vrm="${i}" aria-label="Entfernen">✕</button></div>`).join("");}
 $("#valThumbs").addEventListener("click",e=>{const b=e.target.closest("[data-vrm]");if(!b)return;valFiles.splice(num(b.dataset.vrm),1);renderValThumbs();renderValProgress();});
 
 /* ---------- KI-Bewertung ---------- */
@@ -1692,7 +1717,7 @@ function renderValOut(){
       <div class="kpi"><span class="label">Schnellverkauf${ib("v.schnell")}</span><span class="v">${eurR(r.schnellverkauf)}</span><span class="s">in ca. 4–8 Wochen</span></div>
     </div>
     ${r.fazit?`<p>${esc(r.fazit)}</p>`:""}
-    <div class="row"><button class="btn pri big" id="btnToSale">Verkauf durchrechnen: was bleibt mir?</button><button class="btn big" data-goto="verkauf">Exposé als PDF</button></div>
+    <div class="row"><button class="btn pri big" id="btnToSale">Verkauf durchrechnen: was bleibt mir?</button><button class="btn big" data-goto="pdf">PDF herunterladen</button></div>
   </div>
   <div class="cols2">
     <div class="card"><h3>Markt in ${esc(r.markt?.ort||q.ort)}</h3><div class="kv">
@@ -1731,18 +1756,19 @@ function amort(B,zins,rate,months,sonder){
 }
 function vfeCalc(B,sl,sd){
   if(B<=0) return {v:0,why:"Kein Kredit mehr offen."};
-  if(num(sl.vfeManual)>0) return {v:num(sl.vfeManual),why:"Wert laut Bank."};
+  if(num(sl.vfeManual)>0) return {v:num(sl.vfeManual),why:"Betrag laut deiner Bank."};
   const ze=parseD(sl.zinsEnde);
-  if(!ze) return {v:null,why:"Trag ein, bis wann dein Zins festgeschrieben ist, dann wird die Vorfälligkeitsentschädigung geschätzt."};
-  if(ze<=sd) return {v:0,why:`Die Zinsbindung endet am ${fmtD(ze)} vor dem Notartermin, also keine Entschädigung.`};
+  if(!ze) return {v:null,why:"Noch unbekannt: Trag oben ein, bis wann dein Zins fest ist."};
+  if(ze<=sd) return {v:0,why:`Dein fester Zins endet am ${fmtD(ze)}, also vor dem Verkauf. Keine Strafe.`};
   let end=ze, frei=ze; const az=parseD(sl.auszahlung);
-  if(az){ const k=addMonths(az,126); if(k<=sd) return {v:0,why:"Das Darlehen ist über 10 Jahre ausgezahlt: Mit 6 Monaten Frist kündbar ohne Entschädigung (§ 489 BGB). Kündigung rechtzeitig schicken!"}; if(k<end){ end=k; frei=k; } }
+  if(az){ const k=addMonths(az,126); if(k<=sd) return {v:0,why:"Dein Kredit läuft schon über 10 Jahre. Dann darfst du ohne Strafe kündigen. Wichtig: 6 Monate vorher schriftlich kündigen."}; if(k<end){ end=k; frei=k; } }
   const n=monthsBetween(sd,end), i=num(sl.zins)/1200, w=(num(sl.wiederanlage)||M.pfandbrief)/1200, rate=num(sl.rate), sonder=num(sl.sonder);
   let b=B, pv=0, sumB=0;
   for(let t=1;t<=n;t++){ const int=b*i; let pay=Math.min(rate>0?rate:int,b+int); b=b+int-pay; if(t%12===0&&sonder>0){const s=Math.min(sonder,b); b-=s; pay+=s;} pv+=pay/Math.pow(1+w,t); sumB+=b; }
   pv+=b/Math.pow(1+w,n);
   const saving=0.001*sumB/12;
-  return {v:Math.max(0,pv-B-saving),why:`Geschätzt für ${n} Monate bis ${fmtD(end)} mit ${dec(num(sl.zins))} % Vertragszins gegen ${dec(w*1200)} % Wiederanlagezins.`,frei,n};
+  const v=Math.max(0,pv-B-saving);
+  return {v,lowRate:v===0,why:v>0?`Weil du den Kredit vor dem ${fmtD(end)} zurückzahlst. Geschätzt, die Bank nennt dir die genaue Zahl.`:"Dein Zins ist niedriger als die Zinsen heute. Die Bank verliert nichts, also keine Strafe.",frei,n};
 }
 function saleCalc(){
   const v=S.val, sl=v.sale, q=v.q, r=v.res, today=new Date();
@@ -1761,24 +1787,31 @@ function saleCalc(){
   // Steuer
   const kd=parseD(sl.kaufdatum), frei10=kd?addMonths(kd,120):null, jahre=kd?(sd-kd)/(365.25*864e5):0;
   let steuer=0, gewinnSt=null, stWhy="", afa=0;
-  if(sl.nutzung==="selbst") stWhy="Selbst bewohnt: Der Verkauf ist steuerfrei.";
-  else if(sl.nutzung==="gemischt"&&sl.selbst3) stWhy="Im Verkaufsjahr und den zwei Jahren davor selbst bewohnt: steuerfrei.";
-  else if(!kd) stWhy="Trag das Kaufdatum ein, dann prüft das Tool die 10-Jahres-Frist.";
-  else if(sd>=frei10) stWhy=`Mehr als 10 Jahre im Besitz (seit ${fmtD(kd)}): steuerfrei.`;
+  if(sl.nutzung==="selbst") stWhy="Selbst bewohnt: keine Steuer.";
+  else if(sl.nutzung==="gemischt"&&sl.selbst3) stWhy="In diesem Jahr und den 2 Jahren davor selbst bewohnt: keine Steuer.";
+  else if(!kd) stWhy="Trag unten das Kaufdatum ein, dann wird die Steuer geprüft.";
+  else if(sd>=frei10) stWhy=`Länger als 10 Jahre in deinem Besitz (seit ${fmtD(kd)}): keine Steuer.`;
   else {
     afa=num(sl.afaSumme)||(num(sl.kaufpreis)+num(sl.kaufNk))*0.75*0.02*Math.max(0,jahre);
     const ansch=num(sl.kaufpreis)+num(sl.kaufNk)+num(sl.modKosten)-afa;
     gewinnSt=preis-mak-kostenV-loesch-vfe-gebuehr-ansch;
-    if(!num(sl.kaufpreis)) stWhy="Trag den damaligen Kaufpreis ein, dann wird der Gewinn berechnet.";
-    else if(gewinnSt<1000){ steuer=0; stWhy=gewinnSt<=0?"Kein Gewinn, also keine Steuer.":"Gewinn unter der Freigrenze von 1.000 € im Jahr: steuerfrei."; }
-    else { steuer=gewinnSt*num(sl.steuersatz)/100; stWhy=`Verkauf vor Ablauf von 10 Jahren (steuerfrei ab ${fmtD(frei10)}): Gewinn wird mit deinem Steuersatz versteuert.`; }
+    if(!num(sl.kaufpreis)) stWhy="Trag unten den Kaufpreis von damals ein, dann wird der Gewinn berechnet.";
+    else if(gewinnSt<1000){ steuer=0; stWhy=gewinnSt<=0?"Kein Gewinn, also keine Steuer.":"Gewinn unter 1.000 €: keine Steuer."; }
+    else { steuer=gewinnSt*num(sl.steuersatz)/100; stWhy=`Du verkaufst vor dem ${fmtD(frei10)} (10 Jahre nach dem Kauf). Darum zahlst du Steuer auf den Gewinn.`; }
   }
   const netto=preis-mak-kosten-B-vfe-gebuehr-loesch-weitere-steuer;
   const gewinnKauf=num(sl.kaufpreis)?preis-num(sl.kaufpreis)-num(sl.kaufNk)-num(sl.modKosten):null;
   return {preis,wahl,sd,mak,kosten,kostenV,B,vf,vfe,gebuehr,gs,loesch,weitere,steuer,gewinnSt,stWhy,afa,kd,frei10,netto,gewinnKauf};
 }
+function renderPdfContents(){
+  const el=$("#pdfContents"); if(!el) return;
+  const priv=(document.querySelector("input[name=pdfMode]:checked")?.value||"komplett")==="komplett", photos=valFiles.filter(f=>!f.page).length;
+  const parts=["Titelseite"+(photos?" mit deinem ersten Foto":" (ohne Foto)"),"Alle Fakten und Beschreibung",photos>1?`${Math.min(6,photos-1)} weitere Fotos`:"",priv?"Lage und Marktwert mit Vergleichsangeboten":"Lage",priv&&S.val.res?"Bewertung im Detail":"",priv?"Verkaufserlös mit allen Abzügen":"",priv?"Tipps für deinen Verkauf":""].filter(Boolean);
+  el.textContent=`Im PDF: ${parts.join(" · ")}.${!photos?" Tipp: Lade im Fragebogen Fotos hoch, dann sieht das Exposé viel besser aus.":""}${!S.val.res?" Tipp: Mach zuerst die Wertermittlung, dann kommen Marktwert und Vergleich mit ins PDF.":""}`;
+}
+document.addEventListener("change",e=>{ if(e.target.name==="pdfMode") renderPdfContents(); });
 function renderSaleForm(){
-  const r=S.val.res, sl=S.val.sale;
+  const r=S.val.res, sl=S.val.sale; renderPdfContents();
   const pt=$("#pdfText"); if(pt&&document.activeElement!==pt) pt.value=S.val.exposeText||"";
   const opts=r?[["markt",`Marktwert laut Bewertung · ${eurR(r.marktwert)}`],["angebot",`Angebotspreis · ${eurR(r.angebotspreis)}`],["schnell",`Schnellverkauf · ${eurR(r.schnellverkauf)}`],["eigen","Eigener Preis"]]:[["eigen","Eigener Preis (noch keine Bewertung)"]];
   const def=isoD(addMonths(new Date(),3));
@@ -1805,6 +1838,35 @@ function renderSaleForm(){
     sl.nutzung!=="selbst"?field("val.sale.afaSumme","Bisherige Abschreibung (AfA)","number",{unit:"€",ph:"leer = Schätzung"}):"",
     sl.nutzung!=="selbst"?field("val.sale.steuersatz","Persönlicher Steuersatz","number",{unit:"%",step:1}):""].join("");
 }
+function saleTips(X){
+  const sl=S.val.sale, q=S.val.q, T=[];
+  if(X.netto<0) T.push({c:"bad",t:"Achtung: Der Verkauf reicht nicht für deine Schulden",
+    d:`Nach dem Verkauf fehlen dir noch rund ${eurR(-X.netto)}. Dieses Geld müsstest du aus deinen Ersparnissen an die Bank zahlen.`,
+    tun:["Sprich mit deiner Bank, bevor du einen Makler beauftragst","Prüfe, ob ein höherer Preis möglich ist (z. B. kleine Reparaturen, gute Fotos)","Später verkaufen: Jeden Monat wird dein Kredit kleiner"]});
+  if(X.vfe>0) T.push({c:"warn",t:`Strafe der Bank: rund ${eurR(X.vfe+X.gebuehr)}`,
+    d:`Du zahlst deinen Kredit früher zurück als im Vertrag steht. Die Bank bekommt dadurch weniger Zinsen und verlangt dafür eine Strafe. Das nennt man Vorfälligkeitsentschädigung. Ab dem ${fmtD(X.vf.frei)} fällt diese Strafe weg.`,
+    tun:[`Wenn möglich erst ab dem ${fmtD(X.vf.frei)} verkaufen, dann sparst du das Geld`,"Frag die Bank schriftlich nach der genauen Summe und trag sie oben ein","Frag die Bank, ob du den Kredit auf eine neue Immobilie mitnehmen kannst (Pfandtausch), dann gibt es keine Strafe","Lass die Rechnung der Bank von der Verbraucherzentrale prüfen. Banken rechnen oft zu hoch"]});
+  else if(X.B>0&&X.vf.v===0) T.push({c:"good",t:"Keine Strafe der Bank",d:X.vf.lowRate?"Dein Zins ist niedriger als die heutigen Zinsen. Die Bank verliert durch die frühe Rückzahlung also kein Geld und darf keine Strafe verlangen. Lass dir das von der Bank trotzdem schriftlich bestätigen.":X.vf.why});
+  if(X.vf.v==null&&num(sl.restschuld)>0) T.push({c:"warn",t:"Strafe der Bank noch unbekannt",
+    d:"Trag oben ein, bis wann dein Zins festgeschrieben ist. Das steht in deinem Kreditvertrag. Dann rechnet das Tool aus, ob die Bank Geld verlangt. Das können mehrere Tausend Euro sein."});
+  if(X.steuer>0) T.push({c:"warn",t:`Steuer: rund ${eurR(X.steuer)}`,
+    d:`Du hast die Immobilie nicht selbst bewohnt und verkaufst sie weniger als 10 Jahre nach dem Kauf. Dann bekommt das Finanzamt einen Teil von deinem Gewinn. Ab dem ${fmtD(X.frei10)} ist der Verkauf steuerfrei.`,
+    tun:[`Erst ab dem ${fmtD(X.frei10)} verkaufen, dann zahlst du keine Steuer`,"Selbst einziehen: Wohnst du im Verkaufsjahr und in den 2 Jahren davor selbst drin, ist es auch steuerfrei","Sammle alle Rechnungen für Renovierungen, sie senken die Steuer","Sprich vor dem Verkauf mit einem Steuerberater"]});
+  else if(sl.nutzung==="selbst") T.push({c:"good",t:"Keine Steuer",d:"Du hast selbst in der Immobilie gewohnt. Dann ist dein Gewinn steuerfrei, egal wann du verkaufst."});
+  if(num(sl.makler)>0) T.push({c:"info",t:`Der Makler bekommt ${eurR(X.mak)}`,
+    d:"Der Makler macht Fotos und Inserat, zeigt die Immobilie, prüft die Käufer und bereitet alles für den Notar vor. Dafür bekommt er einen Teil vom Preis.",
+    tun:["Verhandle die Provision, oft gehen 2 bis 3 %","Oder verkaufe selbst: spart das Geld, kostet aber Zeit","Für den eigenen Verkauf kannst du das Exposé-PDF aus diesem Tool nutzen"]});
+  if(!q.ausweis||q.ausweis==="keiner") T.push({c:"warn",t:"Energieausweis nicht vergessen",
+    d:"Wer verkauft, braucht einen Energieausweis. Die Werte müssen schon im Inserat stehen. Ohne Ausweis droht eine Strafe bis 15.000 €.",
+    tun:["Bei einem Energieberater bestellen (ca. 50 bis 600 €)"]});
+  if(q.kueche&&num(q.kuecheWert)) T.push({c:"good",t:"Küche extra in den Vertrag schreiben",
+    d:`Schreib die Küche mit ihrem Wert (${eurR(num(q.kuecheWert))}) extra in den Kaufvertrag. Darauf zahlt der Käufer keine Grunderwerbsteuer. Das macht dein Angebot für Käufer günstiger.`});
+  if(q.typ==="wohnung") T.push({c:"info",t:"Das Spargeld der Hausgemeinschaft",d:"Das gemeinsame Geld für Reparaturen am Haus (Erhaltungsrücklage) bleibt bei der Hausgemeinschaft. Du bekommst davon beim Verkauf nichts zurück."});
+  if(sl.nutzung!=="selbst") T.push({c:"info",t:"Nicht zu viele Immobilien verkaufen",d:"Wer in 5 Jahren mehr als 3 Immobilien verkauft, gilt für das Finanzamt schnell als Händler. Dann wird es deutlich teurer."});
+  T.push({c:"info",t:"So läuft ein Verkauf ab",d:"Vom Entschluss bis zum Geld auf dem Konto dauert es meist 3 bis 6 Monate.",
+    tun:["Unterlagen sammeln: Grundbuchauszug, Energieausweis, Grundriss, bei Wohnungen Protokolle der Eigentümerversammlung","Preis festlegen und Exposé erstellen","Besichtigungen machen","Vom Käufer eine Bestätigung der Bank verlangen, dass er das Geld bekommt","Termin beim Notar, der Notar schreibt den Vertrag","Der Käufer zahlt: Zuerst wird deine Bank bezahlt, der Rest kommt auf dein Konto"]});
+  return T;
+}
 function renderSale(){
   const X=saleCalc(), sl=S.val.sale;
   const L=(op,t,v,info,cls="",sm="")=>`<div class="ln ${cls}"><span class="op">${op}</span><span class="t">${t}${info?ib(info):""}${sm?`<small>${sm}</small>`:""}</span><span class="val">${v}</span></div>`;
@@ -1814,30 +1876,16 @@ function renderSale(){
    +L("=","Erlös vor Kredit und Steuer",eur(X.preis-X.mak-X.kosten),"","tot");
   if(X.B>0||num(sl.restschuld)>0){
     h+=L("−","Restschuld am Notartermin",eur(X.B),"s.restschuld","",`am ${fmtD(X.sd)}`)
-     +L("−","Vorfälligkeitsentschädigung",X.vf.v==null?"?":eur(X.vfe),"s.vfe","",X.vf.why)
+     +L("−","Strafe der Bank (Vorfälligkeitsentschädigung)",X.vf.v==null?"?":eur(X.vfe),"s.vfe","",X.vf.why)
      +(X.gebuehr?L("−","Bearbeitungsgebühr Bank",eur(X.gebuehr),"val.sale.vfeGebuehr"):"")
-     +(X.loesch?L("−","Löschung Grundschuld",eur(X.loesch),"s.loesch","",`ca. 0,3 % von ${eurR(X.gs)}`):"");
+     +(X.loesch?L("−","Eintrag der Bank im Grundbuch löschen",eur(X.loesch),"s.loesch","","Notar und Grundbuchamt"):"");
   }
   if(X.weitere) h+=L("−","Weitere Schulden",eur(X.weitere),"val.sale.weitere");
-  h+=L("−","Steuer auf den Gewinn",eur(X.steuer),"s.steuer","",X.stWhy+(X.gewinnSt!=null&&X.gewinnSt>0?` Steuerpflichtiger Gewinn ${eurR(X.gewinnSt)}${X.afa?` (inkl. ${eurR(X.afa)} Abschreibung)`:""}.`:""))
+  h+=L("−","Steuer auf den Gewinn",eur(X.steuer),"s.steuer","",X.stWhy+(X.gewinnSt!=null&&X.gewinnSt>0?` Gewinn fürs Finanzamt: ${eurR(X.gewinnSt)}.`:""))
    +L("=","Bleibt dir in der Tasche",eur(X.netto),"s.netto","tot big");
   $("#saleLedger").innerHTML=h;
-  const n=[];
-  if(X.netto<0) n.push(["bad",`Der Verkauf deckt deine Schulden nicht. Dir fehlen rund ${eurR(-X.netto)}, die du aus eigenem Geld zahlen müsstest.`]);
-  if(X.vfe>0){
-    n.push(["warn",`Ohne Vorfälligkeitsentschädigung kannst du den Kredit ab ${fmtD(X.vf.frei)} ablösen. Verkaufst du erst dann, sparst du rund ${eurR(X.vfe+X.gebuehr)}.`]);
-    n.push(["",`Wege, die Entschädigung zu senken: vor dem Verkauf das Sondertilgungsrecht nutzen, den Kredit auf eine neue Immobilie übertragen (Pfandtausch), den Käufer das Darlehen übernehmen lassen, oder die Berechnung der Bank von der Verbraucherzentrale prüfen lassen.`]);
-  }
-  if(X.vf.v==null&&num(sl.restschuld)>0) n.push(["warn","Ohne Ende der Zinsbindung kann die Vorfälligkeitsentschädigung nicht geschätzt werden. Sie kann bei 5–10 Jahren Restlaufzeit mehrere zehntausend Euro betragen."]);
-  if(X.steuer>0){ n.push(["warn",`Wartest du bis ${fmtD(X.frei10)}, ist der Verkauf steuerfrei. Das spart rund ${eurR(X.steuer)}.`]);
-    n.push(["","Steuerfrei wird es auch, wenn du selbst einziehst und im Verkaufsjahr und den zwei Kalenderjahren davor selbst darin wohnst. Lass dich dazu von einem Steuerberater beraten."]); }
-  if(sl.nutzung!=="selbst") n.push(["","Verkaufst du innerhalb von 5 Jahren mehr als drei Immobilien, kann das Finanzamt das als gewerblichen Handel werten. Dann kommt Gewerbesteuer dazu."]);
-  if(S.val.q.typ==="wohnung") n.push(["","Die Erhaltungsrücklage gehört der Eigentümergemeinschaft und wird beim Verkauf nicht an dich ausgezahlt."]);
-  if(!S.val.q.ausweis||S.val.q.ausweis==="keiner") n.push(["","Für Inserat und Besichtigung brauchst du einen gültigen Energieausweis. Fehlt er, droht ein Bußgeld bis 15.000 €."]);
-  if(num(sl.makler)>0) n.push(["",`Verkaufst du privat ohne Makler, sparst du ${eurR(X.mak)}, hast aber selbst die Arbeit mit Inseraten, Besichtigungen und Unterlagen.`]);
-  if(S.val.q.kueche&&num(S.val.q.kuecheWert)) n.push(["good",`Weise die Küche (${eurR(num(S.val.q.kuecheWert))}) im Kaufvertrag gesondert aus. Der Käufer spart darauf Grunderwerbsteuer, das macht dein Angebot attraktiver.`]);
-  $("#saleNotes").innerHTML=n.map(([c,t])=>`<p class="note ${c}">${esc(t)}</p>`).join("");
-  $("#saleExtra").innerHTML=`<div class="kv">${K("Restschuld am Notartermin",eurR(X.B),"s.restschuld")}${X.gewinnKauf!=null?K("Gewinn gegenüber deinem Kauf",eurR(X.gewinnKauf),"s.gewinn"):""}${X.kd?K("Steuerfrei verkaufen ab",fmtD(X.frei10),"val.sale.kaufdatum"):""}${X.vfe>0?K("Ohne Entschädigung ab",fmtD(X.vf.frei),"val.sale.zinsEnde"):""}</div>`;
+  $("#saleNotes").innerHTML=saleTips(X).map(tp=>`<div class="tip ${tp.c}"><b>${esc(tp.t)}</b><p>${esc(tp.d)}</p>${tp.tun?.length?`<span class="label">Was du tun kannst</span><ul>${tp.tun.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</div>`).join("");
+  $("#saleExtra").innerHTML=`<div class="kv">${K("Restschuld am Notartermin",eurR(X.B),"s.restschuld")}${X.gewinnKauf!=null?K("Gewinn gegenüber deinem Kauf",eurR(X.gewinnKauf),"s.gewinn"):""}${X.kd?K("Steuerfrei verkaufen ab",fmtD(X.frei10),"val.sale.kaufdatum"):""}${X.vfe>0?K("Ohne Strafe der Bank ab",fmtD(X.vf.frei),"val.sale.zinsEnde"):""}</div>`;
 }
 
 /* ================= EXPOSÉ / VERKAUFSBERICHT ALS PDF ================= */
@@ -1908,7 +1956,7 @@ async function buildPdf(){
     }
     st.textContent="PDF wird erstellt …"; await loadJsPdf();
     const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"}), W=210, H=297, M=16;
-    const q=S.val.q, r=S.val.res, X=saleCalc(), priv=$("#pdfPrivate").checked;
+    const q=S.val.q, r=S.val.res, X=saleCalc(), priv=(document.querySelector("input[name=pdfMode]:checked")?.value||"komplett")==="komplett";
     const C={ink:[22,32,42],muted:[90,102,114],line:[213,219,214],soft:[238,241,238],acc:[13,95,107],sun:[184,119,15],good:[43,122,75],bad:[176,60,43],white:[255,255,255]};
     const fill=c=>doc.setFillColor(...c), color=c=>doc.setTextColor(...c), draw=c=>doc.setDrawColor(...c);
     const font=(sz,b="normal")=>{doc.setFont("helvetica",b);doc.setFontSize(sz);};
@@ -1966,11 +2014,11 @@ async function buildPdf(){
       footer(); }
 
     /* --- Seite 4: Lage & Marktwert --- */
-    doc.addPage(); y=header("Lage und Marktwert");
+    doc.addPage(); y=header(priv?"Lage und Marktwert":"Lage");
     y=sectionTitle("Lage",y); font(10.5); color(C.ink);
     const lage=[`${LAB.lage[q.lage]||""} in ${q.ort||""}${q.stadtteil?`, ${q.stadtteil}`:""}`,LAB.laerm[q.laerm],LAB.oepnv[q.oepnv],LAB.infra[q.infra],LAB.ausblick[q.ausblick]].filter(Boolean);
     lage.forEach(t=>{ fill(C.acc); doc.circle(M+1.5,y-1.2,1,"F"); T(t,M+5,y); y+=6.5; }); y+=4;
-    if(r){
+    if(r&&priv){
       y=sectionTitle("Marktwert",y);
       fill(C.soft); doc.roundedRect(M,y,W-2*M,44,2,2,"F");
       font(8,"bold"); color(C.muted); T("GESCHÄTZTER MARKTWERT",M+6,y+9); font(24,"bold"); color(C.ink); T(eurR(r.marktwert),M+6,y+21);
@@ -1990,30 +2038,51 @@ async function buildPdf(){
           T(v.wfl?`${fmt(v.wfl)} m²`:"–",M+112,y,{align:"right"}); T(eurR(v.preis),M+145,y,{align:"right"}); T(v.preis_qm?fmt(v.preis_qm):v.wfl?fmt(v.preis/v.wfl):"–",W-M,y,{align:"right"}); y+=6.5; });
         font(7.5); color(C.muted); T("Angebotspreise aus Immobilienportalen, Stand der Bewertung. Verkaufspreise liegen meist 5–10 % darunter.",M,y+1); y+=6;
       }
-    } else { font(10); color(C.muted); T("Noch keine Wertermittlung durchgeführt.",M,y); }
+    } else if(priv) { font(10); color(C.muted); T("Noch keine Wertermittlung durchgeführt.",M,y); }
     footer();
+
+    /* --- Bewertung im Detail (nur Bericht) --- */
+    if(priv&&r){
+      doc.addPage(); y=header("Bewertung im Detail");
+      if(r.anpassungen.length){ y=sectionTitle("Was den Preis hoch oder runter zieht",y);
+        r.anpassungen.forEach(a=>{ y=ensure(y,12,"Bewertung im Detail"); font(10,"bold"); color(a.prozent>0?C.good:a.prozent<0?C.bad:C.muted); T(`${a.prozent>0?"+":""}${dec(a.prozent,1)} %`,M,y);
+          color(C.ink); T(a.faktor,M+20,y); font(8.5); color(C.muted); const gl=wrap(a.grund,W-2*M-20); T(gl.slice(0,2),M+20,y+4.5); y+=6+4*Math.min(2,gl.length); });
+        y+=4; }
+      if(r.methoden.length){ y=ensure(y,20,"Bewertung im Detail"); y=sectionTitle("So wurde gerechnet",y);
+        r.methoden.forEach(m=>{ y=ensure(y,14,"Bewertung im Detail"); font(10,"bold"); color(C.ink); T(`${m.name}: ${eurR(m.wert)}`,M,y); y+=5; if(m.erklaerung){ font(9); color(C.muted); for(const ln of wrap(m.erklaerung,W-2*M)){ T(ln,M,y); y+=4.4; } } y+=3; }); }
+      const lists=[["Stärken",r.staerken,C.good],["Schwächen",r.schwaechen,C.bad],["Tipps vor dem Verkauf",r.tipps_wertsteigerung,C.sun],["Aus Fotos und Unterlagen erkannt",r.aus_bildern,C.acc]];
+      lists.forEach(([t,arr,c])=>{ if(!arr?.length) return; y=ensure(y,16,"Bewertung im Detail"); y=sectionTitle(t,y); font(9.5); color(C.ink);
+        arr.forEach(x=>{ for(const [i,ln] of wrap(x,W-2*M-5).entries()){ y=ensure(y,6,"Bewertung im Detail"); if(i===0){fill(c);doc.circle(M+1.5,y-1.2,1,"F");} T(ln,M+5,y); y+=4.8; } y+=1.5; }); y+=3; });
+      footer();
+    }
 
     /* --- Seite 5: Verkaufserlös (privat) --- */
     if(priv){
       doc.addPage(); y=header("Verkaufserlös: was dir bleibt");
       font(9); color(C.muted); T("Nur für dich, nicht für Kaufinteressenten bestimmt.",M,y); y+=8;
       const rows=[["Verkaufspreis",X.preis,""],["Maklerprovision",-X.mak,`${dec(num(S.val.sale.makler))} %`],["Kosten rund um den Verkauf",-X.kosten,""],
-        ["Restschuld am Notartermin",-X.B,`am ${fmtD(X.sd)}`],["Vorfälligkeitsentschädigung",-X.vfe,X.vf.why||""],["Bearbeitungsgebühr Bank",-X.gebuehr,""],
-        ["Löschung Grundschuld",-X.loesch,""],["Weitere Schulden",-X.weitere,""],["Steuer auf den Gewinn",-X.steuer,X.stWhy]].filter(([,v],i)=>i===0||Math.round(v)!==0||i===8);
+        ["Restschuld am Notartermin",-X.B,`am ${fmtD(X.sd)}`],["Strafe der Bank (Vorfälligkeit)",-X.vfe,X.vf.why||""],["Bearbeitungsgebühr Bank",-X.gebuehr,""],
+        ["Eintrag der Bank im Grundbuch löschen",-X.loesch,""],["Weitere Schulden",-X.weitere,""],["Steuer auf den Gewinn",-X.steuer,X.stWhy]].filter(([,v],i)=>i===0||Math.round(v)!==0||i===8);
       rows.forEach(([l,v,s])=>{ y=ensure(y,12,"Verkaufserlös"); font(10.5); color(C.ink); T(l,M,y); font(10.5,"bold"); T((v<0?"– ":"")+eur(Math.abs(v)),W-M,y,{align:"right"});
         if(s){ font(8); color(C.muted); const sl=wrap(s,W-2*M-50); T(sl.slice(0,2),M,y+4.5); y+=4.2*Math.min(2,sl.length); }
         y+=4; draw(C.line); doc.line(M,y,W-M,y); y+=6; });
       fill(X.netto>=0?C.acc:C.bad); doc.roundedRect(M,y,W-2*M,20,2,2,"F"); font(10,"bold"); color(C.white); T("BLEIBT DIR IN DER TASCHE",M+6,y+12.5); font(18,"bold"); T(eur(X.netto),W-M-6,y+13,{align:"right"}); y+=30;
       const extra=[]; if(X.gewinnKauf!=null) extra.push(`Gewinn gegenüber deinem Kauf: ${eurR(X.gewinnKauf)}`); if(X.kd) extra.push(`Steuerfrei verkaufen ab: ${fmtD(X.frei10)}`); if(X.vfe>0) extra.push(`Ohne Vorfälligkeitsentschädigung ab: ${fmtD(X.vf.frei)}`);
       font(10); color(C.ink); extra.forEach(t=>{ T(t,M,y); y+=6; }); y+=4;
-      const notes=$$("#saleNotes .note").map(n=>n.textContent).slice(0,6);
-      if(notes.length){ y=ensure(y,20,"Verkaufserlös"); y=sectionTitle("Hinweise",y); font(9); color(C.muted);
-        notes.forEach(t=>{ for(const [i,ln] of wrap(t,W-2*M-5).entries()){ y=ensure(y,6,"Verkaufserlös"); if(i===0){fill(C.sun);doc.circle(M+1.5,y-1.2,.9,"F");} T(ln,M+5,y); y+=4.6; } y+=2; }); }
+      const tips=saleTips(X);
+      if(tips.length){ footer(); doc.addPage(); y=header("Tipps für deinen Verkauf");
+        tips.forEach(tp=>{ const col={bad:C.bad,warn:C.sun,good:C.good,info:C.acc}[tp.c]||C.acc;
+          const dl=wrap(tp.d,W-2*M-8), tl=(tp.tun||[]).map(x=>wrap(x,W-2*M-14)); const need=10+dl.length*4.6+tl.reduce((a,l)=>a+l.length*4.4+1,0)+(tl.length?6:0);
+          y=ensure(y,need,"Tipps für deinen Verkauf"); fill(col); doc.rect(M,y-4,1.6,need-4,"F");
+          font(10.5,"bold"); color(C.ink); T(tp.t,M+5,y); y+=5.5; font(9.5); color(C.ink); dl.forEach(ln=>{T(ln,M+5,y);y+=4.6;});
+          if(tl.length){ y+=1.5; font(8,"bold"); color(C.muted); T("WAS DU TUN KANNST",M+5,y); y+=4.5; font(9.5); color(C.ink);
+            tl.forEach(l=>{ l.forEach((ln,i)=>{ if(i===0){fill(col);doc.circle(M+7,y-1.2,.8,"F");} T(ln,M+10,y); y+=4.4; }); y+=1; }); }
+          y+=6; }); }
       footer();
     }
     const name=(pdfTxt(headline).replace(/[^\wäöüÄÖÜß -]/g,"").trim().replace(/\s+/g,"-")||"Immobilie")+(priv?"-Verkaufsbericht":"-Expose")+".pdf";
     doc.save(name);
-    st.textContent=`Fertig: ${name}${docs.length?" · Seiten aus PDF-Unterlagen (z. B. Energieausweis) wurden nicht als Fotos verwendet.":""}`;
+    st.textContent=`Fertig: ${name} wurde heruntergeladen. Du findest es in deinen Downloads (iPhone: Dateien-App)${docs.length?" · Seiten aus PDF-Unterlagen (z. B. Energieausweis) wurden nicht als Fotos verwendet.":""}`;
   }catch(e){ st.classList.add("err"); st.textContent=e?.code?errMsg(e):"Das PDF konnte nicht erstellt werden. Bitte nochmal versuchen."; console.error(e); }
   finally{ pdfBusy=false; refresh(); }
 }
@@ -2024,6 +2093,262 @@ $("#btnPdfAi").addEventListener("click",async()=>{ const st=$("#pdfStatus"); st.
 $("#pdfText").addEventListener("input",e=>{ S.val.exposeText=e.target.value; refresh(); });
 
 INFO["pdf.text"]="Der Text auf Seite 2 des Exposés. Die KI schreibt ihn aus deinen Angaben im Stil eines Maklers (kostet ca. 1–3 Cent). Du kannst ihn danach frei ändern.";
+/* ---------- Erklärungen in einfacher Sprache (überschreiben die alten Texte) ---------- */
+Object.assign(INFO,{
+  "obj.titel":"Ein Name für dein Objekt. Nur für dich, damit du es später wiederfindest.\nBeispiel: „Haus Böblingen Gartenstraße“.",
+  "obj.typ":"Was für eine Immobilie ist es? Wohnung, Haus, Doppelhaushälfte …\nDas ist wichtig, weil Häuser und Wohnungen andere Preise haben.",
+  "obj.kaufpreis":"Der Preis, der im Inserat steht.\nTipp: Meistens kann man 3 bis 10 % runterhandeln.",
+  "obj.wfl":"Wie viele Quadratmeter man bewohnen kann. Keller und Garage zählen nicht.\nDas steht im Inserat. Fast alle Rechnungen brauchen diese Zahl.",
+  "obj.grund":"Wie groß das Grundstück ist. Nur bei Häusern wichtig.",
+  "obj.zimmer":"Wie viele Zimmer es gibt. Küche und Bad zählen nicht mit.",
+  "obj.baeder":"Wie viele Badezimmer es gibt.",
+  "obj.baujahr":"In welchem Jahr das Haus gebaut wurde.\nJe älter, desto eher müssen Rohre, Strom und Heizung erneuert werden. Das macht die Sanierung teurer.",
+  "obj.ort":"In welcher Stadt die Immobilie liegt.\nDas Tool sucht dann selbst die aktuellen Preise für genau diesen Ort.",
+  "obj.land":"In welchem Bundesland die Immobilie liegt.\nDavon hängt eine Steuer beim Kauf ab (Grunderwerbsteuer). In Baden-Württemberg sind es 5 % vom Kaufpreis.",
+  "obj.region":"Wie teuer Handwerker in der Gegend sind.\nIm Raum Stuttgart kosten Handwerker mehr als auf dem Land.",
+  "obj.makler":"Was du dem Makler beim Kauf zahlst, in Prozent vom Kaufpreis.\nMeistens 3,57 %. Steht im Inserat. Ohne Makler: 0 eintragen.",
+  "obj.hausgeld":"Bei Wohnungen: das Geld, das du jeden Monat an die Hausgemeinschaft zahlst. Davon werden Hausmeister, Reparaturen und Nebenkosten bezahlt.\nSteht im Inserat.",
+  "obj.zustand":"Wie gut ist die Immobilie in Schuss?\nDaraus schlägt das Tool vor, wie viel renoviert werden muss.",
+  "obj.heizung":"Welche Heizung drin ist und wie alt sie ist.\nTipp: Öl- oder Gasheizungen älter als 30 Jahre müssen oft raus. Das kostet 25.000 bis 40.000 €.",
+  "obj.energie":"Eine Note für den Energieverbrauch, wie beim Kühlschrank. A+ ist sehr gut, H ist sehr schlecht.\nSchlechte Note = hohe Heizkosten.",
+  "obj.istMiete":"Nur ausfüllen, wenn gerade jemand drin wohnt und Miete zahlt. Wie viel Miete (ohne Nebenkosten) zahlt er?",
+  "obj.keller":"Gibt es einen Keller?",
+  "mkt.qmUnsaniert":"So viel kosten ähnliche Immobilien im Ort pro Quadratmeter, im gleichen Zustand wie diese.\nDamit siehst du, ob der Preis im Inserat fair ist. Das Tool füllt das automatisch aus.",
+  "mkt.qmSaniert":"So viel kosten frisch renovierte Immobilien im Ort pro Quadratmeter.\nDaraus schätzt das Tool, wofür du nach der Renovierung verkaufen könntest.",
+  "mkt.mieteQm":"So viel Miete (ohne Nebenkosten) zahlt man im Ort pro Quadratmeter.\nBeispiel: 14 € × 70 m² = 980 € Miete im Monat.",
+  "ortpreise":"Das Tool sucht im Internet die aktuellen Preise für deinen Ort und trägt sie ein.\nDas passiert automatisch. Nach 30 Tagen wird neu gesucht.",
+  "fin.ek":"Dein eigenes Geld, das du mitbringst.\nTipp: Banken wollen mindestens die Nebenkosten (ca. 10 % vom Preis). Mit 20 % Eigengeld bekommst du bessere Zinsen.",
+  "fin.bindung":"So viele Jahre bleibt dein Zins gleich.\nDanach musst du für den Rest einen neuen Zins vereinbaren. Der kann höher oder niedriger sein.",
+  "fin.tilgung":"Wie schnell du den Kredit zurückzahlst. 2 % heißt: im ersten Jahr zahlst du 2 % vom Kredit zurück.\nMehr Tilgung = höhere Rate, aber schneller schuldenfrei.",
+  "fin.zinsAuto":"Mit Haken: Das Tool nimmt den aktuellen Zins vom Markt.\nOhne Haken: Du trägst den Zins aus deinem Bankangebot ein.",
+  "fin.zins":"Der Zins aus deinem Angebot von der Bank.",
+  "fin.src":"Welche Renovierungskosten mit eingerechnet werden sollen.",
+  "fin.ex":"Machst du die Arbeit selbst, teils selbst oder alles mit Handwerkern?",
+  "fin.pos":"Renovierungskosten sind nie genau. Wähle, ob du eher günstig oder eher vorsichtig rechnen willst.\nTipp: Für die Bank lieber vorsichtig (oberer Wert).",
+  "fin.netto":"Wie viel Geld dein Haushalt jeden Monat aufs Konto bekommt, nach Steuern.\nDamit prüft das Tool, ob du dir die Rate leisten kannst.",
+  "fin.kinder":"Wie viele Kinder unter 18 bei dir wohnen. Wichtig für die Förderung vom Staat.",
+  "fin.kfw":"Ein sehr günstiger Kredit vom Staat für Familien mit Kind, die ein altes Haus kaufen und renovieren.\nZins nur ca. 0,5 %. Das Haus muss eine schlechte Energie-Note haben (F, G oder H).",
+  "flip.arv":"Für wie viel du die Immobilie nach der Renovierung verkaufen kannst.\nLeer lassen: Dann nimmt das Tool den Preis aus dem Ort.",
+  "flip.monate":"Wie lange es vom Kauf bis zum Verkauf dauert.\nTipp: Rechne lieber mit 8 bis 12 Monaten. Es dauert fast immer länger als gedacht.",
+  "flip.lfd":"Was das leere Haus jeden Monat kostet: Strom, Heizung, Versicherung, Hausgeld.",
+  "flip.vkMakler":"Was der Makler bekommt, wenn er für dich verkauft. Verkaufst du selbst: 0.",
+  "flip.steuer":"Wie viel Steuer du auf zusätzliches Geld zahlst.\nBei normalem Einkommen meist 30 bis 42 %. Weißt du es nicht, lass 42 % stehen.",
+  "flip.ziel":"Wie viel Gewinn mindestens übrig bleiben soll, in Prozent vom Verkaufspreis.\nProfis wollen mindestens 15 %, damit Überraschungen nicht weh tun.",
+  "rent.tier":"Wie schön die Wohnung nach der Renovierung ist. Schönere Wohnungen bringen mehr Miete.",
+  "rent.lage":"Wo die Immobilie im Ort liegt. In guter Lage zahlen Mieter mehr.",
+  "rent.manual":"Kennst du die Miete schon genau? Dann hier eintragen. Sonst leer lassen.",
+  "rent.ausfall":"Ein kleiner Puffer, falls die Wohnung mal leer steht oder ein Mieter nicht zahlt.\n2 % ist normal.",
+  "rent.verw":"Kosten, die du als Vermieter selbst zahlen musst, z. B. für die Hausverwaltung.\nDie darfst du nicht auf den Mieter umlegen.",
+  "rent.inst":"Geld, das du jedes Jahr für Reparaturen zur Seite legen solltest.",
+  "rent.geb":"Für die Steuer zählt nur das Gebäude, nicht das Grundstück. Das Tool braucht den Anteil vom Gebäude.\nWeißt du es nicht, lass 75 % stehen.",
+  "rent.steuer":"Wie viel Steuer du auf zusätzliches Geld zahlst. Weißt du es nicht, lass 42 % stehen.",
+  "kpi.gesamt":"So viel kostet alles zusammen: Kaufpreis + Nebenkosten + Renovierung.",
+  "kpi.kredit":"So viel musst du dir von der Bank leihen.\nRechnung: Gesamtkosten minus dein eigenes Geld.",
+  "kpi.belastung":"So viel geht jeden Monat von deinem Konto weg: Kreditrate plus Nebenkosten.",
+  "kpi.quote":"Wie viel von deinem Einkommen für die Immobilie draufgeht.\nUnter 35 % ist gut. Über 45 % wird es eng.",
+  "kpi.gewinn":"So viel bleibt nach dem Verkauf übrig, bevor Steuern abgezogen werden.",
+  "kpi.cf":"So viel bleibt dir jeden Monat übrig, wenn du vermietest. Miete rein, Kredit und Kosten raus.\nMinus heißt: Du musst jeden Monat etwas dazuzahlen.",
+  "kpi.stamp":"Das Ergebnis auf einen Blick: Lohnt es sich oder nicht?",
+  "ex.diy":"Du machst alles selbst, was man selbst machen darf. Du zahlst nur das Material.\nStrom, Gas, Heizung und Dach macht trotzdem ein Profi.",
+  "ex.mix":"Du machst einen Teil selbst (z. B. streichen, Boden legen), den Rest machen Handwerker.",
+  "ex.firm":"Handwerker machen alles. Am teuersten, aber am wenigsten Arbeit für dich.",
+  "st.leicht":"Nur schöner machen: streichen, neuer Boden, Kleinigkeiten.",
+  "st.mittel":"Bad und Küche neu, neue Türen, Teile vom Strom neu.",
+  "st.kern":"Fast alles neu: Rohre, Strom, Wände, Böden, Fenster. Beim Haus auch Dach, Fassade und Heizung.",
+  "richtwert":"So viel kosten solche Renovierungen normalerweise pro Quadratmeter.\nGrün heißt: Die Rechnung vom Tool passt dazu.",
+  "puffer":"Extra Geld für Überraschungen. Bei alten Häusern findet man beim Renovieren fast immer etwas.",
+  "q":"Günstig = Baumarkt. Mittel = gute Markenware. Luxus = sehr hochwertig.",
+  "x":"Selbst = du machst die Arbeit. Mix = halb du, halb Handwerker. Firma = alles Handwerker.",
+  "bulk":"Stellt alles auf einmal um. Danach kannst du einzelne Arbeiten wieder ändern.",
+  "stunden":"So viele Stunden ungefähr arbeitest du selbst.",
+  "plan":"Die erste Zeile ist deine Auswahl. Darunter siehst du zum Vergleich, was es kosten würde, wenn du alles gleich machst.",
+  "l.kp":"Der Preis aus dem Inserat.",
+  "l.nk":"Kosten, die beim Kauf extra dazukommen: Steuer, Notar, Grundbuch, Makler. Zusammen ca. 10 bis 12 % vom Preis.\nDiese Kosten zahlt die Bank meistens nicht. Du brauchst dafür eigenes Geld.",
+  "l.kpg":"Kaufpreis plus die Nebenkosten.",
+  "l.san":"Was die Renovierung kostet, mit Puffer für Überraschungen.",
+  "l.kfw":"Der Teil vom Kredit, den der Staat (KfW) sehr günstig gibt.",
+  "l.bank":"Der Teil vom Kredit, den die normale Bank gibt.",
+  "l.zins":"Was die Bank fürs Geldleihen verlangt, pro Jahr.\nJe weniger eigenes Geld du hast, desto höher der Zins.",
+  "l.rate":"So viel zahlst du jeden Monat an die Bank. Darin sind Zinsen und Rückzahlung.",
+  "l.neben":"Kosten fürs Wohnen: Wasser, Müll, Heizung, Versicherung. Beim Haus auch etwas Geld für Reparaturen.",
+  "nk.grest":"Eine Steuer, die man beim Kauf einer Immobilie zahlt. In Baden-Württemberg 5 % vom Preis.",
+  "nk.notar":"Der Notar macht den Kaufvertrag. Kostet ca. 1,5 % vom Preis.",
+  "nk.gb":"Im Grundbuch wird eingetragen, dass dir die Immobilie gehört. Kostet ca. 0,5 % vom Preis.",
+  "loan.ltv":"Wie viel du leihst im Vergleich zum Wert der Immobilie.\nUnter 80 % = gute Zinsen. Über 100 % = teure Zinsen.",
+  "loan.rest":"So viel Schulden hast du noch, wenn dein fester Zins endet.",
+  "loan.zinsen":"So viel Zinsen zahlst du in dieser Zeit insgesamt an die Bank.",
+  "loan.yrs":"Nach so vielen Jahren wäre der Kredit ganz abbezahlt.",
+  "f.vk":"Was der Makler beim Verkauf bekommt.",
+  "f.zinsH":"Zinsen, die du der Bank zahlst, solange dir die Immobilie gehört.",
+  "f.st":"Verkaufst du innerhalb von 10 Jahren, musst du auf den Gewinn Steuern zahlen.",
+  "f.netto":"Das Geld, das am Ende wirklich für dich übrig bleibt.",
+  "f.marge":"Wie viel vom Verkaufspreis Gewinn ist.\nAb 15 % ist es ein guter Deal.",
+  "f.roi":"Wie viel dein eigenes Geld verdient hat.\nBeispiel: 50.000 € eingesetzt, 10.000 € Gewinn = 20 %.",
+  "f.pa":"Dasselbe aufs Jahr gerechnet. So kannst du es mit Zinsen auf dem Sparbuch vergleichen.",
+  "f.max":"Mehr als diesen Preis solltest du nicht bieten. Sonst bleibt zu wenig Gewinn.",
+  "f.abst":"Plus: Das Angebot ist günstig genug. Minus: So viel musst du noch runterhandeln.",
+  "f.qm":"Dein geplanter Verkaufspreis pro m² im Vergleich zu renovierten Immobilien im Ort.\nIst deiner viel höher, bist du zu optimistisch.",
+  "f.sens":"Was passiert, wenn es schlechter läuft als geplant? Die Tabelle zeigt es.\nGrün = gut, Gelb = knapp, Rot = Verlust-Gefahr.",
+  "r.jkm":"Die Miete für ein ganzes Jahr (Monatsmiete × 12).",
+  "r.nu":"Kosten, die du als Vermieter selbst zahlst.",
+  "r.rein":"Was die Immobilie im Jahr einbringt, bevor der Kredit bezahlt wird.",
+  "r.cfv":"Was übrig bleibt, nachdem die Bank bezahlt ist. Noch ohne Steuer.",
+  "r.st":"Auf den Gewinn aus der Miete zahlst du Steuer. Machst du Verlust, bekommst du Steuern zurück.",
+  "r.brutto":"Wie viel Miete du im Jahr bekommst, verglichen mit dem Kaufpreis.\nAb 5 % gut. Unter 4 % trägt sich die Wohnung kaum selbst.",
+  "r.faktor":"Nach wie vielen Jahren Miete der Kaufpreis bezahlt wäre.\nUnter 20 Jahre ist günstig, über 25 teuer.",
+  "r.netto":"Wie viel die Immobilie wirklich bringt, nach allen Kosten.",
+  "r.ekr":"Wie viel dein eigenes Geld pro Jahr verdient.",
+  "r.tiers":"So viel Miete bekommst du je nachdem, wie schön die Wohnung ist.",
+  "e.vergl":"So viel würdest du für eine ähnliche Wohnung im Ort Miete zahlen, mit Nebenkosten.",
+  "e.zins":"Zinsen bekommt die Bank. Das Geld ist weg, wie Miete.",
+  "e.tilg":"Mit diesem Teil zahlst du deinen Kredit ab. Das Geld gehört am Ende dir (als Teil der Wohnung).",
+  "e.mehr":"So viel mehr zahlst du als Eigentümer im Monat als zur Miete.\nMinus heißt: Kaufen ist günstiger als mieten.",
+  "e.qmAng":"Der Preis im Inserat geteilt durch die Quadratmeter.",
+  "e.qmNach":"Kaufpreis plus Renovierung, geteilt durch die Quadratmeter. So viel steckt am Ende drin.",
+  "val.q.titel":"Ein Name für dich, z. B. „Meine Wohnung“.",
+  "val.q.ort":"In welcher Stadt die Immobilie liegt. Muss ausgefüllt sein.",
+  "val.q.plz":"Die Postleitzahl. Damit wird die Bewertung genauer, weil Preise in jedem Stadtteil anders sind.",
+  "val.q.stadtteil":"Der Stadtteil oder die Straße. Die Hausnummer brauchst du nicht.",
+  "val.q.land":"In welchem Bundesland die Immobilie liegt.",
+  "val.q.lage":"Wie gut ist die Gegend? Ruhig, gepflegt, beliebt = gute Lage.\nGute Lagen bringen 10 bis 20 % mehr Geld.",
+  "val.q.laerm":"Ist es laut? Zum Beispiel durch eine große Straße, Züge oder Flugzeuge.\nLärm senkt den Preis.",
+  "val.q.oepnv":"Wie schnell bist du zu Fuß an der nächsten Bus- oder Bahnhaltestelle?",
+  "val.q.infra":"Kann man Supermarkt, Schule und Arzt gut erreichen?",
+  "val.q.ausblick":"Hast du eine schöne Aussicht? Das macht die Immobilie wertvoller.",
+  "val.q.typ":"Was für eine Immobilie ist es? Wohnung, Haus …",
+  "val.q.wfl":"Wie viele Quadratmeter man bewohnen kann. Steht im Kaufvertrag. Muss ausgefüllt sein.",
+  "val.q.zimmer":"Wie viele Zimmer? Küche und Bad zählen nicht.",
+  "val.q.baeder":"Wie viele Badezimmer? Ein zweites Bad oder Gäste-WC ist ein Plus.",
+  "val.q.baujahr":"In welchem Jahr das Haus gebaut wurde.",
+  "val.q.etage":"In welchem Stock die Wohnung liegt. Erdgeschoss = 0.",
+  "val.q.etagenGesamt":"Wie viele Stockwerke das Haus insgesamt hat.",
+  "val.q.einheiten":"Wie viele Wohnungen im ganzen Haus sind.",
+  "val.q.aufzug":"Gibt es einen Aufzug? Wichtig bei oberen Stockwerken.",
+  "val.q.grund":"Wie groß das Grundstück ist. Steht im Grundbuch.",
+  "val.q.aussen":"Gibt es Balkon, Terrasse oder Garten? Ohne Außenbereich ist es schwerer zu verkaufen.",
+  "val.q.aussenQm":"Wie groß ist der Balkon, die Terrasse oder der Garten?",
+  "val.q.ausrichtung":"In welche Himmelsrichtung zeigt der Balkon oder Garten?\nSüd und West sind am beliebtesten, weil dort lange Sonne ist.",
+  "val.q.stellplatz":"Gehört ein Parkplatz oder eine Garage dazu? Das ist oft 10.000 bis 35.000 € wert.",
+  "val.q.stellplatzAnz":"Wie viele Parkplätze gehören dazu?",
+  "val.q.keller":"Gehört ein Keller oder Kellerraum dazu?",
+  "val.q.zustand":"Wie gut ist die Immobilie in Schuss? Sei ehrlich, Käufer sehen es sowieso.",
+  "val.q.modBad":"In welchem Jahr wurde das Bad neu gemacht? Leer lassen, wenn es noch das alte ist.",
+  "val.q.modKueche":"In welchem Jahr kam die Küche neu rein?",
+  "val.q.modBoden":"In welchem Jahr wurden die Böden neu gemacht?",
+  "val.q.modFenster":"In welchem Jahr kamen neue Fenster rein?",
+  "val.q.modHeizung":"In welchem Jahr kam die Heizung neu? Bei Wohnungen: die Heizung im Haus.",
+  "val.q.modElektrik":"In welchem Jahr wurden die Stromleitungen erneuert?",
+  "val.q.modLeitungen":"In welchem Jahr wurden die Wasserrohre erneuert?",
+  "val.q.modDach":"In welchem Jahr wurde das Dach neu gemacht?",
+  "val.q.modFassade":"In welchem Jahr wurden die Außenwände gedämmt?",
+  "val.q.maengel":"Gibt es Schäden, die du kennst? Zum Beispiel feuchter Keller oder Risse.\nWichtig: Wenn du Schäden verschweigst, kann der Käufer später Geld von dir verlangen.",
+  "val.q.ausstattung":"Wie schön und hochwertig ist alles? Bad, Küche, Böden, Türen.",
+  "val.q.bodenart":"Was für Böden liegen hauptsächlich?",
+  "val.q.kueche":"Bleibt die Küche drin und wird mitverkauft?",
+  "val.q.kuecheWert":"Wie viel ist die Küche heute noch wert?\nFaustregel: Nach 10 Jahren noch ca. ein Viertel vom Neupreis.",
+  "val.q.fbh":"Gibt es eine Heizung im Boden?",
+  "val.q.kamin":"Gibt es einen Kamin oder Holzofen?",
+  "val.q.barrierefrei":"Gut für ältere Menschen? Zum Beispiel Dusche ohne Stufe, wenig Treppen.",
+  "val.q.smarthome":"Elektrische Rollläden oder Steuerung per Handy?",
+  "val.q.klima":"Gibt es eine fest eingebaute Klimaanlage?",
+  "val.q.heizart":"Womit wird geheizt?\nAlte Öl- und Gasheizungen sind ein Minus. Wärmepumpe oder Fernwärme sind ein Plus.",
+  "val.q.heizBj":"Wie alt ist die Heizung? Das Jahr steht meist auf einem Schild an der Heizung.",
+  "val.q.energie":"Die Energie-Note aus dem Energieausweis, von A+ (super) bis H (schlecht). Steht vorne auf dem Ausweis.",
+  "val.q.verbrauch":"Die Zahl aus dem Energieausweis in kWh. Steht neben dem farbigen Balken.",
+  "val.q.ausweis":"Hast du einen Energieausweis? Beim Verkauf brauchst du einen, sonst gibt es eine Strafe.",
+  "val.q.pv":"Gibt es Solarzellen auf dem Dach?",
+  "val.q.hausgeld":"Was du jeden Monat an die Hausgemeinschaft zahlst.\nZu hohes Hausgeld schreckt Käufer ab.",
+  "val.q.ruecklage":"Das gemeinsame Spargeld aller Eigentümer für Reparaturen am Haus. Steht in der Jahresabrechnung.\nViel Rücklage = gut für Käufer.",
+  "val.q.sonderumlage":"Muss bald jeder Eigentümer extra zahlen, z. B. für ein neues Dach? Steht im Protokoll der Eigentümerversammlung.",
+  "val.q.vermietet":"Wohnt gerade ein Mieter drin?\nVermietete Wohnungen bringen meist 10 bis 20 % weniger, weil man nicht selbst einziehen kann.",
+  "val.q.kaltmiete":"Wie viel Miete zahlt der Mieter, ohne Nebenkosten?",
+  "val.q.denkmal":"Steht das Haus unter Denkmalschutz?",
+  "val.q.erbbau":"Gehört das Grundstück jemand anderem und du zahlst dafür jedes Jahr Pacht? Dann hier Haken setzen. Das senkt den Wert.",
+  "val.q.rechte":"Steht im Grundbuch, dass jemand anderes Rechte hat? Zum Beispiel darf jemand drin wohnen oder über das Grundstück gehen.",
+  "val.q.besonderes":"Alles, was noch wichtig ist und oben nicht gefragt wurde. Gutes und Schlechtes.\nBeispiel: „2023 neues Bad“, „sehr ruhige Nachbarn“, „Straße wird bald gebaut“.",
+  "val.sale.preisWahl":"Mit welchem Verkaufspreis soll gerechnet werden?\nMarktwert = realistisch. Angebotspreis = höher, für Verhandlungen. Schnellverkauf = niedriger, dafür schnell weg.",
+  "val.sale.preis":"Dein eigener Preis, z. B. wenn ein Käufer schon etwas geboten hat.",
+  "val.sale.datum":"Wann der Verkauf beim Notar sein soll. Leer lassen = in 3 Monaten.",
+  "val.sale.makler":"Was der Makler von dir bekommt, in Prozent vom Preis. Meist 3,57 %.\nVerkaufst du ohne Makler: 0 eintragen.",
+  "val.sale.energieausweis":"Brauchst du einen neuen Energieausweis? Kostet 50 bis 600 €. Hast du einen gültigen: 0.",
+  "val.sale.unterlagen":"Papiere fürs Verkaufen, z. B. Auszug aus dem Grundbuch. Meist um die 100 €.",
+  "val.sale.gutachten":"Nur wenn du einen Gutachter beauftragst. Sonst 0.",
+  "val.sale.staging":"Profi-Fotos oder Möbel für die Besichtigung. Nur wenn du das willst.",
+  "val.sale.reparatur":"Kleine Reparaturen vor dem Verkauf, z. B. streichen.",
+  "val.sale.umzug":"Was dein Umzug kostet, falls du ausziehst.",
+  "val.sale.restschuld":"Wie viel du der Bank heute noch schuldest. Steht auf deinem letzten Kontoauszug vom Kredit.\nKeinen Kredit mehr? Dann leer lassen.",
+  "val.sale.zins":"Dein Zins aus dem Kreditvertrag, z. B. 1,8 %.",
+  "val.sale.rate":"Wie viel du jeden Monat an die Bank zahlst.",
+  "val.sale.sonder":"Wie viel du laut Vertrag jedes Jahr extra zurückzahlen darfst, ohne Strafe. Steht im Kreditvertrag. Sonst 0.",
+  "val.sale.zinsEnde":"Bis wann dein Zins festgeschrieben ist. Steht im Kreditvertrag.\nVerkaufst du danach, verlangt die Bank keine Strafe.",
+  "val.sale.auszahlung":"Wann die Bank dir das Geld ausgezahlt hat. Steht im Vertrag oder Kontoauszug.\nNach 10 Jahren darfst du immer ohne Strafe kündigen.",
+  "val.sale.wiederanlage":"Brauchst du nicht ausfüllen. Nur für Profis: der Zins, mit dem die Bank die Strafe berechnet.",
+  "val.sale.vfeManual":"Hat dir die Bank schon gesagt, wie hoch die Strafe für die frühe Rückzahlung ist? Dann hier eintragen.",
+  "val.sale.vfeGebuehr":"Manche Banken wollen zusätzlich eine kleine Gebühr, meist 0 bis 300 €.",
+  "val.sale.grundschuld":"Die Summe, die im Grundbuch für die Bank eingetragen ist. Meist so viel, wie du am Anfang geliehen hast.\nWeißt du es nicht, leer lassen.",
+  "val.sale.weitere":"Andere Schulden, die mit dem Verkauf bezahlt werden sollen, z. B. ein zweiter Kredit.",
+  "val.sale.nutzung":"Hast du selbst drin gewohnt oder war sie vermietet?\nWenn du selbst drin gewohnt hast, musst du keine Steuer zahlen.",
+  "val.sale.selbst3":"Hast du dieses Jahr und die zwei Jahre davor selbst drin gewohnt? Dann musst du keine Steuer zahlen.",
+  "val.sale.kaufdatum":"Wann du die Immobilie gekauft hast (Datum beim Notar).\nNach 10 Jahren ist der Verkauf immer steuerfrei.",
+  "val.sale.kaufpreis":"Was du damals für die Immobilie bezahlt hast.",
+  "val.sale.kaufNk":"Was beim Kauf extra dazukam: Steuer, Notar, Makler.",
+  "val.sale.modKosten":"Was du seitdem für Renovierungen ausgegeben hast (mit Rechnungen). Das senkt die Steuer.",
+  "val.sale.afaSumme":"Nur bei Vermietung: wie viel du in der Steuererklärung jedes Jahr für das Gebäude abgesetzt hast, zusammengerechnet.\nWeißt du es nicht, leer lassen. Das Tool schätzt dann.",
+  "val.sale.steuersatz":"Wie viel Steuer du auf zusätzliches Geld zahlst. Weißt du es nicht, lass 42 % stehen.",
+  "v.markt":"Der realistische Preis, den du bekommst, wenn du normal verkaufst (2 bis 4 Monate).",
+  "v.angebot":"Mit diesem Preis kannst du die Immobilie anbieten. Er ist etwas höher, weil Käufer meistens handeln.",
+  "v.schnell":"So viel bekommst du, wenn es schnell gehen muss (4 bis 8 Wochen).",
+  "v.spanne":"Der Preis liegt sehr wahrscheinlich irgendwo dazwischen.",
+  "v.sicherheit":"Wie sicher sich die KI ist. Hoch = viele Vergleichspreise gefunden. Niedrig = wenig Infos.",
+  "v.anpassungen":"Was den Preis hoch oder runter zieht.\nBeispiel: Balkon nach Süden = mehr, alte Heizung = weniger.",
+  "v.vergleich":"Ähnliche Immobilien, die gerade im Internet angeboten werden. Daran sieht man, was der Markt zahlt.",
+  "s.netto":"Das Geld, das am Ende wirklich auf deinem Konto landet. Alles ist schon abgezogen.",
+  "s.restschuld":"So viel schuldest du der Bank noch am Tag vom Verkauf. Das wird direkt vom Verkaufspreis bezahlt.",
+  "s.vfe":"Eine Strafe der Bank, wenn du den Kredit früher zurückzahlst als vereinbart.\nGrund: Die Bank bekommt dann weniger Zinsen. Das Tool schätzt die Höhe, die Bank sagt dir die genaue Zahl.",
+  "s.loesch":"Im Grundbuch steht, dass die Bank Geld von dir bekommt. Das muss gelöscht werden. Kostet ca. 0,3 %.",
+  "s.steuer":"Musst du nur zahlen, wenn du NICHT selbst drin gewohnt hast UND weniger als 10 Jahre seit dem Kauf vergangen sind.",
+  "s.kosten":"Alle kleinen Kosten rund um den Verkauf zusammen.",
+  "s.gewinn":"So viel mehr bekommst du heute, als du damals bezahlt hast (mit Renovierungen).",
+  "budget":"So viel Geld darf die KI in diesem Monat höchstens kosten. Ist es aufgebraucht, macht die KI Pause bis zum nächsten Monat. Alles andere im Tool geht weiter.",
+  "pdf.text":"Der Text, der die Immobilie im PDF beschreibt. Die KI kann ihn schreiben (kostet ca. 1–3 Cent). Danach kannst du ihn ändern."
+});
+Object.assign(ITI,{
+  maler:"Wände und Decken streichen. Kannst du gut selbst machen.",
+  spachtel:"Wände glatt machen oder tapezieren, bevor gestrichen wird. Nötig bei alten, unebenen Wänden.",
+  boden:"Alten Boden raus, neuen rein. Günstig = Laminat, Mittel = Vinyl oder Parkett, Luxus = Echtholz oder große Fliesen.",
+  estrich:"Die Schicht unter dem Boden neu machen. Nötig, wenn sie kaputt oder uneben ist.",
+  putz:"Alten Putz von den Wänden runter, neuen drauf. Meistens bei großer Renovierung.",
+  elektrik:"Alle Stromleitungen, Steckdosen und Sicherungen neu. Bei alten Häusern oft nötig. Anschließen darf nur ein Elektriker.",
+  elektrikTeil:"Nur einzelne Steckdosen, Schalter und Leitungen neu. Wenn der Strom grundsätzlich noch okay ist.",
+  tuer:"Neue Zimmertür mit Rahmen. Die Anzahl kannst du ändern.",
+  heizkoerper:"Alte Heizkörper raus, neue rein.",
+  fbh:"Eine Heizung im Boden einbauen. Sehr angenehm, passt gut zur Wärmepumpe.",
+  fenster:"Alte Fenster raus, neue rein. Neue Fenster sparen Heizkosten.",
+  trockenbau:"Wände oder Decken aus Gipsplatten bauen, z. B. um ein Zimmer zu teilen.",
+  kuechenzeile:"Komplette neue Küche mit Geräten und Aufbau. Günstig ab ca. 5.000 €, Mittel ca. 8.000–18.000 €, Luxus ab 18.000 €.",
+  kuecheAnschluss:"Wasser, Abfluss und Strom für Herd an die richtige Stelle legen.",
+  fliesenspiegel:"Fliesen oder Platte an der Wand hinter der Arbeitsfläche.",
+  badRueckbau:"Altes Bad rausreißen und entsorgen. Kannst du selbst machen und viel sparen.",
+  badLeitungen:"Neue Wasserrohre im Bad. In alten Häusern fast immer nötig.",
+  badFliesen:"Neue Fliesen an Wand und Boden.",
+  badSanitaer:"Neues WC, Waschbecken, Wanne oder Dusche und Wasserhähne.",
+  badDusche:"Dusche ohne Stufe, ebenerdig. Modern und beliebt.",
+  badElektrik:"Strom und Licht im Bad. Macht immer ein Elektriker.",
+  kellerFeucht:"Feuchte Kellerwände trockenlegen.",
+  kleinrep:"Viele Kleinigkeiten: Wasserhähne, Silikonfugen, Türen einstellen.",
+  entkernung:"Alles rausreißen bis auf die Wände, mit Container. Viel davon kannst du selbst machen.",
+  dach:"Neues Dach mit Dämmung. Macht nur ein Dachdecker.",
+  dachDaemm:"Den Boden zum Dachboden dämmen. Günstig und oft selbst machbar. Nach dem Kauf eines Hauses meistens Pflicht.",
+  fassade:"Die Außenwände dämmen und neu verputzen. Spart Heizkosten.",
+  heizung:"Alte Heizung raus, Wärmepumpe rein. Der Staat zahlt oft viel dazu (bis zu 70 %), das ist hier noch nicht abgezogen.",
+  hausanschluss:"Neuer Stromkasten im Keller. Oft nötig bei alter Elektrik oder Wärmepumpe.",
+  leitungenHaus:"Alle Wasserrohre im ganzen Haus neu.",
+  kellerdecke:"Die Decke vom Keller dämmen. Günstig, selbst machbar, gibt warme Füße im Erdgeschoss.",
+  schadstoff:"Extra Geld, falls Asbest gefunden wird. Betrifft Häuser, die vor 1993 gebaut wurden.",
+  aussen:"Garten, Zaun, Einfahrt, Terrasse.",
+  sonderumlage:"Bei Wohnungen: Extra-Zahlung, wenn die Hausgemeinschaft z. B. ein neues Dach beschließt."
+});
+
 /* ---------- Haupt-Refresh ---------- */
 let saveT;
 function refresh(){
@@ -2324,7 +2649,7 @@ function renderBudget(){
   }
   ["#budgetBox","#budgetBox2"].forEach(sel=>{const el=$(sel); if(el) el.innerHTML=h||(sel==="#budgetBox2"?`<p class="small muted">Nach dem Anmelden siehst du hier, wie viel vom KI-Budget verbraucht ist.</p>`:"");});
 }
-INFO.budget="Fester Höchstbetrag für alle KI-Anfragen im Monat. Vor jeder Anfrage reserviert der Server die maximal möglichen Kosten. Würde das Budget überschritten, wird die Anfrage gar nicht erst gestellt. Rechnen und Planen ohne KI funktioniert immer. Das Budget stellst du in Vercel mit BUDGET_MONTH_EUR ein.";
+INFO.budget="So viel Geld darf die KI in diesem Monat höchstens kosten. Ist es aufgebraucht, macht die KI Pause bis zum nächsten Monat. Alles andere im Tool geht weiter.";
 
 /* ---------- Speicher (Supabase) ---------- */
 let SB=null, SESSION=null;
